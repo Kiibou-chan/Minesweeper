@@ -110,9 +110,9 @@ public class Map extends GraphicsElement {
 
         Collections.shuffle(freeTiles);
 
-        return (Tile[]) freeTiles.stream()
+        return freeTiles.stream()
                 .limit(bombs)
-                .peek(bomb -> bomb.setType(TileType.BOMB)).toArray();
+                .peek(bomb -> bomb.setType(TileType.BOMB)).toArray(Tile[]::new);
     }
 
     private void createNumberTiles() {
