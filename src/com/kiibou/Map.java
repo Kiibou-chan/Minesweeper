@@ -6,40 +6,39 @@ import space.kiibou.gui.GraphicsElement;
 import space.kiibou.gui.Grid;
 import space.kiibou.gui.VerticalList;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class Map extends GraphicsElement {
-    /**
-     * stores all tiles
-     */
-    private Grid<Tile> tiles;
-
-    /**
-     * reference to all bomb tiles
-     */
-    private Tile[] bombTiles;
-
     /**
      * amount of tiles in x direction
      */
     private final int tilesX;
-
     /**
      * amount of tiles in y direction
      */
     private final int tilesY;
-
     /**
      * amount of bombs on the field
      */
     private final int bombs;
-
+    /**
+     * stores all tiles
+     */
+    private Grid<Tile> tiles;
+    /**
+     * reference to all bomb tiles
+     */
+    private Tile[] bombTiles;
     private VerticalList verticalList;
     private ControlBar controlBar;
     private boolean gameRunning;
     private int revealed;
 
-    public Map(GApplet app, int x, int y, int tilesX, int tilesY, int scale, int bombs) {
+    public Map(final GApplet app, final int x, final int y, final int tilesX, final int tilesY, final int scale, final int bombs) {
         super(app, x, y, tilesX * Tile.tileHeight * scale, tilesY * Tile.tileHeight * scale, scale);
         this.tilesX = tilesX;
         this.tilesY = tilesY;
@@ -76,15 +75,17 @@ public class Map extends GraphicsElement {
 
     @Override
     public void drawImpl() {
-
+        if (revealed == tilesX * tilesY - bombs) {
+            win();
+        }
     }
 
-    private Grid<Tile> createTiles(int tilesX, int tilesY) {
-        Grid<Tile> tiles = new Grid<>(getApp(), 0, 0, tilesX, tilesY, getScale());
+    private Grid<Tile> createTiles(final int tilesX, final int tilesY) {
+        final Grid<Tile> tiles = new Grid<>(getApp(), 0, 0, tilesX, tilesY, getScale());
 
         for (int x = 0; x < tilesX; x++) {
             for (int y = 0; y < tilesY; y++) {
-                Tile tile = new Tile(getApp(), this, getScale(), x, y);
+                final Tile tile = new Tile(getApp(), this, getScale(), x, y);
                 tiles.put(x, y, tile);
             }
         }
@@ -92,28 +93,26 @@ public class Map extends GraphicsElement {
         return tiles;
     }
 
+    /**
+     * Places the specified amount of Bombs on the map.
+     *
+     * @param bombs Bombs to be placed
+     * @return array of the Tiles on which bombs are placed
+     * @throws IllegalArgumentException This exception is thrown when the amount
+     *                                  of available tiles is lower than the specified amount of bombs
+     */
     private Tile[] placeBombs(int bombs) {
-        Tile[] bombTiles = new Tile[bombs];
+        if (bombs > tilesX * tilesY)
+            throw new IllegalArgumentException("Can not place more Bombs than Tiles are on the Map");
 
-        int placedBombs = 0;
+        final List<Tile> freeTiles = StreamSupport.stream(tiles.spliterator(), false)
+                .collect(Collectors.toList());
 
-        while (placedBombs < bombs) {
-            int cx = (int) getApp().random(tilesX);
-            int cy = (int) getApp().random(tilesY);
-            Tile cur = tiles.get(cx, cy);
+        Collections.shuffle(freeTiles);
 
-            while (cur.getType() == TileType.BOMB) {
-                cx = (int) getApp().random(tilesX);
-                cy = (int) getApp().random(tilesY);
-                cur = tiles.get(cx, cy);
-            }
-
-            cur.setType(TileType.BOMB);
-            bombTiles[placedBombs] = cur;
-            placedBombs++;
-        }
-
-        return bombTiles;
+        return (Tile[]) freeTiles.stream()
+                .limit(bombs)
+                .peek(bomb -> bomb.setType(TileType.BOMB)).toArray();
     }
 
     private void createNumberTiles() {
@@ -171,27 +170,27 @@ public class Map extends GraphicsElement {
     }
 
     /**
-     * Reveals a tile at position x, y if it exists.
-     * Reveals surrounding empty or number tiles if it is empty.
+     * Reveal a tile at position x, y if it exists.
+     * If it is empty, it reveals the surrounding tiles.
      *
      * @param x x-coordinate of the tile
      * @param y y-coordinate of the tile
      */
     public void reveal(int x, int y) {
-        if (isValidTile(x, y) && tiles.get(x, y).getType() == TileType.EMPTY) {
-            for (int px = -1; px <= 1; px++) {
-                for (int py = -1; py <= 1; py++) {
-                    if (revealTile(x + px, y + py)) {
-                        reveal(x + px, y + py);
+        /* Go through each of the surrounding tiles and reveal them if tile is empty
+         * otherwise just reveal the tile */
+        if (isValidTile(x, y)) {
+            if (tiles.get(x, y).getType() == TileType.EMPTY) {
+                for (int px = -1; px <= 1; px++) {
+                    for (int py = -1; py <= 1; py++) {
+                        if (revealTile(x + px, y + py)) {
+                            reveal(x + px, y + py);
+                        }
                     }
                 }
+            } else {
+                revealTile(x, y);
             }
-        } else {
-            revealTile(x, y);
-        }
-
-        if (revealed == tilesX * tilesY - bombs) {
-            win();
         }
     }
 
@@ -203,6 +202,7 @@ public class Map extends GraphicsElement {
      * @return true if tile is empty, false otherwise
      */
     private boolean revealTile(int x, int y) {
+        // TODO: 07/09/2019 refactor following if out of this method
         if (!gameRunning) {
             gameRunning = true;
             controlBar.startTimer();
