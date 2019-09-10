@@ -46,9 +46,9 @@ public class EventDispatcher {
 
     public void mouseEvent(processing.event.MouseEvent source) {
         MouseEvent event = new MouseEvent(source);
-        Optional<GraphicsElement> opt = topElement(event.getX(), event.getY(), registry.get("mouseEvent"));
+        Optional<GraphicsElement> topElement = topElement(event.getX(), event.getY(), registry.get("mouseEvent"));
 
-        opt.ifPresent(element -> {
+        topElement.ifPresent(element -> {
             boolean sameElement = element.equals(prevGraphicsElement);
 
             if (!sameElement) {
@@ -63,7 +63,7 @@ public class EventDispatcher {
             element.mouseEvent(event);
         });
 
-        if (!opt.isPresent() && prevGraphicsElement != null) {
+        if (!topElement.isPresent() && prevGraphicsElement != null) {
             prevGraphicsElement.mouseEvent(new MouseEvent(event, MouseEventAction.ELEMENT_EXIT));
             prevGraphicsElement = null;
         }
