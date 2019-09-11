@@ -98,21 +98,18 @@ public class Map extends GraphicsElement {
      *
      * @param bombs Bombs to be placed
      * @return array of the Tiles on which bombs are placed
-     * @throws IllegalArgumentException This exception is thrown when the amount
+     * @throws ArrayIndexOutOfBoundsException This exception is thrown when the amount
      *                                  of available tiles is lower than the specified amount of bombs
      */
     private Tile[] placeBombs(int bombs) {
-        if (bombs > tilesX * tilesY)
-            throw new IllegalArgumentException("Can not place more Bombs than Tiles are on the Map");
-
         final List<Tile> freeTiles = StreamSupport.stream(tiles.spliterator(), false)
                 .collect(Collectors.toList());
 
         Collections.shuffle(freeTiles);
 
-        return freeTiles.stream()
-                .limit(bombs)
-                .peek(bomb -> bomb.setType(TileType.BOMB)).toArray(Tile[]::new);
+        return freeTiles.subList(0, bombs).stream()
+                .peek(bomb -> bomb.setType(TileType.BOMB))
+                .toArray(Tile[]::new);
     }
 
     private void createNumberTiles() {
@@ -195,7 +192,7 @@ public class Map extends GraphicsElement {
     }
 
     /**
-     * Reveals the tile at position x, y if it exists.
+     * Reveal the tile at position x, y if it exists.
      *
      * @param x x-coordinate of the tile
      * @param y y-coordinate of the tile
