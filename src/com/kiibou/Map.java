@@ -134,8 +134,7 @@ public class Map extends GraphicsElement {
     }
 
     private boolean isBomb(int x, int y) {
-        if (isValidTile(x, y)) return (tiles.get(x, y).getType() == TileType.BOMB);
-        else return false;
+        return (isValidTile(x, y) && tiles.get(x, y).getType() == TileType.BOMB);
     }
 
     /**
