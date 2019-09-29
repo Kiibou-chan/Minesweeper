@@ -128,35 +128,7 @@ public class Map extends GraphicsElement {
 
                 Tile cur = tiles.get(x, y);
 
-                switch (count) {
-                    case 0:
-                        cur.setType(TileType.EMPTY);
-                        break;
-                    case 1:
-                        cur.setType(TileType.ONE);
-                        break;
-                    case 2:
-                        cur.setType(TileType.TWO);
-                        break;
-                    case 3:
-                        cur.setType(TileType.THREE);
-                        break;
-                    case 4:
-                        cur.setType(TileType.FOUR);
-                        break;
-                    case 5:
-                        cur.setType(TileType.FIVE);
-                        break;
-                    case 6:
-                        cur.setType(TileType.SIX);
-                        break;
-                    case 7:
-                        cur.setType(TileType.SEVEN);
-                        break;
-                    case 8:
-                        cur.setType(TileType.EIGHT);
-                        break;
-                }
+                cur.setType(TileType.getTypeFromValue(count));
             }
         }
     }
