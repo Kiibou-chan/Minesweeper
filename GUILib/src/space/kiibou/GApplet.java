@@ -14,10 +14,6 @@ public class GApplet extends PApplet {
         eventDispatcher = new EventDispatcher(this);
     }
 
-    public static void main(String mainClass) {
-        PApplet.main(mainClass);
-    }
-
     public void registerMethod(String methodName, GraphicsElement target) {
         eventDispatcher.registerMethod(methodName, target);
     }
