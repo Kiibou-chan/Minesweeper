@@ -1,8 +1,10 @@
 package space.kiibou.net.server;
 
 import space.kiibou.net.common.Callbacks;
-import space.kiibou.net.common.Message;
 import space.kiibou.net.common.SocketConnection;
+import space.kiibou.net.common.TextMessage;
+import space.kiibou.net.server.service.ActionService;
+import space.kiibou.net.server.service.JSONService;
 import space.kiibou.reflect.Inject;
 import space.kiibou.reflect.ReflectUtils;
 
@@ -15,11 +17,11 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-public class Server {
+public final class Server {
 
     private final Map<Long, SocketConnection> connections;
     private final List<Service> services;
-    private final Callbacks<Message, Void> messageCallbacks;
+    private final Callbacks<TextMessage, Void> messageCallbacks;
     private ServerSocket serverSocket;
     private Thread connectionListenerThread;
 
@@ -47,6 +49,7 @@ public class Server {
         }
 
         registerService(JSONService.class.getCanonicalName());
+        registerService(ActionService.class.getCanonicalName());
 
         for (Service service : services) injectServices(service);
         for (Service service : services) service.initialize();
@@ -160,7 +163,7 @@ public class Server {
     }
 
     private void messageReceived(final long handle, final String message) {
-        Message msg = new Message(handle, message);
+        TextMessage msg = new TextMessage(handle, message);
         messageCallbacks.callAll(msg);
     }
 

@@ -1,7 +1,9 @@
-package space.kiibou.net.server;
+package space.kiibou.net.server.service;
 
 import processing.data.JSONObject;
 import space.kiibou.net.common.Callbacks;
+import space.kiibou.net.server.Server;
+import space.kiibou.net.server.Service;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -28,17 +30,30 @@ public class JSONService extends Service {
 
         result.setLong("handle", handle);
         result.setJSONObject("message", parsedMessage);
+
+        jsonMessageCallbacks.callAll(result);
     }
 
-    public long registerJSONMessageReceivedCallback(final Consumer<JSONObject> callback) {
+    public long addJSONMessageReceivedCallback(final Consumer<JSONObject> callback) {
         Objects.requireNonNull(callback);
+
         return jsonMessageCallbacks.addCallback(message -> {
             callback.accept(message);
             return null;
         });
     }
 
+    public void removeJSONMessageReceivedCallback(final long callbackHandle) {
+        jsonMessageCallbacks.removeCallback(callbackHandle);
+    }
+
+    public void sendJSONObject(final long handle, final JSONObject object) {
+        Objects.requireNonNull(object);
+        server.sendMessage(handle, object.format(-1));
+    }
+
     public void broadcastJSONObject(final JSONObject object) {
+        Objects.requireNonNull(object);
         server.broadcastMessage(object.format(-1));
     }
 

@@ -1,11 +1,11 @@
 package space.kiibou.net.common;
 
-public class Message {
+public class TextMessage {
 
     private final long connectionHandle;
     private final String message;
 
-    public Message(long connectionHandle, String message) {
+    public TextMessage(long connectionHandle, String message) {
         this.connectionHandle = connectionHandle;
         this.message = message;
     }
