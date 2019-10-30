@@ -7,6 +7,7 @@ import space.kiibou.event.MouseEventListener;
 import space.kiibou.event.MouseEventOption;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -36,7 +37,7 @@ public abstract class GraphicsElement extends Rectangle implements MouseEventLis
         this.app = app;
         this.hidden = false;
         this.scale = scale;
-        children = new ArrayList<>();
+        children = Collections.synchronizedList(new ArrayList<>());
         mouseOptionMap = new MouseOptionMap();
         active = true;
         hierarchyDepth = 0;
