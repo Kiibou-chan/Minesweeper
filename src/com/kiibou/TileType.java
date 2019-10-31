@@ -36,6 +36,10 @@ public enum TileType {
         return path;
     }
 
+    public int getLookup() {
+        return lookup;
+    }
+
     public static TileType getTypeFromValue(int value) {
         return map.get(value);
     }

@@ -1,6 +1,6 @@
 package com.kiibou;
 
-import processing.core.PGraphics;
+import processing.data.JSONObject;
 import space.kiibou.GApplet;
 import space.kiibou.event.MouseEvent;
 import space.kiibou.event.MouseEventAction;
@@ -49,7 +49,6 @@ public class Tile extends GraphicsElement {
         this.tileY = tileY;
 
         this.map = map;
-        PGraphics g = app.getGraphics();
         this.type = TileType.EMPTY;
 
         revealed = false;
@@ -59,7 +58,6 @@ public class Tile extends GraphicsElement {
         flag.hide();
 
         tilePicture = new Picture(app, type.getPath(), scale);
-        // tilePicture.hide();
     }
 
     @Override
@@ -74,45 +72,53 @@ public class Tile extends GraphicsElement {
 
     @Override
     protected void initImpl() {
+        /* GUI stuff */
         button.moveTo(getX(), getY());
         tilePicture.resize(getWidth(), getHeight());
         tilePicture.moveTo(getX(), getY());
 
+        flag.moveTo(button.getX() + button.getBorder().getBorderWidth(), button.getY() + button.getBorder().getBorderHeight());
+        flag.resize(button.getBorder().getInnerWidth(), button.getBorder().getInnerHeight());
+
+        /* Button and Mouse Stuff */
+
+        /* Reveal the tile, if possible, and set the smiley back to normal */
         button.registerCallback(
                 MouseEventListener.options(
                         MouseEventButton.LEFT, MouseEventAction.RELEASE
                 ), event -> {
                     map.getControlBar().setSmiley(SmileyStatus.NORMAL);
-                    onLeftClick(event);
+                    reveal(event);
                 }
         );
 
+        /* Flag the tile */
         button.registerCallback(
                 MouseEventListener.options(
                         MouseEventButton.RIGHT, MouseEventAction.RELEASE
-                ), this::onRightClick
+                ), this::flag
         );
 
+        /* Set smiley to surprised */
         button.registerCallback(
                 options(
                         MouseEventButton.LEFT, MouseEventAction.PRESS
                 ), event -> map.getControlBar().setSmiley(SmileyStatus.SURPRISED)
         );
 
+        /* Same as above */
         button.registerCallback(
                 options(
                         MouseEventButton.LEFT, EnumSet.of(MouseEventAction.DRAG, MouseEventAction.ELEMENT_ENTER)
                 ), event -> map.getControlBar().setSmiley(SmileyStatus.SURPRISED)
         );
 
+        /* Set Smiley to normal */
         button.registerCallback(
                 options(
                         MouseEventButton.LEFT, EnumSet.of(MouseEventAction.DRAG, MouseEventAction.ELEMENT_EXIT)
                 ), event -> map.getControlBar().setSmiley(SmileyStatus.NORMAL)
         );
-
-        flag.moveTo(button.getX() + button.getBorder().getBorderWidth(), button.getY() + button.getBorder().getBorderHeight());
-        flag.resize(button.getBorder().getInnerWidth(), button.getBorder().getInnerHeight());
     }
 
     @Override
@@ -123,25 +129,19 @@ public class Tile extends GraphicsElement {
     public void drawImpl() {
     }
 
-    private void onLeftClick(MouseEvent event) {
-        reveal();
+    private void reveal(MouseEvent event) {
+        ((Minesweeper) getApp()).getClient().sendJSON(new JSONObject()
+                .setString("action", "reveal-tiles")
+                .setInt("x", tileX)
+                .setInt("y", tileY)
+        );
     }
 
-    private void onRightClick(MouseEvent event) {
-        if (!revealed) {
-            setFlagged(!flagged);
-        }
-    }
-
-    private void reveal() {
-        if (type == TileType.BOMB) {
-            map.loose();
-            setType(TileType.RED_BOMB);
-        } else {
-            map.reveal(tileX, tileY);
-        }
-
-        tilePicture.show();
+    private void flag(MouseEvent event) {
+        ((Minesweeper) getApp()).getClient().sendJSON(new JSONObject()
+                .setString("action", "flag-toggle")
+                .setInt("x", tileX)
+                .setInt("y", tileY));
     }
 
     public void reset() {
@@ -170,7 +170,9 @@ public class Tile extends GraphicsElement {
         if (tilePicture != null) {
             index = getChildIndex(tilePicture);
             removeChild(tilePicture);
-        } else index = getChildren().size();
+        } else {
+            index = getChildren().size();
+        }
 
         tilePicture = new Picture(getApp(), type.getPath(), getScale());
         addChild(index, tilePicture);
@@ -201,10 +203,6 @@ public class Tile extends GraphicsElement {
     }
 
     public void setFlagged(boolean flagged) {
-        if (this.flagged != flagged) {
-            map.tileFlag(flagged);
-        }
-
         if (flagged) flag.show();
         else flag.hide();
 

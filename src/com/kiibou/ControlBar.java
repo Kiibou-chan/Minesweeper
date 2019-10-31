@@ -1,5 +1,6 @@
 package com.kiibou;
 
+import processing.data.JSONObject;
 import space.kiibou.GApplet;
 import space.kiibou.event.MouseEventAction;
 import space.kiibou.event.MouseEventButton;
@@ -8,17 +9,14 @@ import space.kiibou.gui.Button;
 import space.kiibou.gui.GraphicsElement;
 import space.kiibou.gui.Picture;
 import space.kiibou.gui.Rectangle;
-
-import java.util.Timer;
-import java.util.TimerTask;
+import space.kiibou.net.client.Client;
 
 public class ControlBar extends GraphicsElement {
     private final Map map;
+    private final Client client;
     private SevenSegmentDisplay timerDisplay;
     private Button restartButton;
     private SevenSegmentDisplay bombsLeft;
-    private final Timer timer;
-    private TimerTask timerTask;
 
     private Picture smiley1;
     private Picture smiley2;
@@ -28,7 +26,7 @@ public class ControlBar extends GraphicsElement {
     public ControlBar(GApplet app, int scale, Map map) {
         super(app, 0, 0, 0, 0, scale);
         this.map = map;
-        timer = new Timer("MapTimer", true);
+        client = ((Minesweeper) getApp()).getClient();
     }
 
     @Override
@@ -57,9 +55,8 @@ public class ControlBar extends GraphicsElement {
                 MouseEventListener.options(
                         MouseEventButton.LEFT, MouseEventAction.RELEASE
                 ), event -> {
-                    map.restart();
-                    stopTimer();
-                    setSmiley(SmileyStatus.NORMAL);
+                    ((Minesweeper) getApp()).getClient().sendJSON(new JSONObject()
+                            .setString("action", "restart"));
                 }
         );
 
@@ -103,26 +100,6 @@ public class ControlBar extends GraphicsElement {
 
         int buttonY = getY() + height - restartButton.getHeight();
         restartButton.moveTo(restartButton.getX(), buttonY);
-    }
-
-    public void startTimer() {
-        timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                timerDisplay.inc();
-            }
-        };
-
-        timer.schedule(timerTask, 0, 1000);
-    }
-
-    public void stopTimer() {
-        if (timerTask != null)
-            timerTask.cancel();
-    }
-
-    public void resetTimer() {
-        timerDisplay.setValue(0);
     }
 
     public void resetBombsLeft() {

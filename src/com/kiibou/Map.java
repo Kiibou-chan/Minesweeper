@@ -6,45 +6,22 @@ import space.kiibou.gui.GraphicsElement;
 import space.kiibou.gui.Grid;
 import space.kiibou.gui.VerticalList;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 public class Map extends GraphicsElement {
-    /**
-     * amount of tiles in x direction
-     */
+
     private final int tilesX;
-    /**
-     * amount of tiles in y direction
-     */
     private final int tilesY;
-    /**
-     * amount of bombs on the field
-     */
     private final int bombs;
-    /**
-     * stores all tiles
-     */
     private Grid<Tile> tiles;
-    /**
-     * reference to all bomb tiles
-     */
-    private Tile[] bombTiles;
     private VerticalList verticalList;
     private ControlBar controlBar;
-    private boolean gameRunning;
-    private int revealed;
 
     public Map(final GApplet app, final int x, final int y, final int tilesX, final int tilesY, final int scale, final int bombs) {
         super(app, x, y, tilesX * Tile.tileHeight * scale, tilesY * Tile.tileHeight * scale, scale);
         this.tilesX = tilesX;
         this.tilesY = tilesY;
         this.bombs = bombs;
-        gameRunning = false;
-        revealed = 0;
     }
 
     @Override
@@ -55,15 +32,12 @@ public class Map extends GraphicsElement {
         controlBar = new ControlBar(getApp(), getScale(), this);
         verticalList.addChild(controlBar);
 
-        tiles = createTiles(tilesX, tilesY);
+        tiles = createGrid(tilesX, tilesY);
         verticalList.addChild(tiles);
     }
 
     @Override
     public void initImpl() {
-        bombTiles = placeBombs(bombs);
-        createNumberTiles();
-
         controlBar.setWidth(verticalList.getChild(0).getInnerWidth());
         resize(verticalList.getWidth(), verticalList.getHeight());
     }
@@ -75,12 +49,10 @@ public class Map extends GraphicsElement {
 
     @Override
     public void drawImpl() {
-        if (revealed == tilesX * tilesY - bombs) {
-            win();
-        }
+
     }
 
-    private Grid<Tile> createTiles(final int tilesX, final int tilesY) {
+    private Grid<Tile> createGrid(final int tilesX, final int tilesY) {
         final Grid<Tile> tiles = new Grid<>(getApp(), 0, 0, tilesX, tilesY, getScale());
 
         for (int x = 0; x < tilesX; x++) {
@@ -93,151 +65,37 @@ public class Map extends GraphicsElement {
         return tiles;
     }
 
-    /**
-     * Places the specified amount of Bombs on the map.
-     *
-     * @param bombs Bombs to be placed
-     * @return array of the Tiles on which bombs are placed
-     * @throws ArrayIndexOutOfBoundsException This exception is thrown when the amount
-     *                                  of available tiles is lower than the specified amount of bombs
-     */
-    private Tile[] placeBombs(int bombs) {
-        final List<Tile> freeTiles = StreamSupport.stream(tiles.spliterator(), false)
-                .collect(Collectors.toList());
-
-        Collections.shuffle(freeTiles);
-
-        return freeTiles.subList(0, bombs).stream()
-                .peek(bomb -> bomb.setType(TileType.BOMB))
-                .toArray(Tile[]::new);
+    public void revealTile(int x, int y, TileType type) {
+        tiles.get(x, y).setType(type);
+        tiles.get(x, y).setRevealed(true);
     }
 
-    private void createNumberTiles() {
-        for (int x = 0; x < tilesX; x++) {
-            for (int y = 0; y < tilesY; y++) {
-                if (isBomb(x, y)) continue;
-                int count = 0;
-
-                for (int px = -1; px <= 1; px++) {
-                    for (int py = -1; py <= 1; py++) {
-                        if (isBomb(x + px, y + py)) {
-                            count++;
-                        }
-                    }
-                }
-
-                Tile cur = tiles.get(x, y);
-
-                cur.setType(TileType.getTypeFromValue(count));
-            }
-        }
-    }
-
-    private boolean isBomb(int x, int y) {
-        return (isValidTile(x, y) && tiles.get(x, y).getType() == TileType.BOMB);
-    }
-
-    /**
-     * Reveal a tile at position x, y if it exists.
-     * If it is empty, it reveals the surrounding tiles.
-     *
-     * @param x x-coordinate of the tile
-     * @param y y-coordinate of the tile
-     */
-    public void reveal(int x, int y) {
-        /* Go through each of the surrounding tiles and reveal them if tile is empty
-         * otherwise just reveal the tile */
-        if (isValidTile(x, y)) {
-            if (tiles.get(x, y).getType() == TileType.EMPTY) {
-                for (int px = -1; px <= 1; px++) {
-                    for (int py = -1; py <= 1; py++) {
-                        if (revealTile(x + px, y + py)) {
-                            reveal(x + px, y + py);
-                        }
-                    }
-                }
-            } else {
-                revealTile(x, y);
-            }
-        }
-    }
-
-    /**
-     * Reveal the tile at position x, y if it exists.
-     *
-     * @param x x-coordinate of the tile
-     * @param y y-coordinate of the tile
-     * @return true if tile is empty, false otherwise
-     */
-    private boolean revealTile(int x, int y) {
-        // TODO: 07/09/2019 refactor following if out of this method
-        if (!gameRunning) {
-            gameRunning = true;
-            controlBar.startTimer();
-        }
-
-        boolean val = false;
-
-        if (isValidTile(x, y)) {
-            Tile tile = tiles.get(x, y);
-            if (!tile.isRevealed()) {
-                if (tile.getType() == TileType.EMPTY)
-                    val = true;
-                tile.setRevealed(true);
-                revealed++;
-            }
-        }
-
-        return val;
-    }
-
-    private void win() {
+    public void win() {
         controlBar.setSmiley(SmileyStatus.GLASSES);
-        controlBar.stopTimer();
 
         forEachTile(Tile::deactivate);
-
-        for (Tile b : bombTiles) {
-            b.setFlagged(true);
-        }
-
-        gameRunning = false;
     }
 
-    void loose() {
-        for (Tile b : bombTiles) {
-            b.setRevealed(true);
-        }
-
-        for (Tile t : tiles) {
-            t.deactivate();
-        }
+    public void loose() {
+        forEachTile(Tile::deactivate);
 
         controlBar.setSmiley(SmileyStatus.DEAD);
-        controlBar.stopTimer();
-        gameRunning = false;
     }
 
     public void restart() {
         forEachTile(Tile::reset);
-        bombTiles = placeBombs(bombs);
-        createNumberTiles();
-        controlBar.resetTimer();
-        controlBar.resetBombsLeft();
-
-        revealed = 0;
+        controlBar.setSmiley(SmileyStatus.NORMAL);
+        controlBar.getBombsLeft().setValue(bombs);
     }
 
-    public void tileFlag(boolean flagged) {
+    public void tileFlag(final int x, final int y, final boolean flagged) {
         if (flagged) {
             controlBar.getBombsLeft().dec();
         } else {
             controlBar.getBombsLeft().inc();
         }
-    }
 
-    private boolean isValidTile(final int x, final int y) {
-        return x >= 0 && x < tilesX && y >= 0 && y < tilesY;
+        tiles.get(x, y).setFlagged(flagged);
     }
 
     private void forEachTile(Consumer<Tile> action) {
