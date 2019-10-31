@@ -1,4 +1,4 @@
-package com.kiibou.data;
+package space.kiibou.data;
 
 public class Vec3 extends Vec2 {
 

@@ -1,8 +1,8 @@
 package com.kiibou.server;
 
 import com.kiibou.TileType;
-import com.kiibou.data.Vec2;
-import com.kiibou.data.Vec3;
+import space.kiibou.data.Vec2;
+import space.kiibou.data.Vec3;
 
 import java.util.*;
 import java.util.stream.Collectors;

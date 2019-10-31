@@ -1,8 +1,8 @@
 package com.kiibou.server;
 
-import com.kiibou.data.Vec3;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
+import space.kiibou.data.Vec3;
 import space.kiibou.net.server.JSONMessage;
 import space.kiibou.net.server.Server;
 import space.kiibou.net.server.Service;
