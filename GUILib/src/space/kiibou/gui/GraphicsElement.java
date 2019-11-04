@@ -1,5 +1,6 @@
 package space.kiibou.gui;
 
+import processing.core.PGraphics;
 import processing.core.PImage;
 import space.kiibou.GApplet;
 import space.kiibou.event.MouseEvent;
@@ -120,6 +121,8 @@ public abstract class GraphicsElement extends Rectangle implements MouseEventLis
 
     public final void draw() {
         if (!hidden) {
+            final PGraphics g = getApp().getGraphics();
+            g.clip(getX(), getY(), getWidth(), getHeight());
             drawImpl();
             getChildren().forEach(GraphicsElement::draw);
         }
