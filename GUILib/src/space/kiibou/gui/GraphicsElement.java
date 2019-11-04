@@ -17,21 +17,18 @@ public abstract class GraphicsElement extends Rectangle implements MouseEventLis
     private static int gID = 0;
 
     private final GApplet app;
-
-    private boolean hidden;
     private final int scale;
     private final List<GraphicsElement> children;
-    private GraphicsElement parent;
-
-    private boolean active;
     private final MouseOptionMap mouseOptionMap;
-
-    private int hierarchyDepth;
     private final int id;
-
+    private boolean hidden;
+    private GraphicsElement parent;
+    private boolean active;
+    private int hierarchyDepth;
     private boolean preInitialized;
     private boolean initialized;
     private boolean postInitialized;
+    private boolean clip;
 
     public GraphicsElement(GApplet app, int x, int y, int width, int height, int scale) {
         super(x, y, width, height);
@@ -46,6 +43,7 @@ public abstract class GraphicsElement extends Rectangle implements MouseEventLis
         preInitialized = false;
         initialized = false;
         postInitialized = false;
+        clip = true;
     }
 
     static Function<Rectangle, TileRenderer> tilemapRenderFactory(PImage image) {
@@ -122,9 +120,16 @@ public abstract class GraphicsElement extends Rectangle implements MouseEventLis
     public final void draw() {
         if (!hidden) {
             final PGraphics g = getApp().getGraphics();
-            g.clip(getX(), getY(), getWidth(), getHeight());
+            if (clip) {
+                g.clip(getX(), getY(), getWidth(), getHeight());
+            }
+
             drawImpl();
             getChildren().forEach(GraphicsElement::draw);
+
+            if (clip) {
+                g.noClip();
+            }
         }
     }
 
@@ -301,5 +306,13 @@ public abstract class GraphicsElement extends Rectangle implements MouseEventLis
 
     public int getId() {
         return id;
+    }
+
+    public void clip(boolean clip) {
+        this.clip = clip;
+    }
+
+    public boolean clip() {
+        return clip;
     }
 }
