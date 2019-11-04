@@ -125,11 +125,12 @@ public abstract class GraphicsElement extends Rectangle implements MouseEventLis
             }
 
             drawImpl();
-            getChildren().forEach(GraphicsElement::draw);
 
             if (clip) {
                 g.noClip();
             }
+
+            getChildren().forEach(GraphicsElement::draw);
         }
     }
 
