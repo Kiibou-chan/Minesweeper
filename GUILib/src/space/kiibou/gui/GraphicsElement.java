@@ -8,6 +8,7 @@ import space.kiibou.event.MouseEventListener;
 import space.kiibou.event.MouseEventOption;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -124,13 +125,18 @@ public abstract class GraphicsElement extends Rectangle implements MouseEventLis
                 g.clip(getX(), getY(), getWidth(), getHeight());
             }
 
+            g.pushMatrix();
+            g.pushStyle();
             drawImpl();
+            getChildren().forEach(GraphicsElement::draw);
+            g.popStyle();
+            g.popMatrix();
 
-            if (clip) {
+
+            if (clip) { // clip has to end here, otherwise children will have the clip
                 g.noClip();
             }
 
-            getChildren().forEach(GraphicsElement::draw);
         }
     }
 
