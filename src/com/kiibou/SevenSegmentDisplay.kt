@@ -5,8 +5,8 @@ import processing.core.PGraphics
 import processing.core.PImage
 import space.kiibou.GApplet
 import space.kiibou.gui.GraphicsElement
-import space.kiibou.gui.ImageBuffer
 import space.kiibou.gui.Rectangle
+import space.kiibou.gui.loadImage
 import java.util.*
 import java.util.function.Predicate
 
@@ -14,7 +14,7 @@ class SevenSegmentDisplay(app: GApplet, scale: Int, private val digits: Int, var
     : GraphicsElement(app, 0, 0, scale * digitWidth * digits, scale * digitHeight, scale) {
 
     companion object {
-        private val segments: PImage = ImageBuffer.loadImage("pictures/number_segments.png")
+        private val segments: PImage = loadImage("pictures/number_segments.png")
         private val digitBuffer: MutableMap<Int, PImage> = HashMap()
         private const val digitWidth = 13
         private const val digitHeight = 23
@@ -98,14 +98,14 @@ class SevenSegmentDisplay(app: GApplet, scale: Int, private val digits: Int, var
         }.toTypedArray()
     }
 
-    override fun move(x: Int, y: Int): GraphicsElement {
-        super.move(x, y)
+    override fun move(dx: Int, dy: Int): GraphicsElement {
+        super.move(dx, dy)
         calcDigitCoordinates()
         return this
     }
 
-    override fun moveTo(x: Int, y: Int): GraphicsElement {
-        super.moveTo(x, y)
+    override fun moveTo(nx: Int, ny: Int): GraphicsElement {
+        super.moveTo(nx, ny)
         calcDigitCoordinates()
         return this
     }
@@ -154,6 +154,16 @@ class SevenSegmentDisplay(app: GApplet, scale: Int, private val digits: Int, var
     fun removeLimit() {
         removeLowerLimit()
         removeUpperLimit()
+    }
+
+    operator fun inc(): SevenSegmentDisplay {
+        value++
+        return this
+    }
+
+    operator fun dec(): SevenSegmentDisplay {
+        value--
+        return this
     }
 
     init {

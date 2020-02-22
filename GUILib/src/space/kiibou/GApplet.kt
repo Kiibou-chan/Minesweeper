@@ -1,36 +1,22 @@
-package space.kiibou;
+package space.kiibou
 
-import processing.core.PApplet;
-import space.kiibou.event.EventDispatcher;
-import space.kiibou.gui.GraphicsElement;
-import space.kiibou.util.GraphicsManager;
+import processing.core.PApplet
+import space.kiibou.event.EventDispatcher
+import space.kiibou.gui.GGraphics
+import space.kiibou.gui.GraphicsElement
+import space.kiibou.util.GraphicsManager
 
-public class GApplet extends PApplet {
-    private final GraphicsManager graphicsManager;
-    private final EventDispatcher eventDispatcher;
+open class GApplet : PApplet() {
+    lateinit var gg: GGraphics
+    private val graphicsManager: GraphicsManager = GraphicsManager().apply { registerApp(this@GApplet) }
+    private val eventDispatcher: EventDispatcher = EventDispatcher().apply { registerApp(this@GApplet) }
 
-    public GApplet() {
-        graphicsManager = new GraphicsManager(this);
-        eventDispatcher = new EventDispatcher(this);
-    }
+    fun registerMethod(methodName: String, target: GraphicsElement) =
+            eventDispatcher.registerMethod(methodName, target)
 
-    public void registerMethod(String methodName, GraphicsElement target) {
-        eventDispatcher.registerMethod(methodName, target);
-    }
+    fun unregisterMethod(methodName: String, target: GraphicsElement) =
+            eventDispatcher.unregisterMethod(methodName, target)
 
-    public void unregisterMethod(String methodName, GraphicsElement target) {
-        eventDispatcher.unregisterMethod(methodName, target);
-    }
+    fun registerGraphicsElement(element: GraphicsElement) = graphicsManager.registerGraphicsElement(element)
 
-    public void registerGraphicsElement(GraphicsElement element) {
-        graphicsManager.registerGraphicsElement(element);
-    }
-
-    public GraphicsManager getGraphicsManager() {
-        return graphicsManager;
-    }
-
-    public EventDispatcher getEventDispatcher() {
-        return eventDispatcher;
-    }
 }

@@ -4,9 +4,9 @@ import space.kiibou.GApplet
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Grid
 import space.kiibou.gui.VerticalList
-import java.util.function.Consumer
 
-class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val tilesY: Int, scale: Int, val bombs: Int) : GraphicsElement(app, x, y, tilesX * Tile.tileHeight * scale, tilesY * Tile.tileHeight * scale, scale) {
+class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val tilesY: Int, scale: Int, val bombs: Int)
+    : GraphicsElement(app, x, y, tilesX * Tile.tileHeight * scale, tilesY * Tile.tileHeight * scale, scale) {
     private lateinit var tiles: Grid<Tile>
     private lateinit var verticalList: VerticalList
     lateinit var controlBar: ControlBar
@@ -22,7 +22,7 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
     }
 
     public override fun initImpl() {
-        controlBar.width = verticalList.getChild(0).innerWidth
+        controlBar.width = verticalList[0].innerWidth
         resize(verticalList.width, verticalList.height)
     }
 
@@ -34,7 +34,7 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
 
         (0 until tilesX).forEach { x ->
             (0 until tilesY).forEach { y ->
-                tiles.put(x, y, Tile(app, this, scale, x, y))
+                tiles[x, y] = Tile(app, this, scale, x, y)
             }
         }
 
@@ -42,36 +42,36 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
     }
 
     fun revealTile(x: Int, y: Int, type: TileType) {
-        tiles[x, y].type = type
-        tiles[x, y].revealed = true
+        tiles[x, y]!!.type = type
+        tiles[x, y]!!.revealed = true
     }
 
     fun win() {
         controlBar.setSmiley(SmileyStatus.GLASSES)
-        forEachTile(Consumer { obj: Tile -> obj.deactivate() })
+        forEachTile(Tile::deactivate)
     }
 
     fun loose() {
-        forEachTile(Consumer { obj: Tile -> obj.deactivate() })
+        forEachTile(Tile::deactivate)
         controlBar.setSmiley(SmileyStatus.DEAD)
     }
 
     fun restart() {
-        forEachTile(Consumer { obj: Tile -> obj.reset() })
+        forEachTile(Tile::reset)
         controlBar.setSmiley(SmileyStatus.NORMAL)
         controlBar.bombsLeft.value = bombs
     }
 
     fun tileFlag(x: Int, y: Int, flagged: Boolean) {
         when (flagged) {
-            true -> controlBar.bombsLeft.apply { value = value-- }
-            false -> controlBar.bombsLeft.apply { value = value++ }
+            true -> controlBar.bombsLeft--
+            false -> controlBar.bombsLeft++
         }
 
-        tiles[x, y].flagged = flagged
+        tiles[x, y]!!.flagged = flagged
     }
 
-    private fun forEachTile(action: Consumer<Tile>) {
+    private inline fun forEachTile(action: (Tile) -> Unit) {
         tiles.forEach(action)
     }
 

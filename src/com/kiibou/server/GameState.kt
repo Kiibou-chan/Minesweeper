@@ -6,8 +6,7 @@ import space.kiibou.data.Vec3
 import java.util.*
 import kotlin.streams.toList
 
-class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, gameService: GameService) {
-    private val gameService: GameService
+class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, private val gameService: GameService) {
     private var width = 0
     private var height = 0
     private var bombs = 0
@@ -17,7 +16,7 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, g
     private lateinit var bombTiles: Array<Vec2>
     private var gameRunning = false
     private var revealedTiles = 0
-    private val timer: Timer
+    private val timer = Timer("Timer", true)
     private lateinit var timerTask: TimerTask
     private var time = 0
 
@@ -31,6 +30,8 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, g
         if (gameRunning) {
             stopTimer()
         }
+
+        resetTimer()
 
         revealed = Array(width) { BooleanArray(height) { false } }
         flagged = Array(width) { BooleanArray(height) { false } }
@@ -122,7 +123,6 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, g
     private fun getTile(x: Int, y: Int) = tiles[x][y]
 
     private fun setTile(x: Int, y: Int, tileType: TileType) {
-        Objects.requireNonNull(tileType)
         tiles[x][y] = tileType
     }
 
@@ -178,7 +178,5 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, g
 
     init {
         setupVariables(width, height, bombs)
-        timer = Timer("Timer", true)
-        this.gameService = Objects.requireNonNull(gameService)
     }
 }

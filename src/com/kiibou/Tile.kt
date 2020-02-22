@@ -5,7 +5,7 @@ import space.kiibou.GApplet
 import space.kiibou.event.MouseEventAction.*
 import space.kiibou.event.MouseEventButton.LEFT
 import space.kiibou.event.MouseEventButton.RIGHT
-import space.kiibou.event.MouseEventListener
+import space.kiibou.event.options
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Picture
@@ -24,16 +24,19 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
         const val tileHeight = 16
     }
 
-    private val client: Client = (getApp() as Minesweeper).client
+    private val client: Client = (app as Minesweeper).client
     var type: TileType = TileType.EMPTY
         set(value) {
             field = value
-            val index = getChildIndex(tilePicture)
-            removeChild(tilePicture)
-            tilePicture = Picture(app, value.path, scale)
-            addChild(index, tilePicture)
-            tilePicture.moveTo(x, y)
-            tilePicture.resize(width, height)
+
+            deferAfterDraw {
+                val index = getChildIndex(tilePicture)
+                removeChild(tilePicture)
+                tilePicture = Picture(app, value.path, scale)
+                addChild(index, tilePicture)
+                tilePicture.moveTo(x, y)
+                tilePicture.resize(width, height)
+            }
         }
 
     var revealed: Boolean = false
@@ -77,28 +80,28 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
 
         /* Button and Mouse Stuff */
         /* Reveal the tile, if possible, and set the smiley back to normal */
-        button.registerCallback(MouseEventListener.options(LEFT, RELEASE)) {
+        button.registerCallback(options(LEFT, RELEASE)) {
             map.controlBar.setSmiley(SmileyStatus.NORMAL)
             reveal()
         }
 
         /* Flag the tile */
-        button.registerCallback(MouseEventListener.options(RIGHT, RELEASE)) {
+        button.registerCallback(options(RIGHT, RELEASE)) {
             flag()
         }
 
         /* Set smiley to surprised */
-        button.registerCallback(MouseEventListener.options(LEFT, PRESS)) {
+        button.registerCallback(options(LEFT, PRESS)) {
             map.controlBar.setSmiley(SmileyStatus.SURPRISED)
         }
 
         /* Same as above */
-        button.registerCallback(MouseEventListener.options(LEFT, EnumSet.of(DRAG, ELEMENT_ENTER))) {
+        button.registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_ENTER))) {
             map.controlBar.setSmiley(SmileyStatus.SURPRISED)
         }
 
         /* Set Smiley to normal */
-        button.registerCallback(MouseEventListener.options(LEFT, EnumSet.of(DRAG, ELEMENT_EXIT))) {
+        button.registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_EXIT))) {
             map.controlBar.setSmiley(SmileyStatus.NORMAL)
         }
     }

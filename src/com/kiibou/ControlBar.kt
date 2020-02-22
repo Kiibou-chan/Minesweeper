@@ -4,19 +4,37 @@ import processing.data.JSONObject
 import space.kiibou.GApplet
 import space.kiibou.event.MouseEventAction
 import space.kiibou.event.MouseEventButton
-import space.kiibou.event.MouseEventListener
+import space.kiibou.event.options
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Picture
 import space.kiibou.net.client.Client
 
 class ControlBar(app: GApplet, scale: Int, private val map: Map) : GraphicsElement(app, 0, 0, 0, 0, scale) {
-    private val client: Client = (getApp() as Minesweeper).client
+    private val client: Client = (app as Minesweeper).client
     lateinit var timerDisplay: SevenSegmentDisplay
     private lateinit var restartButton: Button
     lateinit var bombsLeft: SevenSegmentDisplay
 
     private lateinit var smileys: Array<Picture>
+
+    override var width: Int
+        get() = super.width
+        set(value) {
+            super.width = value
+            val timerX = x + width - timerDisplay.width
+            timerDisplay.moveTo(timerX, timerDisplay.y)
+            val buttonX = x + width / 2 - restartButton.width / 2
+            restartButton.moveTo(buttonX, restartButton.y)
+        }
+
+    override var height: Int
+        get() = super.height
+        set(value) {
+            super.height = value
+            val buttonY = y + height - restartButton.height
+            restartButton.moveTo(restartButton.x, buttonY)
+        }
 
     override fun preInitImpl() {
         bombsLeft = SevenSegmentDisplay(app, scale, 3, map.bombs)
@@ -38,7 +56,7 @@ class ControlBar(app: GApplet, scale: Int, private val map: Map) : GraphicsEleme
         restartButton.border.addChild(smileys[2])
         restartButton.border.addChild(smileys[3])
 
-        restartButton.registerCallback(MouseEventListener.options(MouseEventButton.LEFT, MouseEventAction.RELEASE)) {
+        restartButton.registerCallback(options(MouseEventButton.LEFT, MouseEventAction.RELEASE)) {
             client.sendJSON(JSONObject().setString("action", "restart"))
         }
 
@@ -54,20 +72,6 @@ class ControlBar(app: GApplet, scale: Int, private val map: Map) : GraphicsEleme
 
     override fun postInitImpl() {}
     override fun drawImpl() {}
-
-    override fun setWidth(width: Int) {
-        super.setWidth(width)
-        val timerX = x + width - timerDisplay.width
-        timerDisplay.moveTo(timerX, timerDisplay.y)
-        val buttonX = x + width / 2 - restartButton.width / 2
-        restartButton.moveTo(buttonX, restartButton.y)
-    }
-
-    override fun setHeight(height: Int) {
-        super.setHeight(height)
-        val buttonY = y + height - restartButton.height
-        restartButton.moveTo(restartButton.x, buttonY)
-    }
 
     fun setSmiley(status: SmileyStatus) {
         smileys.forEach { it.hide() }

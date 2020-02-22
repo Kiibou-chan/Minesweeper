@@ -1,6 +1,7 @@
 package com.kiibou
 
 import com.kiibou.server.GameService
+import processing.core.PApplet
 import processing.data.JSONObject
 import processing.opengl.PGraphicsOpenGL
 import processing.opengl.PJOGL
@@ -9,8 +10,7 @@ import space.kiibou.gui.GGraphics
 import space.kiibou.net.NetUtils
 import space.kiibou.net.client.Client
 import space.kiibou.net.common.ActionDispatcher
-import space.kiibou.net.server.Server
-import java.util.function.Consumer
+import space.kiibou.net.server.startServer
 
 class Minesweeper : GApplet() {
     private lateinit var map: Map
@@ -27,15 +27,13 @@ class Minesweeper : GApplet() {
         surface.setTitle("Minesweeper")
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 0, 0, 9, 9, 4, 10)
+        map = Map(this, 0, 0, 9, 9, 2, 10)
         registerGraphicsElement(map)
 
-        dispatcher = object : ActionDispatcher<JSONObject>() {
-            override fun messageReceived(obj: JSONObject) {
-                if (obj.hasKey("action")) {
-                    val action = obj.getString("action")
-                    dispatchAction(action, obj)
-                }
+        dispatcher = ActionDispatcher {
+            if (it.hasKey("action")) {
+                val action = it.getString("action")
+                dispatcher.dispatchAction(action, it)
             }
         }
 
@@ -47,9 +45,9 @@ class Minesweeper : GApplet() {
         dispatcher.addActionCallback("toggle-flag", ::toggleFlag)
 
         client = Client(
-                Runnable { onServerConnect() },
-                Consumer { obj: JSONObject -> dispatcher.messageReceived(obj) },
-                Runnable { onServerDisconnect() }
+                ::onServerConnect,
+                dispatcher.messageReceived,
+                ::onServerDisconnect
         ).connect("localhost", 8454)
     }
 
@@ -66,6 +64,7 @@ class Minesweeper : GApplet() {
         if (width != map.width || height != map.height) {
             surface.setSize(map.width, map.height)
         }
+
         background(204)
     }
 
@@ -93,10 +92,12 @@ class Minesweeper : GApplet() {
 }
 
 fun main() {
-    GApplet.main(Minesweeper::class.java)
+    PApplet.main(Minesweeper::class.java)
 
     if (!NetUtils.checkServerListening("localhost", 8454, 200)) {
-        Server.start(GameService::class.java).ifPresent { server: Process ->
+        /*
+         */
+        startServer(GameService::class.java).ifPresent { server: Process ->
             println("Starting Server")
             Runtime.getRuntime().addShutdownHook(
                     Thread {
@@ -106,6 +107,6 @@ fun main() {
             )
         }
 
-        // Server.main(arrayOf("--port=8454", "--services=" + GameService::class.java.canonicalName))
+        // serverMain(arrayOf("--port=8454", "--services=" + GameService::class.java.canonicalName))
     }
 }
