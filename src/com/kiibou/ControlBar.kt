@@ -1,5 +1,7 @@
 package com.kiibou
 
+import com.kiibou.SmileyStatus.NORMAL
+import javafx.beans.binding.Bindings
 import processing.data.JSONObject
 import space.kiibou.GApplet
 import space.kiibou.event.MouseEventAction
@@ -8,74 +10,54 @@ import space.kiibou.event.options
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Picture
-import space.kiibou.net.client.Client
 
-class ControlBar(app: GApplet, scale: Int, private val map: Map) : GraphicsElement(app, 0, 0, 0, 0, scale) {
-    private val client: Client = (app as Minesweeper).client
-    lateinit var timerDisplay: SevenSegmentDisplay
-    private lateinit var restartButton: Button
-    lateinit var bombsLeft: SevenSegmentDisplay
-
-    private lateinit var smileys: Array<Picture>
-
-    override var width: Int
-        get() = super.width
-        set(value) {
-            super.width = value
-            val timerX = x + width - timerDisplay.width
-            timerDisplay.moveTo(timerX, timerDisplay.y)
-            val buttonX = x + width / 2 - restartButton.width / 2
-            restartButton.moveTo(buttonX, restartButton.y)
-        }
-
-    override var height: Int
-        get() = super.height
-        set(value) {
-            super.height = value
-            val buttonY = y + height - restartButton.height
-            restartButton.moveTo(restartButton.x, buttonY)
-        }
-
-    override fun preInitImpl() {
-        bombsLeft = SevenSegmentDisplay(app, scale, 3, map.bombs)
-        bombsLeft.setLowerLimit(0)
-        addChild(bombsLeft)
-
-        val smileyMap = Picture(app, "pictures/smiley.png", scale)
-        restartButton = Button(app, scale)
-
-        smileys = arrayOf(
-                smileyMap.subPicture(0, 0, 20, 20),
-                smileyMap.subPicture(20, 0, 20, 20),
-                smileyMap.subPicture(40, 0, 20, 20),
-                smileyMap.subPicture(60, 0, 20, 20)
+class ControlBar(app: GApplet, scale: Int, map: Map) : GraphicsElement(app, 0, 0, 0, 0, scale) {
+    private val smileys: Array<Picture> = Picture(app, "pictures/smiley.png", scale).let {
+        arrayOf(
+                it.subPicture(0, 0, 20, 20),
+                it.subPicture(20, 0, 20, 20),
+                it.subPicture(40, 0, 20, 20),
+                it.subPicture(60, 0, 20, 20)
         )
+    }
 
-        restartButton.border.addChild(smileys[0])
-        restartButton.border.addChild(smileys[1])
-        restartButton.border.addChild(smileys[2])
-        restartButton.border.addChild(smileys[3])
+    val bombsLeft = SevenSegmentDisplay(app, scale, 3, map.bombs).also {
+        it.xProp.bind(xProp)
+        it.yProp.bind(yProp)
+        it.setLowerLimit(0)
+        addChild(it)
+    }
 
-        restartButton.registerCallback(options(MouseEventButton.LEFT, MouseEventAction.RELEASE)) {
-            client.sendJSON(JSONObject().setString("action", "restart"))
+    val restartButton = Button(app, scale).also {
+        it.xProp.bind(widthProp.divide(2).subtract(it.widthProp.divide(2)))
+        it.yProp.bind(yProp)
+        it.addChild(smileys[NORMAL.ordinal])
+        addChild(it)
+
+        it.registerCallback(options(MouseEventButton.LEFT, MouseEventAction.RELEASE)) {
+            (app as Minesweeper).client.sendJSON(JSONObject().setString("action", "restart"))
         }
-
-        addChild(restartButton)
-        setSmiley(SmileyStatus.NORMAL)
-        timerDisplay = SevenSegmentDisplay(app, scale, 3, 0)
-        addChild(timerDisplay)
     }
 
-    override fun initImpl() {
-        height = children.map { obj: GraphicsElement -> obj.height }.max() ?: 0
+    val timerDisplay: SevenSegmentDisplay = SevenSegmentDisplay(app, scale, 3, 0).also {
+        it.xProp.bind(xProp.add(widthProp).subtract(it.widthProp))
+        it.yProp.bind(yProp)
+        addChild(it)
     }
 
+    init {
+        heightProp.bind(Bindings.max(timerDisplay.heightProp, Bindings.max(restartButton.heightProp, bombsLeft.heightProp)))
+    }
+
+    override fun preInitImpl() {}
+    override fun initImpl() {}
     override fun postInitImpl() {}
     override fun drawImpl() {}
 
     fun setSmiley(status: SmileyStatus) {
-        smileys.forEach { it.hide() }
-        smileys[status.ordinal].show()
+        restartButton.border.removeChild(0)
+        restartButton.border.addChild(smileys[status.ordinal])
+        restartButton.border.bindProps(smileys[status.ordinal])
     }
 
 }

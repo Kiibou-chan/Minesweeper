@@ -1,5 +1,6 @@
 package space.kiibou.gui
 
+import javafx.beans.property.SimpleIntegerProperty
 import processing.core.PConstants
 import processing.core.PGraphics
 import processing.opengl.PGraphicsOpenGL
@@ -9,38 +10,40 @@ class BorderBox(app: GApplet, scale: Int) : GraphicsElement(app, 0, 0, 0, 0, sca
     private val g: PGraphics = app.graphics
     private var redraw: Boolean = true
     private lateinit var buffer: PGraphics
+
     var borderStyle = BorderStyle.IN
         set(value) {
             field = value
             redraw = true
         }
 
-    override var width: Int
-        get() = super.width
-        set(value) {
-            super.width = value
-            redraw = true
-        }
+    val borderWidthProp = scaleProp.multiply(borderStyle.borderWidth)
+    val borderWidth: Int
+        get() = borderWidthProp.value as Int
 
-    override var height: Int
-        get() = super.height
-        set(value) {
-            super.height = value
-            redraw = true
-        }
+    val borderHeightProp = scaleProp.multiply(borderStyle.borderHeight)
+    val borderHeight: Int
+        get() = borderHeightProp.value as Int
 
-    override fun preInitImpl() {}
-    public override fun initImpl() {
-        val x1 = children.stream().mapToInt { it.x }.min().orElse(0)
-        val y1 = children.stream().mapToInt { it.y }.min().orElse(0)
-        val x2 = children.stream().mapToInt { it.x + it.width }.max().orElse(0)
-        val y2 = children.stream().mapToInt { it.y + it.height }.max().orElse(0)
-        x = x1 - borderStyle.borderWidth * scale
-        y = y1 - borderStyle.borderHeight * scale
-        width = x2 - x1 + 2 * borderStyle.borderWidth * scale
-        height = y2 - y1 + 2 * borderStyle.borderHeight * scale
+    val innerWidthProp = SimpleIntegerProperty(0)
+    val innerWidth: Int
+        get() = innerWidthProp.intValue()
+
+    val innerHeightProp = SimpleIntegerProperty(0)
+    val innerHeight: Int
+        get() = innerHeightProp.intValue()
+
+    init {
+//        clip = true
+
+        widthProp.bind(innerWidthProp.add(borderHeightProp.multiply(2)))
+        heightProp.bind(innerHeightProp.add(borderHeightProp.multiply(2)))
+        widthProp.addListener { _, _, _ -> redraw = true }
+        heightProp.addListener { _, _, _ -> redraw = true }
     }
 
+    override fun preInitImpl() {}
+    public override fun initImpl() {}
     override fun postInitImpl() {}
 
     public override fun drawImpl() {
@@ -49,8 +52,8 @@ class BorderBox(app: GApplet, scale: Int) : GraphicsElement(app, 0, 0, 0, 0, sca
             buffer.beginDraw()
             val w = width
             val h = height
-            val bw = borderStyle.borderWidth * scale
-            val bh = borderStyle.borderHeight * scale
+            val bw = borderWidth
+            val bh = borderHeight
             drawTile(0, 0, bw, bh, borderStyle.corner1)
             drawTile(w - bw, 0, bw, bh, borderStyle.corner2)
             drawTile(w - bw, h - bh, bw, bh, borderStyle.corner3)
@@ -77,16 +80,12 @@ class BorderBox(app: GApplet, scale: Int) : GraphicsElement(app, 0, 0, 0, 0, sca
         renderer(buffer, x, y, width, height)
     }
 
-    val innerWidth: Int
-        get() = width - borderStyle.borderWidth * scale * 2
-
-    val innerHeight: Int
-        get() = height - borderStyle.borderHeight * scale * 2
-
-    val borderWidth: Int
-        get() = borderStyle.borderWidth * scale
-
-    val borderHeight: Int
-        get() = borderStyle.borderHeight * scale
+    fun bindProps(other: GraphicsElement): BorderBox {
+        other.xProp.bind(xProp.add(borderWidthProp))
+        other.yProp.bind(yProp.add(borderHeightProp))
+        innerWidthProp.bind(other.widthProp)
+        innerHeightProp.bind(other.heightProp)
+        return this
+    }
 
 }

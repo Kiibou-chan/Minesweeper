@@ -1,21 +1,34 @@
 package space.kiibou.gui
 
+import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleListProperty
+import javafx.collections.FXCollections.observableArrayList
+import javafx.collections.FXCollections.synchronizedObservableList
 import processing.core.PConstants.*
 import processing.core.PImage
 import space.kiibou.GApplet
+import space.kiibou.data.Rectangle
 import space.kiibou.event.MouseEventConsumer
 import space.kiibou.event.MouseEventListener
 import space.kiibou.event.MouseEventOption
 import space.kiibou.event.MouseOptionMap
 import java.util.*
+import kotlin.collections.ArrayList
 
-val outline = System.getenv("minesweeper.outline")?.toBoolean() ?: false
+val outline = System.getenv("outline")?.toBoolean() ?: false
 
-abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, height: Int, val scale: Int) : Rectangle(x, y, width, height), MouseEventListener {
-    val children: MutableList<GraphicsElement> = Collections.synchronizedList(ArrayList())
+abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, height: Int, scale: Int)
+    : Rectangle(x, y, width, height), MouseEventListener {
+    val scaleProp = SimpleIntegerProperty(null, "${toString()} Scale", scale)
+    val scale
+        get() = scaleProp.value
+    val childrenProperty: SimpleListProperty<GraphicsElement> = SimpleListProperty(null, "Children", synchronizedObservableList(observableArrayList<GraphicsElement>()))
+    val children: MutableList<GraphicsElement>
+        get() = childrenProperty.value
     final override val mouseOptionMap: MouseOptionMap = MouseOptionMap()
-    private val id: Int = nextID()
-    private var hidden = false
+    protected val id: Int = nextID()
+    var hidden = false
+        protected set
     private var parent: GraphicsElement? = null
     override var active: Boolean = true
     var hierarchyDepth: Int = 0
@@ -75,19 +88,24 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
         if (!hidden) {
             insideDraw = true
             val g = app.graphics
-            /*if (clip) {
-                g.clip(getX() * scale, getY() * scale, getWidth() * scale, getHeight() * scale);
-            }*/
+            if (clip) {
+                g.clip((x).toFloat(), (y).toFloat(), (width).toFloat(), (height).toFloat())
+            }
             g.pushMatrix()
             g.pushStyle()
             drawImpl()
             children.forEach(GraphicsElement::draw)
+            g.popStyle()
+            g.popMatrix()
+            if (clip) {
+                g.noClip()
+            }
             if (outline) {
                 with(g) {
                     stroke(255f, 50f, 50f)
                     noFill()
                     rect(x.toFloat(), y.toFloat(), this@GraphicsElement.width.toFloat(), this@GraphicsElement.height.toFloat())
-                    textSize(2.5f * scale)
+                    textSize(5f * scale)
                     textAlign(CENTER, TOP)
                     fill(50f, 155f, 50f)
                     text(unscaledWidth, x + this@GraphicsElement.width / 2f, y.toFloat())
@@ -95,11 +113,6 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
                     text(unscaledHeight, x.toFloat(), y + this@GraphicsElement.height / 2f)
                 }
             }
-            g.popStyle()
-            g.popMatrix()
-            /*if (clip) {
-                g.noClip()
-            }*/
             insideDraw = false
 
             deferredActions.forEach { it() }
@@ -122,9 +135,8 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
     }
 
     open fun move(dx: Int, dy: Int): GraphicsElement {
-        children.forEach { it.move(dx, dy) }
-        x += dx
-        y += dy
+        x = x.plus(dx)
+        y = y.plus(dy)
         return this
     }
 
@@ -175,7 +187,7 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
         return children[index]
     }
 
-    fun removeChild(index: Int): GraphicsElement {
+    open fun removeChild(index: Int): GraphicsElement {
         if (insideDraw)
             throw IllegalStateException("Can not modify children during draw")
 
@@ -194,7 +206,10 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
             throw IllegalStateException("Can not modify children during draw")
 
         val index = getChildIndex(old)
-        if (index != -1) addChild(index, newE) else addChild(newE)
+        if (index != -1) {
+            removeChild(index)
+            addChild(index, newE)
+        } else addChild(newE)
     }
 
     fun removeChild(child: GraphicsElement?): GraphicsElement {
@@ -218,6 +233,10 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
         if (other == null || javaClass != other.javaClass) return false
         val that = other as GraphicsElement
         return id == that.id
+    }
+
+    final override fun toString(): String {
+        return "${this.javaClass.simpleName}@${hashCode()}"
     }
 
     override fun hashCode(): Int {

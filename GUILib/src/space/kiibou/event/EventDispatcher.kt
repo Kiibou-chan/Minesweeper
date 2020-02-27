@@ -16,6 +16,8 @@ class EventDispatcher {
             "touchEvent" to HashSet()
     )
 
+    private val mouseQueue = Collections.synchronizedList(ArrayList<processing.event.MouseEvent>())
+
     private var prevGraphicsElement: GraphicsElement? = null
 
     private fun topElement(x: Int, y: Int, elements: Set<GraphicsElement>): GraphicsElement? {
@@ -24,30 +26,40 @@ class EventDispatcher {
                 .maxBy { it.hierarchyDepth }
     }
 
+    private fun dispatchEvents() {
+        mouseQueue.forEach {
+            val event = MouseEvent(it)
+            val topElement = topElement(event.x, event.y, registry["mouseEvent"]!!)
+
+            topElement?.let { element: GraphicsElement ->
+                val sameElement = element == prevGraphicsElement
+                if (!sameElement) {
+                    if (prevGraphicsElement != null) {
+                        prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
+                    }
+                    element.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_ENTER))
+                    prevGraphicsElement = element
+                }
+                element.mouseEvent(event)
+            }
+
+            if (topElement != null && prevGraphicsElement != null) {
+                prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
+                prevGraphicsElement = null
+            }
+        }
+    }
+
+    fun pre() {
+        dispatchEvents()
+    }
+
     fun keyEvent(event: KeyEvent) {}
 
     fun mouseEvent(source: processing.event.MouseEvent) {
         if (source.button == 0) return
 
-        val event = MouseEvent(source)
-        val topElement = topElement(event.x, event.y, registry["mouseEvent"]!!)
-
-        topElement?.let { element: GraphicsElement ->
-            val sameElement = element == prevGraphicsElement
-            if (!sameElement) {
-                if (prevGraphicsElement != null) {
-                    prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
-                }
-                element.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_ENTER))
-                prevGraphicsElement = element
-            }
-            element.mouseEvent(event)
-        }
-
-        if (topElement != null && prevGraphicsElement != null) {
-            prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
-            prevGraphicsElement = null
-        }
+        mouseQueue += source
     }
 
     fun touchEvent(event: TouchEvent) {}
@@ -72,6 +84,7 @@ class EventDispatcher {
 
     fun registerApp(app: GApplet) {
         this.app = app
+        app.registerMethod("pre", this)
         app.registerMethod("keyEvent", this)
         app.registerMethod("mouseEvent", this)
         app.registerMethod("touchEvent", this)

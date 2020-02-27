@@ -8,8 +8,8 @@ import space.kiibou.util.GraphicsManager
 
 open class GApplet : PApplet() {
     lateinit var gg: GGraphics
-    private val graphicsManager: GraphicsManager = GraphicsManager().apply { registerApp(this@GApplet) }
-    private val eventDispatcher: EventDispatcher = EventDispatcher().apply { registerApp(this@GApplet) }
+    private val eventDispatcher: EventDispatcher = EventDispatcher().also { it.registerApp(this) }
+    protected val graphicsManager: GraphicsManager = GraphicsManager().also { it.registerApp(this) }
 
     fun registerMethod(methodName: String, target: GraphicsElement) =
             eventDispatcher.registerMethod(methodName, target)

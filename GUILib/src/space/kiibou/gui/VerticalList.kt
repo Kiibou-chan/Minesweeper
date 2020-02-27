@@ -1,36 +1,33 @@
 package space.kiibou.gui
 
+import javafx.beans.binding.Bindings
+import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.value.ObservableNumberValue
 import space.kiibou.GApplet
 
 class VerticalList(app: GApplet, x: Int, y: Int, scale: Int) : GraphicsElement(app, x, y, 0, 0, scale) {
-    override fun preInitImpl() {}
-    public override fun initImpl() {
-        var height = 0
 
-        children.forEach {
-            it.moveTo(x, y + height)
-            height += it.height
+    init {
+        childrenProperty.addListener { _, _, list ->
+            var h: ObservableNumberValue = SimpleIntegerProperty(0)
+            list.forEach {
+                it.xProp.bind(xProp)
+                it.yProp.bind(h)
+                h = Bindings.add(it.heightProp, h)
+            }
+            heightProp.bind(h)
+
+            var w: ObservableNumberValue = SimpleIntegerProperty(0)
+            list.forEach {
+                w = Bindings.max(it.widthProp, w)
+            }
+            widthProp.bind(w)
         }
-
-        var width = 0
-        if (children.size > 0) {
-            width = children.map(GraphicsElement::width).max() ?: 0
-            for (child in children) child.width = width
-        }
-
-        resize(width, height)
     }
 
+    override fun preInitImpl() {}
+    public override fun initImpl() {}
     override fun postInitImpl() {}
     override fun drawImpl() {}
 
-    override fun addChild(element: GraphicsElement) {
-        val borderBox = BorderBox(app, scale)
-        borderBox += element
-        super.addChild(borderBox)
-    }
-
-    override fun get(index: Int): BorderBox {
-        return super.get(index) as BorderBox
-    }
 }

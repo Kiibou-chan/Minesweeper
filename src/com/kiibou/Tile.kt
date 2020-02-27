@@ -9,7 +9,6 @@ import space.kiibou.event.options
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Picture
-import space.kiibou.net.client.Client
 import java.util.*
 
 /**
@@ -19,12 +18,6 @@ import java.util.*
 class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: Int, private val tileY: Int)
     : GraphicsElement(app, 0, 0, scale * tileWidth, scale * tileHeight, scale) {
 
-    companion object {
-        const val tileWidth = 16
-        const val tileHeight = 16
-    }
-
-    private val client: Client = (app as Minesweeper).client
     var type: TileType = TileType.EMPTY
         set(value) {
             field = value
@@ -32,10 +25,18 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
             deferAfterDraw {
                 val index = getChildIndex(tilePicture)
                 removeChild(tilePicture)
+                tilePicture.xProp.unbind()
+                tilePicture.yProp.unbind()
+                tilePicture.widthProp.unbind()
+                tilePicture.heightProp.unbind()
+
                 tilePicture = Picture(app, value.path, scale)
+                tilePicture.xProp.bind(xProp)
+                tilePicture.yProp.bind(yProp)
+                tilePicture.widthProp.bind(widthProp)
+                tilePicture.heightProp.bind(heightProp)
+
                 addChild(index, tilePicture)
-                tilePicture.moveTo(x, y)
-                tilePicture.resize(width, height)
             }
         }
 
@@ -59,24 +60,34 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
             if (value) flag.show() else flag.hide()
             field = value
         }
-    private lateinit var button: Button
-    private val flag: Picture = Picture(app, "tiles/flag_tile.png", scale).apply { hide() }
-    private var tilePicture: Picture = Picture(app, type.path, scale)
 
-    override fun preInitImpl() {
-        addChild(tilePicture)
-        button = Button(app, scale)
-        button.resize(width, height)
-        button.border.addChild(flag)
-        addChild(button)
+    private var tilePicture: Picture = Picture(app, type.path, scale).also {
+        it.xProp.bind(xProp)
+        it.yProp.bind(yProp)
+        it.widthProp.bind(widthProp)
+        it.heightProp.bind(heightProp)
+        addChild(it)
     }
 
-    override fun initImpl() { /* GUI stuff */
-        button.moveTo(x, y)
-        tilePicture.resize(width, height)
-        tilePicture.moveTo(x, y)
-        flag.moveTo(button.x + button.border.borderWidth, button.y + button.border.borderHeight)
-        flag.resize(button.border.innerWidth, button.border.innerHeight)
+    private val button = Button(app, scale).also {
+        it.xProp.bind(xProp)
+        it.yProp.bind(yProp)
+        addChild(it)
+    }
+
+    private val flag: Picture = Picture(app, "tiles/flag_tile.png", scale).also {
+        button.addChild(it)
+        it.hide()
+    }
+
+    init {
+//        widthProp.bind(scaleProp.multiply(tileWidth))
+//        heightProp.bind(scaleProp.multiply(tileHeight))
+    }
+
+    override fun preInitImpl() {}
+    override fun initImpl() {
+        /* GUI stuff */
 
         /* Button and Mouse Stuff */
         /* Reveal the tile, if possible, and set the smiley back to normal */
@@ -110,7 +121,7 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
     public override fun drawImpl() {}
 
     private fun reveal() {
-        client.sendJSON(JSONObject()
+        (app as Minesweeper).client.sendJSON(JSONObject()
                 .setString("action", "reveal-tiles")
                 .setInt("x", tileX)
                 .setInt("y", tileY)
@@ -118,7 +129,7 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
     }
 
     private fun flag() {
-        client.sendJSON(JSONObject()
+        (app as Minesweeper).client.sendJSON(JSONObject()
                 .setString("action", "flag-toggle")
                 .setInt("x", tileX)
                 .setInt("y", tileY))
@@ -138,3 +149,6 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
     }
 
 }
+
+const val tileWidth = 16
+const val tileHeight = 16

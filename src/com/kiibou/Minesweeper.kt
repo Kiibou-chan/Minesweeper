@@ -27,7 +27,7 @@ class Minesweeper : GApplet() {
         surface.setTitle("Minesweeper")
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 0, 0, 9, 9, 2, 10)
+        map = Map(this, 0, 0, 18, 18, 2, 50)
         registerGraphicsElement(map)
 
         dispatcher = ActionDispatcher {
@@ -92,8 +92,6 @@ class Minesweeper : GApplet() {
 }
 
 fun main() {
-    PApplet.main(Minesweeper::class.java)
-
     if (!NetUtils.checkServerListening("localhost", 8454, 200)) {
         /*
          */
@@ -109,4 +107,6 @@ fun main() {
 
         // serverMain(arrayOf("--port=8454", "--services=" + GameService::class.java.canonicalName))
     }
+
+    PApplet.main(Minesweeper::class.java)
 }

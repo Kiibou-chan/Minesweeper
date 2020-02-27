@@ -1,11 +1,13 @@
 import processing.core.PApplet
 import processing.core.PImage
 import space.kiibou.GApplet
+import space.kiibou.gui.BorderBox
 import space.kiibou.gui.GGraphics
 import space.kiibou.gui.Picture
 import space.kiibou.gui.VerticalList
 
 class TestMain : GApplet() {
+
     override fun settings() {
         size(800, 800, GGraphics::class.java.canonicalName)
     }
@@ -49,18 +51,37 @@ class TestMain : GApplet() {
          *
          * Add Binding/Referential Properties
          */
-//        GraphicsElement element =
-//                new VectorGraphics(this, 0, 0, 800, 800, 1, "vector.json");
-//        registerGraphicsElement(element);
-        val list = VerticalList(this, 0, 0, 2)
-        list += Picture(this, PImage(50, 50), 2)
-        list += Picture(this, PImage(60, 40), 2)
-        list += Picture(this, PImage(70, 30), 2)
-        list += Picture(this, PImage(80, 20), 2)
+
+        val list = VerticalList(this, 20, 20, 2)
+        val p1 = Picture(this, PImage(100, 50), 2)
+        val p2 = Picture(this, PImage(100, 40), 2)
+        val p3 = Picture(this, PImage(100, 30), 2)
+
+        p1.heightProp.bind(graphicsManager.mouseX)
+        p2.heightProp.bind(graphicsManager.mouseY)
+
+        list += BorderBox(this, 2).also {
+            it.addChild(p1)
+            it.bindProps(p1)
+        }
+
+        list += BorderBox(this, 2).also {
+            it.addChild(p2)
+            it.bindProps(p2)
+        }
+
+        list += BorderBox(this, 2).also {
+            it.addChild(p3)
+            it.bindProps(p3)
+        }
+
         registerGraphicsElement(list)
+
     }
 
-    override fun draw() {}
+    override fun draw() {
+        background(0xAA)
+    }
 }
 
 fun main() {

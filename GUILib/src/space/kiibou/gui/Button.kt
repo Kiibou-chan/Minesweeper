@@ -9,27 +9,34 @@ import space.kiibou.gui.BorderStyle.OUT
 import java.util.*
 
 class Button(app: GApplet, scale: Int) : GraphicsElement(app, 0, 0, 0, 0, scale) {
-    val border = BorderBox(app, scale).apply(::addChild)
+    val border = BorderBox(app, scale).also {
+        it.xProp.bind(xProp)
+        it.yProp.bind(yProp)
+        widthProp.bind(it.widthProp)
+        heightProp.bind(it.heightProp)
+        it.borderStyle = OUT
+        super.addChild(it)
+    }
 
-    override fun preInitImpl() {}
-    override fun initImpl() {
-        border.moveTo(x, y)
-
-        if (border.width > 0 && border.height > 0) {
-            resize(border.width, border.height)
-        } else {
-            border.resize(width, height)
-        }
-
-        border.borderStyle = OUT
-
+    init {
         registerCallback(options(LEFT, PRESS)) { border.borderStyle = IN }
         registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_ENTER))) { border.borderStyle = IN }
         registerCallback(options(LEFT, RELEASE)) { border.borderStyle = OUT }
         registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_EXIT))) { border.borderStyle = OUT }
     }
 
+    override fun preInitImpl() {}
+    override fun initImpl() {}
     override fun postInitImpl() {}
     override fun drawImpl() {}
+
+    override fun addChild(element: GraphicsElement) {
+        border.addChild(element)
+        border.bindProps(element)
+    }
+
+    override fun removeChild(index: Int): GraphicsElement {
+        return border.removeChild(index)
+    }
 
 }
