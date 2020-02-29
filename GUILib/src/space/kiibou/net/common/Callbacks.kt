@@ -7,7 +7,6 @@ class Callbacks<R, S> {
     private val callbacks: MutableMap<Long, (R) -> S> = Collections.synchronizedMap(HashMap())
 
     fun addCallback(function: (R) -> S): Long {
-        Objects.requireNonNull(function)
         val handle = nextHandle()
         callbacks[handle] = function
         return handle
@@ -23,7 +22,7 @@ class Callbacks<R, S> {
 
     fun callAll(arg: R): List<S> {
         return callbacks.values.stream()
-                .map { `fun`: (R) -> S -> `fun`(arg) }
+                .map { it(arg) }
                 .toList()
     }
 

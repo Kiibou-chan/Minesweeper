@@ -2,10 +2,12 @@
 
 package space.kiibou.event
 
+import processing.data.JSONObject
 import processing.event.KeyEvent
 import processing.event.TouchEvent
 import space.kiibou.GApplet
 import space.kiibou.gui.GraphicsElement
+import space.kiibou.net.common.ActionDispatcher
 import java.util.*
 
 class EventDispatcher {
@@ -17,6 +19,18 @@ class EventDispatcher {
     )
 
     private val mouseQueue = Collections.synchronizedList(ArrayList<processing.event.MouseEvent>())
+    private val jsonQueue = Collections.synchronizedList(ArrayList<JSONObject>())
+
+    private fun dispatchJson(action: String, obj: JSONObject) {
+        jsonDispatcher.dispatchAction(action, obj)
+    }
+
+    private val jsonDispatcher = ActionDispatcher<JSONObject> {
+        if (it.hasKey("action")) {
+            val action = it.getString("action")
+            dispatchJson(action, it)
+        }
+    }
 
     private var prevGraphicsElement: GraphicsElement? = null
 
@@ -48,6 +62,12 @@ class EventDispatcher {
                 prevGraphicsElement = null
             }
         }
+        mouseQueue.clear()
+
+        jsonQueue.forEach {
+            jsonDispatcher.messageReceived(it)
+        }
+        jsonQueue.clear()
     }
 
     fun pre() {
@@ -63,6 +83,14 @@ class EventDispatcher {
     }
 
     fun touchEvent(event: TouchEvent) {}
+
+    fun jsonEvent(obj: JSONObject) {
+        jsonQueue += obj
+    }
+
+    fun registerJsonCallback(action: String, callback: (JSONObject) -> Unit) {
+        jsonDispatcher.addActionCallback(action, callback)
+    }
 
     fun registerMethod(eventType: String, element: GraphicsElement) {
         when (eventType) {

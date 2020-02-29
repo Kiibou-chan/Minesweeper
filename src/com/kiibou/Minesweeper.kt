@@ -9,13 +9,11 @@ import space.kiibou.GApplet
 import space.kiibou.gui.GGraphics
 import space.kiibou.net.NetUtils
 import space.kiibou.net.client.Client
-import space.kiibou.net.common.ActionDispatcher
 import space.kiibou.net.server.startServer
 
 class Minesweeper : GApplet() {
     private lateinit var map: Map
     lateinit var client: Client
-    private lateinit var dispatcher: ActionDispatcher<JSONObject>
 
     override fun settings() {
         size(800, 800, GGraphics::class.java.canonicalName)
@@ -30,23 +28,16 @@ class Minesweeper : GApplet() {
         map = Map(this, 0, 0, 18, 18, 2, 50)
         registerGraphicsElement(map)
 
-        dispatcher = ActionDispatcher {
-            if (it.hasKey("action")) {
-                val action = it.getString("action")
-                dispatcher.dispatchAction(action, it)
-            }
-        }
-
-        dispatcher.addActionCallback("set-time", ::setTime)
-        dispatcher.addActionCallback("reveal-tiles", ::revealTiles)
-        dispatcher.addActionCallback("win") { map.win() }
-        dispatcher.addActionCallback("loose") { map.loose() }
-        dispatcher.addActionCallback("restart") { map.restart() }
-        dispatcher.addActionCallback("toggle-flag", ::toggleFlag)
+        registerJsonCallback("set-time", ::setTime)
+        registerJsonCallback("reveal-tiles", ::revealTiles)
+        registerJsonCallback("win") { map.win() }
+        registerJsonCallback("loose") { map.loose() }
+        registerJsonCallback("restart") { map.restart() }
+        registerJsonCallback("toggle-flag", ::toggleFlag)
 
         client = Client(
                 ::onServerConnect,
-                dispatcher.messageReceived,
+                eventDispatcher::jsonEvent,
                 ::onServerDisconnect
         ).connect("localhost", 8454)
     }
@@ -88,6 +79,10 @@ class Minesweeper : GApplet() {
         val y = o.getInt("y")
         val flag = o.getBoolean("toggle")
         map.tileFlag(x, y, flag)
+    }
+
+    fun registerJsonCallback(action: String, callback: (JSONObject) -> Unit) {
+        eventDispatcher.registerJsonCallback(action, callback)
     }
 }
 

@@ -16,6 +16,7 @@ class ActionDispatcher<T>(val messageReceived: (JSONObject) -> Unit) {
         if (!actionCallbackMap.containsKey(action)) {
             actionCallbackMap[action] = Callbacks()
         }
+
         return actionCallbackMap[action]!!.addCallback { message: T ->
             callback(message)
         }
