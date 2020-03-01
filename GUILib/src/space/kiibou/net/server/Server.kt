@@ -4,7 +4,7 @@ import space.kiibou.net.common.Callbacks
 import space.kiibou.net.common.SocketConnection
 import space.kiibou.net.common.TextMessage
 import space.kiibou.net.server.service.ActionService
-import space.kiibou.net.server.service.JSONService
+import space.kiibou.net.server.service.JsonService
 import space.kiibou.reflect.Inject
 import space.kiibou.reflect.ReflectUtils.createInstance
 import space.kiibou.reflect.ReflectUtils.getAnnotatedFields
@@ -99,7 +99,7 @@ class Server internal constructor(vararg serviceNames: String) {
             registerService(serviceName)
         }
 
-        registerService(JSONService::class.java.canonicalName)
+        registerService(JsonService::class.java.canonicalName)
         registerService(ActionService::class.java.canonicalName)
 
         for (service in services) injectServices(service)

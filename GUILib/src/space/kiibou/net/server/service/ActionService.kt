@@ -1,27 +1,27 @@
 package space.kiibou.net.server.service
 
-import processing.data.JSONObject
+import com.fasterxml.jackson.databind.node.ObjectNode
 import space.kiibou.net.common.ActionDispatcher
-import space.kiibou.net.server.JSONMessage
+import space.kiibou.net.server.JsonMessage
 import space.kiibou.net.server.Server
 import space.kiibou.net.server.Service
 import space.kiibou.reflect.Inject
 
 class ActionService(server: Server) : Service(server) {
     @Inject
-    lateinit var json: JSONService
-    private val dispatcher: ActionDispatcher<JSONMessage>
+    lateinit var json: JsonService
+    private val dispatcher: ActionDispatcher<JsonMessage>
 
     override fun initialize() {
         json.addJSONMessageReceivedCallback(dispatcher.messageReceived)
     }
 
-    fun sendActionToClient(handle: Long, action: String, message: JSONObject = JSONObject()) {
-        message.setString("action", action)
-        json.sendJSONObject(handle, message)
+    fun sendActionToClient(handle: Long, action: String, message: ObjectNode = json.mapper.createObjectNode()) {
+        message.put("action", action)
+        json.sendJsonMessage(handle, message)
     }
 
-    fun addActionCallback(action: String, callback: (JSONMessage) -> Unit): Long {
+    fun addActionCallback(action: String, callback: (JsonMessage) -> Unit): Long {
         return dispatcher.addActionCallback(action, callback)
     }
 
@@ -29,18 +29,18 @@ class ActionService(server: Server) : Service(server) {
         dispatcher.removeActionCallback(action, callbackHandle)
     }
 
-    private fun dispatch(action: String, jsonMessage: JSONMessage) {
+    private fun dispatch(action: String, jsonMessage: JsonMessage) {
         dispatcher.dispatchAction(action, jsonMessage)
     }
 
     init {
         dispatcher = ActionDispatcher {
-            if (it.hasKey("handle") && it.hasKey("message")) {
-                val handle = it.getInt("handle")
-                val message = it.getJSONObject("message")
-                if (message.hasKey("action")) {
-                    val action = message.getString("action")
-                    val jsonMessage = JSONMessage(handle.toLong(), message)
+            if (it.has("handle") && it.has("message")) {
+                val handle = it.at("/handle").intValue()
+                val message = it.at("/message")
+                if (message.has("action")) {
+                    val action = message.at("/action").textValue()
+                    val jsonMessage = JsonMessage(handle.toLong(), message)
                     dispatch(action, jsonMessage)
                 }
             }

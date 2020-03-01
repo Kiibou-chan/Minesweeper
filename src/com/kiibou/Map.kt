@@ -50,6 +50,12 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
         tiles[x, y]!!.revealed = true
     }
 
+    fun revealTiles(revealTiles: RevealTiles) {
+        revealTiles.tiles.forEach {
+            revealTile(it.x, it.y, TileType.getTypeFromValue(it.type))
+        }
+    }
+
     fun win() {
         controlBar.setSmiley(SmileyStatus.GLASSES)
         forEachTile(Tile::deactivate)
@@ -66,13 +72,13 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
         controlBar.bombsLeft.value = bombs
     }
 
-    fun tileFlag(x: Int, y: Int, flagged: Boolean) {
-        when (flagged) {
+    fun tileFlag(flagInfo: FlagInfo) {
+        when (flagInfo.toggle) {
             true -> controlBar.bombsLeft.dec()
             false -> controlBar.bombsLeft.inc()
         }
 
-        tiles[x, y]!!.flagged = flagged
+        tiles[flagInfo.x, flagInfo.y]!!.flagged = flagInfo.toggle
     }
 
     private inline fun forEachTile(action: (Tile) -> Unit) {

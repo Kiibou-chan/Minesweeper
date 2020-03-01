@@ -1,8 +1,8 @@
 package com.kiibou.server
 
+import com.kiibou.TileInfo
 import com.kiibou.TileType
 import space.kiibou.data.Vec2
-import space.kiibou.data.Vec3
 import java.util.*
 import kotlin.streams.toList
 
@@ -61,9 +61,9 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
         revealedTiles = 0
     }
 
-    fun reveal(x: Int, y: Int): List<Vec3> {
+    fun reveal(x: Int, y: Int): List<TileInfo> {
         if (!gameRunning) setGameRunning(true)
-        val revealed: MutableList<Vec3> = ArrayList()
+        val revealed: MutableList<TileInfo> = ArrayList()
 
         if (isValidTile(x, y)) {
             if (getTile(x, y) == TileType.EMPTY) {
@@ -80,10 +80,8 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
                     setGameRunning(false)
 
                     revealed.addAll(
-                            Arrays.stream(bombTiles)
-                                    .filter { !(it.x == x && it.y == y) }
-                                    .map { Vec3(it.x, it.y, TileType.BOMB.lookup) }
-                                    .toList()
+                            bombTiles.filter { !(it.x == x && it.y == y) }
+                                    .map { TileInfo(it.x, it.y, TileType.BOMB.lookup) }
                     )
 
                     gameService.sendLoose(handle)
@@ -97,8 +95,7 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
         if (revealedTiles == width * height - bombs && gameRunning) {
             gameService.sendWin(handle)
 
-            Arrays.stream(bombTiles)
-                    .filter { !isFlagged(it.x, it.y) }
+            bombTiles.filter { !isFlagged(it.x, it.y) }
                     .forEach { gameService.sendFlagToggle(handle, it.x, it.y) }
 
             setGameRunning(false)
@@ -107,12 +104,12 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
         return revealed
     }
 
-    private fun revealTile(x: Int, y: Int, revealed: MutableList<Vec3>): Boolean {
+    private fun revealTile(x: Int, y: Int, revealed: MutableList<TileInfo>): Boolean {
         var empty = false
 
         if (isValidTile(x, y) && isNotRevealed(x, y)) {
             empty = getTile(x, y) == TileType.EMPTY
-            revealed.add(Vec3(x, y, getTile(x, y).lookup))
+            revealed.add(TileInfo(x, y, getTile(x, y).lookup))
             setRevealed(x, y, true)
             revealedTiles++
         }
@@ -156,6 +153,8 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
         }
         return flagged[x][y]
     }
+
+    fun flag(x: Int, y: Int) = flagged[x][y]
 
     private fun startTimer() {
         timerTask = object : TimerTask() {

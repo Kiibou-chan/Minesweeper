@@ -2,7 +2,7 @@
 
 package space.kiibou.event
 
-import processing.data.JSONObject
+import com.fasterxml.jackson.databind.JsonNode
 import processing.event.KeyEvent
 import processing.event.TouchEvent
 import space.kiibou.GApplet
@@ -19,15 +19,15 @@ class EventDispatcher {
     )
 
     private val mouseQueue = Collections.synchronizedList(ArrayList<processing.event.MouseEvent>())
-    private val jsonQueue = Collections.synchronizedList(ArrayList<JSONObject>())
+    private val jsonQueue = Collections.synchronizedList(ArrayList<JsonNode>())
 
-    private fun dispatchJson(action: String, obj: JSONObject) {
+    private fun dispatchJson(action: String, obj: JsonNode) {
         jsonDispatcher.dispatchAction(action, obj)
     }
 
-    private val jsonDispatcher = ActionDispatcher<JSONObject> {
-        if (it.hasKey("action")) {
-            val action = it.getString("action")
+    private val jsonDispatcher = ActionDispatcher<JsonNode> {
+        if (it.has("action")) {
+            val action = it.get("action").textValue()
             dispatchJson(action, it)
         }
     }
@@ -84,11 +84,11 @@ class EventDispatcher {
 
     fun touchEvent(event: TouchEvent) {}
 
-    fun jsonEvent(obj: JSONObject) {
-        jsonQueue += obj
+    fun jsonEvent(obj: JsonNode) {
+        jsonQueue.add(obj)
     }
 
-    fun registerJsonCallback(action: String, callback: (JSONObject) -> Unit) {
+    fun registerJsonCallback(action: String, callback: (JsonNode) -> Unit) {
         jsonDispatcher.addActionCallback(action, callback)
     }
 

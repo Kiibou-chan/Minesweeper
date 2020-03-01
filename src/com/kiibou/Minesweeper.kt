@@ -1,15 +1,19 @@
 package com.kiibou
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.kiibou.server.GameService
 import processing.core.PApplet
-import processing.data.JSONObject
 import processing.opengl.PGraphicsOpenGL
 import processing.opengl.PJOGL
 import space.kiibou.GApplet
 import space.kiibou.gui.GGraphics
 import space.kiibou.net.NetUtils
 import space.kiibou.net.client.Client
-import space.kiibou.net.server.startServer
+import space.kiibou.net.server.main
 
 class Minesweeper : GApplet() {
     private lateinit var map: Map
@@ -59,37 +63,45 @@ class Minesweeper : GApplet() {
         background(204)
     }
 
-    private fun revealTiles(o: JSONObject) {
-        val revealedTiles = o.getJSONArray("revealed-tiles")
-        for (i in 0 until revealedTiles.size()) {
-            val data = revealedTiles.getJSONObject(i)
-            val x = data.getInt("x")
-            val y = data.getInt("y")
-            val type = data.getInt("type")
-            map.revealTile(x, y, TileType.getTypeFromValue(type))
-        }
+    private fun revealTiles(o: JsonNode) {
+        map.revealTiles(mapper.treeToValue(o, RevealTiles::class.java))
     }
 
-    private fun setTime(o: JSONObject) {
-        map.controlBar.timerDisplay.value = o.getInt("time")
+    private fun setTime(o: JsonNode) {
+        map.controlBar.timerDisplay.value = o.at("/time").intValue()
     }
 
-    private fun toggleFlag(o: JSONObject) {
-        val x = o.getInt("x")
-        val y = o.getInt("y")
-        val flag = o.getBoolean("toggle")
-        map.tileFlag(x, y, flag)
+    private fun toggleFlag(o: JsonNode) {
+        map.tileFlag(mapper.treeToValue(o, FlagInfo::class.java))
     }
 
-    fun registerJsonCallback(action: String, callback: (JSONObject) -> Unit) {
+    fun registerJsonCallback(action: String, callback: (JsonNode) -> Unit) {
         eventDispatcher.registerJsonCallback(action, callback)
     }
 }
 
+val mapper = ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+data class TileInfo @JsonCreator constructor(
+        @param:JsonProperty("x") val x: Int,
+        @param:JsonProperty("y") val y: Int,
+        @param:JsonProperty("type") val type: Int)
+
+data class FlagInfo @JsonCreator constructor(
+        @param:JsonProperty("x") val x: Int,
+        @param:JsonProperty("y") val y: Int,
+        @param:JsonProperty("toggle") val toggle: Boolean)
+
+data class RevealTiles @JsonCreator constructor(
+        @param:JsonProperty("tiles") val tiles: List<TileInfo>)
+
+data class TimeInfo @JsonCreator constructor(
+        @param:JsonProperty("time") val time: Int)
+
 fun main() {
     if (!NetUtils.checkServerListening("localhost", 8454, 200)) {
         /*
-         */
         startServer(GameService::class.java).ifPresent { server: Process ->
             println("Starting Server")
             Runtime.getRuntime().addShutdownHook(
@@ -99,8 +111,9 @@ fun main() {
                     }
             )
         }
+         */
 
-        // serverMain(arrayOf("--port=8454", "--services=" + GameService::class.java.canonicalName))
+        main(arrayOf("--port=8454", "--services=" + GameService::class.java.canonicalName))
     }
 
     PApplet.main(Minesweeper::class.java)

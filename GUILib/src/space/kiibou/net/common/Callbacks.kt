@@ -1,7 +1,6 @@
 package space.kiibou.net.common
 
 import java.util.*
-import kotlin.streams.toList
 
 class Callbacks<R, S> {
     private val callbacks: MutableMap<Long, (R) -> S> = Collections.synchronizedMap(HashMap())
@@ -21,9 +20,8 @@ class Callbacks<R, S> {
     }
 
     fun callAll(arg: R): List<S> {
-        return callbacks.values.stream()
+        return callbacks.values
                 .map { it(arg) }
-                .toList()
     }
 
     companion object {

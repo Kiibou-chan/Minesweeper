@@ -1,6 +1,5 @@
 package com.kiibou
 
-import processing.data.JSONObject
 import space.kiibou.GApplet
 import space.kiibou.event.MouseEventAction.*
 import space.kiibou.event.MouseEventButton.LEFT
@@ -80,11 +79,6 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
         it.hide()
     }
 
-    init {
-//        widthProp.bind(scaleProp.multiply(tileWidth))
-//        heightProp.bind(scaleProp.multiply(tileHeight))
-    }
-
     override fun preInitImpl() {}
     override fun initImpl() {
         /* GUI stuff */
@@ -121,18 +115,17 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
     public override fun drawImpl() {}
 
     private fun reveal() {
-        (app as Minesweeper).client.sendJSON(JSONObject()
-                .setString("action", "reveal-tiles")
-                .setInt("x", tileX)
-                .setInt("y", tileY)
-        )
+        (app as Minesweeper).client.sendJson(mapper.createObjectNode()
+                .put("action", "reveal-tiles")
+                .put("x", tileX)
+                .put("y", tileY))
     }
 
     private fun flag() {
-        (app as Minesweeper).client.sendJSON(JSONObject()
-                .setString("action", "flag-toggle")
-                .setInt("x", tileX)
-                .setInt("y", tileY))
+        (app as Minesweeper).client.sendJson(mapper.createObjectNode()
+                .put("action", "flag-toggle")
+                .put("x", tileX)
+                .put("y", tileY))
     }
 
     fun reset() {

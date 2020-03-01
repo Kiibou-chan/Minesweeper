@@ -1,9 +1,9 @@
 package space.kiibou.net.common
 
-import processing.data.JSONObject
+import com.fasterxml.jackson.databind.JsonNode
 import java.util.*
 
-class ActionDispatcher<T>(val messageReceived: (JSONObject) -> Unit) {
+class ActionDispatcher<T>(val messageReceived: (JsonNode) -> Unit) {
     private val actionCallbackMap = Collections.synchronizedMap(HashMap<String, Callbacks<T, Unit>>())
 
     fun dispatchAction(action: String, jsonMessage: T) {

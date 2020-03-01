@@ -2,7 +2,6 @@ package com.kiibou
 
 import com.kiibou.SmileyStatus.NORMAL
 import javafx.beans.binding.Bindings
-import processing.data.JSONObject
 import space.kiibou.GApplet
 import space.kiibou.event.MouseEventAction
 import space.kiibou.event.MouseEventButton
@@ -35,7 +34,7 @@ class ControlBar(app: GApplet, scale: Int, map: Map) : GraphicsElement(app, 0, 0
         addChild(it)
 
         it.registerCallback(options(MouseEventButton.LEFT, MouseEventAction.RELEASE)) {
-            (app as Minesweeper).client.sendJSON(JSONObject().setString("action", "restart"))
+            (app as Minesweeper).client.sendJson(mapper.createObjectNode().put("action", "restart"))
         }
     }
 
