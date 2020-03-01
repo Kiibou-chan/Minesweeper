@@ -127,12 +127,13 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
 
     private fun setRevealed(x: Int, y: Int, r: Boolean) {
         if (isFlagged(x, y)) {
+            flagToggle(x, y)
             gameService.sendFlagToggle(handle, x, y)
         }
         revealed[x][y] = r
     }
 
-    private fun isFlagged(x: Int, y: Int) = flagged[x][y]
+    fun isFlagged(x: Int, y: Int) = flagged[x][y]
     private fun isBomb(x: Int, y: Int) = getTile(x, y) == TileType.BOMB
     private fun isValidTile(x: Int, y: Int) = x in 0 until width && y >= 0 && y < height
 
@@ -153,8 +154,6 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
         }
         return flagged[x][y]
     }
-
-    fun flag(x: Int, y: Int) = flagged[x][y]
 
     private fun startTimer() {
         timerTask = object : TimerTask() {

@@ -53,7 +53,7 @@ class GameService(server: Server) : Service(server) {
 
     fun sendFlagToggle(handle: Long, x: Int, y: Int) {
         val gameState = getGameState(handle)
-        actionService.sendActionToClient(handle, "toggle-flag", json.mapper.valueToTree(FlagInfo(x, y, gameState.flag(x, y))))
+        actionService.sendActionToClient(handle, "toggle-flag", json.mapper.valueToTree(FlagInfo(x, y, gameState.isFlagged(x, y))))
     }
 
     private fun sendRevealTiles(handle: Long, revealed: List<TileInfo>) {
