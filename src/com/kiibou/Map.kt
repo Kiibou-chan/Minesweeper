@@ -19,6 +19,7 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
             }
         }
     }
+
     private val tilesBox = BorderBox(app, scale).also {
         it.addChild(tiles)
         it.bindProps(tiles)
@@ -41,7 +42,10 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
     }
 
     public override fun preInitImpl() {}
-    public override fun initImpl() {}
+    public override fun initImpl() {
+        (app as Minesweeper).client.sendJson(mapper.valueToTree(MapInfo(tilesX, tilesY, bombs)))
+    }
+
     public override fun postInitImpl() {}
     public override fun drawImpl() {}
 

@@ -1,9 +1,6 @@
 package com.kiibou.server
 
-import com.kiibou.FlagInfo
-import com.kiibou.RevealTiles
-import com.kiibou.TileInfo
-import com.kiibou.TimeInfo
+import com.kiibou.*
 import space.kiibou.data.Vec2
 import space.kiibou.net.server.JsonMessage
 import space.kiibou.net.server.Server
@@ -21,9 +18,17 @@ class GameService(server: Server) : Service(server) {
     private val gameStates: HashMap<Long, GameState> = HashMap()
 
     override fun initialize() {
-        actionService.addActionCallback("reveal-tiles") { message: JsonMessage -> revealTiles(message) }
-        actionService.addActionCallback("restart") { message: JsonMessage -> restart(message) }
-        actionService.addActionCallback("flag-toggle") { message: JsonMessage -> flagToggle(message) }
+        actionService.addActionCallback("reveal-tiles", ::revealTiles)
+        actionService.addActionCallback("restart", ::restart)
+        actionService.addActionCallback("flag-toggle", ::flagToggle)
+        actionService.addActionCallback("init-map", ::initMap)
+    }
+
+    private fun initMap(message: JsonMessage) {
+        val gameState = getGameState(message.connectionHandle)
+        val (width, height, bombs) = json.mapper.treeToValue(message.node, MapInfo::class.java)
+        gameState.setupVariables(width, height, bombs)
+        actionService.sendActionToClient(message.connectionHandle, "restart")
     }
 
     private fun revealTiles(message: JsonMessage) {
@@ -63,6 +68,6 @@ class GameService(server: Server) : Service(server) {
             actionService.sendActionToClient(handle, "set-time", json.mapper.valueToTree(TimeInfo(time)))
 
     private fun getGameState(handle: Long) =
-            gameStates.computeIfAbsent(handle) { GameState(it, 18, 18, 50, this) }
+            gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }
 
 }

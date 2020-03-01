@@ -29,7 +29,7 @@ class Minesweeper : GApplet() {
         surface.setTitle("Minesweeper")
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 0, 0, 18, 18, 2, 50)
+        map = Map(this, 0, 0, 18, 18, 2, 40)
         registerGraphicsElement(map)
 
         registerJsonCallback("set-time", ::setTime)
@@ -80,7 +80,7 @@ class Minesweeper : GApplet() {
     }
 }
 
-val mapper = ObjectMapper()
+val mapper: ObjectMapper = ObjectMapper()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
 data class TileInfo @JsonCreator constructor(
@@ -98,6 +98,12 @@ data class RevealTiles @JsonCreator constructor(
 
 data class TimeInfo @JsonCreator constructor(
         @param:JsonProperty("time") val time: Int)
+
+data class MapInfo @JsonCreator constructor(
+        @param:JsonProperty("width") val width: Int,
+        @param:JsonProperty("height") val height: Int,
+        @param:JsonProperty("bombs") val bombs: Int,
+        @param:JsonProperty("action") val action: String = "init-map")
 
 fun main() {
     if (!NetUtils.checkServerListening("localhost", 8454, 200)) {

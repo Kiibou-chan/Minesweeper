@@ -22,7 +22,7 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
 
     fun setupVariables() = setupVariables(width, height, bombs)
 
-    private fun setupVariables(width: Int, height: Int, bombs: Int) {
+    fun setupVariables(width: Int, height: Int, bombs: Int) {
         this.width = width
         this.height = height
         this.bombs = bombs
