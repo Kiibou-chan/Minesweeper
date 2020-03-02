@@ -48,10 +48,10 @@ class GameService(server: Server) : Service(server) {
         val gameState = getGameState(message.connectionHandle)
         val (x, y) = json.mapper.treeToValue(message.node, Vec2::class.java)
         gameState.flagToggle(x, y)
-        sendFlagToggle(message.connectionHandle, x, y)
+        sendFlagStatus(message.connectionHandle, x, y)
     }
 
-    fun sendFlagToggle(handle: Long, x: Int, y: Int) {
+    fun sendFlagStatus(handle: Long, x: Int, y: Int) {
         val gameState = getGameState(handle)
         actionService.sendActionToClient(handle, "toggle-flag", json.mapper.valueToTree(FlagInfo(x, y, gameState.isFlagged(x, y))))
     }

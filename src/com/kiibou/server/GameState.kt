@@ -96,7 +96,10 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
             gameService.sendWin(handle)
 
             bombTiles.filter { !isFlagged(it.x, it.y) }
-                    .forEach { gameService.sendFlagToggle(handle, it.x, it.y) }
+                    .forEach {
+                        flagToggle(it.x, it.y)
+                        gameService.sendFlagStatus(handle, it.x, it.y)
+                    }
 
             setGameRunning(false)
         }
@@ -128,7 +131,7 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
     private fun setRevealed(x: Int, y: Int, r: Boolean) {
         if (isFlagged(x, y)) {
             flagToggle(x, y)
-            gameService.sendFlagToggle(handle, x, y)
+            gameService.sendFlagStatus(handle, x, y)
         }
         revealed[x][y] = r
     }
