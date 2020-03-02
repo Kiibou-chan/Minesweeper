@@ -3,10 +3,10 @@ package space.kiibou.event
 import java.util.*
 
 class MouseEvent {
-    val source: processing.event.MouseEvent
-    val button: MouseEventButton
-    val actions: EnumSet<MouseEventAction>
-    val modifiers: EnumSet<MouseEventModifier>
+    private val source: processing.event.MouseEvent
+    private val button: MouseEventButton
+    private val actions: EnumSet<MouseEventAction>
+    private val modifiers: EnumSet<MouseEventModifier>
 
     internal constructor(source: processing.event.MouseEvent) {
         this.source = source
@@ -37,4 +37,9 @@ class MouseEvent {
 
     val millis: Long
         get() = source.millis
+
+    override fun toString(): String {
+        return "MouseEvent(source=$source, button=$button, actions=$actions, modifiers=$modifiers)"
+    }
+
 }

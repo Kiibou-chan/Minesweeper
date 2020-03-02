@@ -1,4 +1,4 @@
-@file:Suppress("MapGetWithNotNullAssertionOperator", "unused")
+@file:Suppress("MapGetWithNotNullAssertionOperator", "unused", "UNUSED_PARAMETER")
 
 package space.kiibou.event
 
@@ -45,19 +45,19 @@ class EventDispatcher {
             val event = MouseEvent(it)
             val topElement = topElement(event.x, event.y, registry["mouseEvent"]!!)
 
-            topElement?.let { element: GraphicsElement ->
-                val sameElement = element == prevGraphicsElement
+            if (topElement != null) {
+                val sameElement = topElement == prevGraphicsElement
                 if (!sameElement) {
                     if (prevGraphicsElement != null) {
                         prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
                     }
-                    element.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_ENTER))
-                    prevGraphicsElement = element
+                    topElement.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_ENTER))
+                    prevGraphicsElement = topElement
                 }
-                element.mouseEvent(event)
+                topElement.mouseEvent(event)
             }
 
-            if (topElement != null && prevGraphicsElement != null) {
+            if (topElement == null && prevGraphicsElement != null) {
                 prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
                 prevGraphicsElement = null
             }
@@ -78,7 +78,6 @@ class EventDispatcher {
 
     fun mouseEvent(source: processing.event.MouseEvent) {
         if (source.button == 0) return
-
         mouseQueue += source
     }
 

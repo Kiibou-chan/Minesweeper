@@ -26,7 +26,7 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
     val children: MutableList<GraphicsElement>
         get() = childrenProperty.value
     final override val mouseOptionMap: MouseOptionMap = MouseOptionMap()
-    protected val id: Int = nextID()
+    val id: Int = nextID()
     var hidden = false
         protected set
     private var parent: GraphicsElement? = null
