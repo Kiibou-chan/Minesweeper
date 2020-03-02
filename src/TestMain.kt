@@ -52,7 +52,7 @@ class TestMain : GApplet() {
          * Add Binding/Referential Properties
          */
 
-        val list = VerticalList(this, 20, 20, 2)
+        val list = VerticalList(this, 20, 20, scale = 2)
         val p1 = Picture(this, PImage(100, 50), 2)
         val p2 = Picture(this, PImage(100, 40), 2)
         val p3 = Picture(this, PImage(100, 30), 2)

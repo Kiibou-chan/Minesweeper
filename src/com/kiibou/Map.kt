@@ -1,15 +1,25 @@
 package com.kiibou
 
 import space.kiibou.GApplet
-import space.kiibou.gui.BorderBox
-import space.kiibou.gui.GraphicsElement
-import space.kiibou.gui.Grid
-import space.kiibou.gui.VerticalList
+import space.kiibou.gui.*
 
 class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val tilesY: Int, scale: Int, val bombs: Int)
     : GraphicsElement(app, x, y, tilesX * tileHeight * scale, tilesY * tileHeight * scale, scale) {
-    private val verticalList = VerticalList(app, x, y, scale).also {
+
+    private val margin = tileWidth / 4
+    private val marginProp = scaleProp.multiply(margin)
+
+    private val box = BorderBox(app, scale).also {
+        it.borderStyle = BorderStyle.OUT
         addChild(it)
+    }
+
+    private val verticalList = VerticalList(app, x, y, margin, scale).also {
+        box.addChild(it)
+        it.xProp.bind(box.xProp.add(box.borderWidthProp).add(marginProp))
+        it.yProp.bind(box.yProp.add(box.borderHeightProp).add(marginProp))
+        box.innerWidthProp.bind(it.widthProp.add(marginProp.multiply(2)))
+        box.innerHeightProp.bind(it.heightProp.add(marginProp.multiply(2)))
     }
 
     private val tiles = Grid<Tile>(app, 0, 0, tilesX, tilesY, scale).also {
@@ -25,9 +35,10 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
         it.bindProps(tiles)
     }
 
-    val controlBar = ControlBar(app, scale, this).also {
+    val controlBar = ControlBar(app, margin, scale, this).also {
         it.widthProp.bind(tiles.widthProp)
     }
+
     private val controlBarBox = BorderBox(app, scale).also {
         it.addChild(controlBar)
         it.bindProps(controlBar)
@@ -37,8 +48,8 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
         verticalList += controlBarBox
         verticalList += tilesBox
 
-        widthProp.bind(verticalList.widthProp)
-        heightProp.bind(verticalList.heightProp)
+        widthProp.bind(box.widthProp)
+        heightProp.bind(box.heightProp)
     }
 
     public override fun preInitImpl() {}

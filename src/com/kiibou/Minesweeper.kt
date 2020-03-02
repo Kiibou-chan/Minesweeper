@@ -29,7 +29,7 @@ class Minesweeper : GApplet() {
         surface.setTitle("Minesweeper")
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 0, 0, 18, 18, 2, 40)
+        map = Map(this, 0, 0, 9, 9, 2, 10)
         registerGraphicsElement(map)
 
         registerJsonCallback("set-time", ::setTime)
@@ -63,21 +63,16 @@ class Minesweeper : GApplet() {
         background(204)
     }
 
-    private fun revealTiles(o: JsonNode) {
-        map.revealTiles(mapper.treeToValue(o, RevealTiles::class.java))
-    }
+    private fun revealTiles(o: JsonNode) = map.revealTiles(mapper.treeToValue(o, RevealTiles::class.java))
 
     private fun setTime(o: JsonNode) {
         map.controlBar.timerDisplay.value = o.at("/time").intValue()
     }
 
-    private fun toggleFlag(o: JsonNode) {
-        map.tileFlag(mapper.treeToValue(o, FlagInfo::class.java))
-    }
+    private fun toggleFlag(o: JsonNode) = map.tileFlag(mapper.treeToValue(o, FlagInfo::class.java))
 
-    fun registerJsonCallback(action: String, callback: (JsonNode) -> Unit) {
-        eventDispatcher.registerJsonCallback(action, callback)
-    }
+    private fun registerJsonCallback(action: String, callback: (JsonNode) -> Unit) =
+            eventDispatcher.registerJsonCallback(action, callback)
 }
 
 val mapper: ObjectMapper = ObjectMapper()

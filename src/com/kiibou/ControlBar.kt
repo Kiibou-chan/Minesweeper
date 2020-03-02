@@ -1,7 +1,6 @@
 package com.kiibou
 
 import com.kiibou.SmileyStatus.NORMAL
-import javafx.beans.binding.Bindings
 import space.kiibou.GApplet
 import space.kiibou.event.MouseEventAction
 import space.kiibou.event.MouseEventButton
@@ -10,7 +9,7 @@ import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Picture
 
-class ControlBar(app: GApplet, scale: Int, map: Map) : GraphicsElement(app, 0, 0, 0, 0, scale) {
+class ControlBar(app: GApplet, margin: Int, scale: Int, map: Map) : GraphicsElement(app, 0, 0, 0, 0, scale) {
     private val smileys: Array<Picture> = Picture(app, "pictures/smiley.png", scale).let {
         arrayOf(
                 it.subPicture(0, 0, 20, 20),
@@ -21,15 +20,15 @@ class ControlBar(app: GApplet, scale: Int, map: Map) : GraphicsElement(app, 0, 0
     }
 
     val bombsLeft = SevenSegmentDisplay(app, scale, 3, map.bombs).also {
-        it.xProp.bind(xProp)
-        it.yProp.bind(yProp)
+        it.xProp.bind(xProp.add(scaleProp.multiply(margin)))
+        it.yProp.bind(yProp.add(scaleProp.multiply(margin)))
         it.setLowerLimit(0)
         addChild(it)
     }
 
-    val restartButton = Button(app, scale).also {
-        it.xProp.bind(widthProp.divide(2).subtract(it.widthProp.divide(2)))
-        it.yProp.bind(yProp)
+    private val restartButton = Button(app, scale).also {
+        it.xProp.bind(xProp.add(widthProp.divide(2).subtract(it.widthProp.divide(2))))
+        it.yProp.bind(yProp.add(heightProp.divide(2).subtract(it.heightProp.divide(2))))
         it.addChild(smileys[NORMAL.ordinal])
         addChild(it)
 
@@ -39,13 +38,13 @@ class ControlBar(app: GApplet, scale: Int, map: Map) : GraphicsElement(app, 0, 0
     }
 
     val timerDisplay: SevenSegmentDisplay = SevenSegmentDisplay(app, scale, 3, 0).also {
-        it.xProp.bind(xProp.add(widthProp).subtract(it.widthProp))
-        it.yProp.bind(yProp)
+        it.xProp.bind(xProp.add(widthProp).subtract(it.widthProp).subtract(scaleProp.multiply(margin)))
+        it.yProp.bind(yProp.add(scaleProp.multiply(margin)))
         addChild(it)
     }
 
     init {
-        heightProp.bind(Bindings.max(timerDisplay.heightProp, Bindings.max(restartButton.heightProp, bombsLeft.heightProp)))
+        heightProp.bind(scaleProp.multiply(margin * 2).add(bombsLeft.heightProp))
     }
 
     override fun preInitImpl() {}
