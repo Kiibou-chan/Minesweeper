@@ -41,33 +41,37 @@ class EventDispatcher {
     }
 
     private fun dispatchEvents() {
-        mouseQueue.forEach {
-            val event = MouseEvent(it)
-            val topElement = topElement(event.x, event.y, registry["mouseEvent"]!!)
+        synchronized(mouseQueue) {
+            mouseQueue.forEach {
+                val event = MouseEvent(it)
+                val topElement = topElement(event.x, event.y, registry["mouseEvent"]!!)
 
-            if (topElement != null) {
-                val sameElement = topElement == prevGraphicsElement
-                if (!sameElement) {
-                    if (prevGraphicsElement != null) {
-                        prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
+                if (topElement != null) {
+                    val sameElement = topElement == prevGraphicsElement
+                    if (!sameElement) {
+                        if (prevGraphicsElement != null) {
+                            prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
+                        }
+                        topElement.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_ENTER))
+                        prevGraphicsElement = topElement
                     }
-                    topElement.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_ENTER))
-                    prevGraphicsElement = topElement
+                    topElement.mouseEvent(event)
                 }
-                topElement.mouseEvent(event)
-            }
 
-            if (topElement == null && prevGraphicsElement != null) {
-                prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
-                prevGraphicsElement = null
+                if (topElement == null && prevGraphicsElement != null) {
+                    prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
+                    prevGraphicsElement = null
+                }
             }
+            mouseQueue.clear()
         }
-        mouseQueue.clear()
 
-        jsonQueue.forEach {
-            jsonDispatcher.messageReceived(it)
+        synchronized(jsonQueue) {
+            jsonQueue.forEach {
+                jsonDispatcher.messageReceived(it)
+            }
+            jsonQueue.clear()
         }
-        jsonQueue.clear()
     }
 
     fun pre() {
@@ -78,13 +82,18 @@ class EventDispatcher {
 
     fun mouseEvent(source: processing.event.MouseEvent) {
         if (source.button == 0) return
-        mouseQueue += source
+
+        synchronized(mouseQueue) {
+            mouseQueue += source
+        }
     }
 
     fun touchEvent(event: TouchEvent) {}
 
     fun jsonEvent(obj: JsonNode) {
-        jsonQueue.add(obj)
+        synchronized(jsonQueue) {
+            jsonQueue.add(obj)
+        }
     }
 
     fun registerJsonCallback(action: String, callback: (JsonNode) -> Unit) {
