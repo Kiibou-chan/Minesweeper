@@ -3,18 +3,18 @@ package com.kiibou
 import space.kiibou.GApplet
 import space.kiibou.gui.*
 
-class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val tilesY: Int, scale: Int, val bombs: Int)
-    : GraphicsElement(app, x, y, tilesX * tileHeight * scale, tilesY * tileHeight * scale, scale) {
+class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bombs: Int)
+    : GraphicsElement(app) {
 
     private val margin = tileWidth / 4
     private val marginProp = scaleProp.multiply(margin)
 
-    private val box = BorderBox(app, scale).also {
+    private val box = BorderBox(app).also {
         it.borderStyle = BorderStyle.OUT
         addChild(it)
     }
 
-    private val verticalList = VerticalList(app, x, y, margin, scale).also {
+    private val verticalList = VerticalList(app, margin).also {
         box.addChild(it)
         it.xProp.bind(box.xProp.add(box.borderWidthProp).add(marginProp))
         it.yProp.bind(box.yProp.add(box.borderHeightProp).add(marginProp))
@@ -22,24 +22,24 @@ class Map(app: GApplet, x: Int, y: Int, private val tilesX: Int, private val til
         box.innerHeightProp.bind(it.heightProp.add(marginProp.multiply(2)))
     }
 
-    private val tiles = Grid<Tile>(app, 0, 0, tilesX, tilesY, scale).also {
+    private val tiles = Grid<Tile>(app, tilesX, tilesY).also {
         (0 until tilesX).forEach { x ->
             (0 until tilesY).forEach { y ->
-                it[x, y] = Tile(app, this, scale, x, y)
+                it[x, y] = Tile(app, this, x, y)
             }
         }
     }
 
-    private val tilesBox = BorderBox(app, scale).also {
+    private val tilesBox = BorderBox(app).also {
         it.addChild(tiles)
         it.bindProps(tiles)
     }
 
-    val controlBar = ControlBar(app, margin, scale, this).also {
+    val controlBar = ControlBar(app, margin, this).also {
         it.widthProp.bind(tiles.widthProp)
     }
 
-    private val controlBarBox = BorderBox(app, scale).also {
+    private val controlBarBox = BorderBox(app).also {
         it.addChild(controlBar)
         it.bindProps(controlBar)
     }

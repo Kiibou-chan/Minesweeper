@@ -17,12 +17,12 @@ import kotlin.collections.ArrayList
 
 val outline = System.getenv("outline")?.toBoolean() ?: false
 
-abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, height: Int, scale: Int)
+abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: Int = 0, height: Int = 0)
     : Rectangle(x, y, width, height), MouseEventListener {
-    val scaleProp = SimpleIntegerProperty(null, "${toString()} Scale", scale)
-    val scale
+    val scaleProp = SimpleIntegerProperty(1)
+    val scale: Int
         get() = scaleProp.value
-    val childrenProperty: SimpleListProperty<GraphicsElement> = SimpleListProperty(null, "Children", synchronizedObservableList(observableArrayList<GraphicsElement>()))
+    val childrenProperty: SimpleListProperty<GraphicsElement> = SimpleListProperty(synchronizedObservableList(observableArrayList<GraphicsElement>()))
     val children: MutableList<GraphicsElement>
         get() = childrenProperty.value
     final override val mouseOptionMap: MouseOptionMap = MouseOptionMap()
@@ -39,7 +39,7 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
     private var insideDraw: Boolean = false
     private val deferredActions = Collections.synchronizedList(ArrayList<() -> Unit>())
 
-    var clip: Boolean = false
+    var clip: Boolean = true
 
     override fun registerCallback(option: MouseEventOption, callback: MouseEventConsumer) {
         super.registerCallback(option, callback)
@@ -177,6 +177,7 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
         if (element.parent == null) {
             element.parent = this
             children.add(index, element)
+            element.scaleProp.bind(scaleProp)
             element.hierarchyDepth = hierarchyDepth + 1
         } else {
             throw IllegalArgumentException("The passed GraphicsElement is already child of another GraphicsElement.")
@@ -193,6 +194,7 @@ abstract class GraphicsElement(val app: GApplet, x: Int, y: Int, width: Int, hei
 
         val removed: GraphicsElement = children.removeAt(index)
         removed.parent = null
+        removed.scaleProp.unbind()
         return removed
     }
 

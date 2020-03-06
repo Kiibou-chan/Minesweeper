@@ -6,7 +6,7 @@ import processing.core.PGraphics
 import processing.opengl.PGraphicsOpenGL
 import space.kiibou.GApplet
 
-class BorderBox(app: GApplet, scale: Int) : GraphicsElement(app, 0, 0, 0, 0, scale) {
+class BorderBox(app: GApplet) : GraphicsElement(app) {
     private val g: PGraphics = app.graphics
     private var redraw: Boolean = true
     private lateinit var buffer: PGraphics
@@ -34,8 +34,6 @@ class BorderBox(app: GApplet, scale: Int) : GraphicsElement(app, 0, 0, 0, 0, sca
         get() = innerHeightProp.intValue()
 
     init {
-//        clip = true
-
         widthProp.bind(innerWidthProp.add(borderHeightProp.multiply(2)))
         heightProp.bind(innerHeightProp.add(borderHeightProp.multiply(2)))
         widthProp.addListener { _, _, _ -> redraw = true }
@@ -83,6 +81,7 @@ class BorderBox(app: GApplet, scale: Int) : GraphicsElement(app, 0, 0, 0, 0, sca
     fun bindProps(other: GraphicsElement): BorderBox {
         other.xProp.bind(xProp.add(borderWidthProp))
         other.yProp.bind(yProp.add(borderHeightProp))
+        other.scaleProp.bind(scaleProp)
         innerWidthProp.bind(other.widthProp)
         innerHeightProp.bind(other.heightProp)
         return this

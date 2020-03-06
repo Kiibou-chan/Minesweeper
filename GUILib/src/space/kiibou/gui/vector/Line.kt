@@ -5,7 +5,7 @@ import space.kiibou.gui.GraphicsElement
 import kotlin.math.min
 
 class Line(app: GApplet, private val data: LineData)
-    : GraphicsElement(app, min(data.start.x, data.end.x), min(data.start.y, data.end.y), min(data.start.x, data.end.x), min(data.start.y, data.end.y), data.scale) {
+    : GraphicsElement(app, min(data.start.x, data.end.x), min(data.start.y, data.end.y), min(data.start.x, data.end.x), min(data.start.y, data.end.y)) {
 
     override fun preInitImpl() {}
     override fun initImpl() {}

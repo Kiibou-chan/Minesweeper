@@ -14,8 +14,8 @@ import java.util.*
  * @param tileX X-Position of the tile on the Map
  * @param tileY Y-Position of the tile on the Map
  */
-class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: Int, private val tileY: Int)
-    : GraphicsElement(app, 0, 0, scale * tileWidth, scale * tileHeight, scale) {
+class Tile(app: GApplet, private val map: Map, private val tileX: Int, private val tileY: Int)
+    : GraphicsElement(app) {
 
     var type: TileType = TileType.EMPTY
         set(value) {
@@ -29,7 +29,7 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
                 tilePicture.widthProp.unbind()
                 tilePicture.heightProp.unbind()
 
-                tilePicture = Picture(app, value.path, scale)
+                tilePicture = Picture(app, value.path)
                 tilePicture.xProp.bind(xProp)
                 tilePicture.yProp.bind(yProp)
                 tilePicture.widthProp.bind(widthProp)
@@ -60,7 +60,7 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
             field = value
         }
 
-    private var tilePicture: Picture = Picture(app, type.path, scale).also {
+    private var tilePicture: Picture = Picture(app, type.path).also {
         it.xProp.bind(xProp)
         it.yProp.bind(yProp)
         it.widthProp.bind(widthProp)
@@ -68,15 +68,20 @@ class Tile(app: GApplet, private val map: Map, scale: Int, private val tileX: In
         addChild(it)
     }
 
-    private val button = Button(app, scale).also {
+    private val button = Button(app).also {
         it.xProp.bind(xProp)
         it.yProp.bind(yProp)
         addChild(it)
     }
 
-    private val flag: Picture = Picture(app, "tiles/flag_tile.png", scale).also {
+    private val flag: Picture = Picture(app, "tiles/flag_tile.png").also {
         button.addChild(it)
         it.hide()
+    }
+
+    init {
+        widthProp.bind(scaleProp.multiply(tileWidth))
+        heightProp.bind(scaleProp.multiply(tileHeight))
     }
 
     override fun preInitImpl() {}

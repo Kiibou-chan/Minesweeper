@@ -2,7 +2,7 @@ package space.kiibou.data
 
 import javafx.beans.property.SimpleIntegerProperty
 
-open class Rectangle(x: Int, y: Int, width: Int, height: Int) {
+open class Rectangle(x: Int = 0, y: Int = 0, width: Int = 0, height: Int = 0) {
     val xProp = SimpleIntegerProperty(null, "Rectangle X-Property", x)
     open var x: Int
         get() = xProp.value

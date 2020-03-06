@@ -21,6 +21,7 @@ class Minesweeper : GApplet() {
 
     override fun settings() {
         size(800, 800, GGraphics::class.java.canonicalName)
+        setScale(4)
         //        fullScreen(P2D)
         PJOGL.setIcon("pictures/icon.png")
     }
@@ -29,7 +30,7 @@ class Minesweeper : GApplet() {
         surface.setTitle("Minesweeper")
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 0, 0, 9, 9, 2, 10)
+        map = Map(this, 18, 18, 50)
         registerGraphicsElement(map)
 
         registerJsonCallback("set-time", ::setTime)

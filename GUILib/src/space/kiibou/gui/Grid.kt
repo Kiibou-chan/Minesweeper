@@ -7,8 +7,8 @@ import javafx.collections.FXCollections
 import javafx.collections.MapChangeListener
 import space.kiibou.GApplet
 
-class Grid<T : GraphicsElement>(app: GApplet, x: Int, y: Int, private val cellsX: Int, private val cellsY: Int, scale: Int)
-    : GraphicsElement(app, x, y, 0, 0, scale), Iterable<T> {
+class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private val cellsY: Int)
+    : GraphicsElement(app), Iterable<T> {
 
     private val colWidths = Array(cellsX) { SimpleIntegerProperty(0) to SimpleIntegerProperty(0) }.also {
         it.forEachIndexed { index, pair ->

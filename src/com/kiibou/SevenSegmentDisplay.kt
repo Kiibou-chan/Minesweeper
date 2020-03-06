@@ -10,22 +10,25 @@ import space.kiibou.gui.loadImage
 import java.util.*
 import java.util.function.Predicate
 
-class SevenSegmentDisplay(app: GApplet, scale: Int, private val digits: Int, var value: Int)
-    : GraphicsElement(app, 0, 0, scale * digitWidth * digits, scale * digitHeight, scale) {
+class SevenSegmentDisplay(app: GApplet, private val digits: Int, var value: Int)
+    : GraphicsElement(app) {
 
     private val g: PGraphics = app.graphics
     private val digitRenderer: PGraphics = app.createGraphics(digitWidth, digitHeight, PConstants.P2D)
     private val digitCoordinates: Array<Rectangle> =
-            (width / digits).let { digitWidth ->
-                (0 until digits).map { digitPos ->
-                    Rectangle(0, 0, 0, 0).also { rec ->
-                        rec.xProp.bind(xProp.add(digitWidth * digitPos))
-                        rec.yProp.bind(yProp)
-                        rec.widthProp.setValue(digitWidth)
-                        rec.heightProp.bind(heightProp)
-                    }
-                }.toTypedArray()
-            }
+            (0 until digits).map { digitPos ->
+                Rectangle().also { rec ->
+                    rec.xProp.bind(xProp.add(widthProp.divide(digits).multiply(digitPos)))
+                    rec.yProp.bind(yProp)
+                    rec.widthProp.bind(scaleProp.multiply(digitWidth))
+                    rec.heightProp.bind(scaleProp.multiply(digitHeight))
+                }
+            }.toTypedArray()
+
+    init {
+        widthProp.bind(scaleProp.multiply(digitWidth * digits))
+        heightProp.bind(scaleProp.multiply(digitHeight))
+    }
 
     private var lowerLimit = 0
     private var upperLimit = 0

@@ -5,8 +5,7 @@ import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.value.ObservableNumberValue
 import space.kiibou.GApplet
 
-class VerticalList(app: GApplet, x: Int, y: Int, margin: Int = 0, scale: Int) : GraphicsElement(app, x, y, 0, 0, scale) {
-
+class VerticalList(app: GApplet, margin: Int = 0) : GraphicsElement(app) {
     private val marginProp = scaleProp.multiply(margin)
 
     init {
@@ -26,7 +25,7 @@ class VerticalList(app: GApplet, x: Int, y: Int, margin: Int = 0, scale: Int) : 
     }
 
     override fun preInitImpl() {}
-    public override fun initImpl() {}
+    override fun initImpl() {}
     override fun postInitImpl() {}
     override fun drawImpl() {}
 

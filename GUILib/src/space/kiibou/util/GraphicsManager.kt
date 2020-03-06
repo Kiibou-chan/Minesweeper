@@ -10,8 +10,14 @@ class GraphicsManager {
     private lateinit var app: GApplet
     private val elements: MutableList<GraphicsElement> = ArrayList()
 
-    val mouseX = SimpleIntegerProperty(null, "Mouse X", 0)
-    val mouseY = SimpleIntegerProperty(null, "Mouse Y", 0)
+    val mouseX = SimpleIntegerProperty(0)
+    val mouseY = SimpleIntegerProperty(0)
+    val scaleProp = SimpleIntegerProperty(1)
+    var scale
+        get() = scaleProp.value
+        set(value) {
+            scaleProp.value = value
+        }
 
     fun pre() {
         elements.forEach(GraphicsElement::preInit)
@@ -29,6 +35,7 @@ class GraphicsManager {
 
     fun registerGraphicsElement(element: GraphicsElement) {
         elements.add(element)
+        element.scaleProp.bind(scaleProp)
     }
 
     fun registerApp(app: GApplet) {

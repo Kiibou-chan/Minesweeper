@@ -8,8 +8,8 @@ import space.kiibou.gui.BorderStyle.IN
 import space.kiibou.gui.BorderStyle.OUT
 import java.util.*
 
-class Button(app: GApplet, scale: Int) : GraphicsElement(app, 0, 0, 0, 0, scale) {
-    val border = BorderBox(app, scale).also {
+class Button(app: GApplet) : GraphicsElement(app) {
+    val border = BorderBox(app).also {
         it.xProp.bind(xProp)
         it.yProp.bind(yProp)
         widthProp.bind(it.widthProp)
