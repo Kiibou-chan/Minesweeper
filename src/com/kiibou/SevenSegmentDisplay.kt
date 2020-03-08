@@ -8,7 +8,6 @@ import space.kiibou.data.Rectangle
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.loadImage
 import java.util.*
-import java.util.function.Predicate
 
 class SevenSegmentDisplay(app: GApplet, private val digits: Int, var value: Int)
     : GraphicsElement(app) {
@@ -137,20 +136,15 @@ private val segmentMap: PImage = loadImage("pictures/number_segments.png")
 private val digitBuffer: MutableMap<Int, PImage> = HashMap()
 private const val digitWidth = 13
 private const val digitHeight = 23
-private var segmentARenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 1, 9, 3, 2, 1, 9, 3, 13, conditionBuilder(0))
-private var segmentBRenderer: (PGraphics, Int) -> Unit = segmentRenderer(9, 2, 3, 9, 9, 4, 3, 9, 13, conditionBuilder(1))
-private var segmentCRenderer: (PGraphics, Int) -> Unit = segmentRenderer(9, 12, 3, 9, 9, 16, 3, 9, 13, conditionBuilder(2))
-private var segmentDRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 19, 9, 3, 2, 25, 9, 3, 13, conditionBuilder(3))
-private var segmentERenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 12, 3, 9, 1, 16, 3, 9, 13, conditionBuilder(4))
-private var segmentFRenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 2, 3, 9, 1, 4, 3, 9, 13, conditionBuilder(5))
-private var segmentGRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 10, 9, 3, 2, 13, 9, 3, 13, conditionBuilder(6))
+private var segmentARenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 1, 9, 3, 2, 1, 9, 3, 13, hasSegment(0))
+private var segmentBRenderer: (PGraphics, Int) -> Unit = segmentRenderer(9, 2, 3, 9, 9, 4, 3, 9, 13, hasSegment(1))
+private var segmentCRenderer: (PGraphics, Int) -> Unit = segmentRenderer(9, 12, 3, 9, 9, 16, 3, 9, 13, hasSegment(2))
+private var segmentDRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 19, 9, 3, 2, 25, 9, 3, 13, hasSegment(3))
+private var segmentERenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 12, 3, 9, 1, 16, 3, 9, 13, hasSegment(4))
+private var segmentFRenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 2, 3, 9, 1, 4, 3, 9, 13, hasSegment(5))
+private var segmentGRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 10, 9, 3, 2, 13, 9, 3, 13, hasSegment(6))
 
-private fun segmentRenderer(x: Int, y: Int, w: Int, h: Int, tx: Int, ty: Int, tw: Int, th: Int, offset: Int, condition: Predicate<Int>): (PGraphics, Int) -> Unit {
-    return { graphics, segments ->
-        graphics.image(segmentMap, x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), if (condition.test(segments)) tx else tx + offset, ty, (if (condition.test(segments)) tx else tx + offset) + tw, ty + th)
-    }
-}
+private fun segmentRenderer(x: Int, y: Int, w: Int, h: Int, tx: Int, ty: Int, tw: Int, th: Int, offset: Int, condition: (Int) -> Boolean): (PGraphics, Int) -> Unit =
+        { g, seg -> g.image(segmentMap, x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), if (condition(seg)) tx else tx + offset, ty, (if (condition(seg)) tx else tx + offset) + tw, ty + th) }
 
-private fun conditionBuilder(segment: Int): Predicate<Int> {
-    return Predicate { segments: Int -> 1 shl segment and segments > 0 }
-}
+private fun hasSegment(segment: Int): (Int) -> Boolean = { segments: Int -> 1 shl segment and segments > 0 }
