@@ -13,9 +13,9 @@ import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.*
-import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.reflect.jvm.jvmName
 
 class Server internal constructor(vararg serviceNames: String) {
     private val connections: MutableMap<Long, SocketConnection> = Collections.synchronizedMap(HashMap<Long, SocketConnection>())
@@ -84,7 +84,7 @@ class Server internal constructor(vararg serviceNames: String) {
     }
 
     init {
-        connectionListenerThread = Thread(Runnable {
+        connectionListenerThread = Thread({
             while (!Thread.interrupted()) {
                 try {
                     val conn = serverSocket.accept()
@@ -130,11 +130,9 @@ fun startServer(vararg services: Class<*>): Optional<Process> {
     val javaHome = System.getProperty("java.home")
     val javaBin = javaHome + File.separator + "bin" + File.separator + "java"
     val classpath = System.getProperty("java.class.path")
-    val className = "space.kiibou.net.server.ServerKt"
+    val className = Server::class.jvmName + "Kt"
     val port = "--port=8454"
-    val servicesArg = "--services=" + Arrays.stream(services)
-            .map { it.canonicalName }
-            .collect(Collectors.joining(";"))
+    val servicesArg = "--services=" + services.joinToString(";") { it.canonicalName }
     val builder = ProcessBuilder(javaBin, "-cp", classpath, className, port, servicesArg)
 
     return try {
