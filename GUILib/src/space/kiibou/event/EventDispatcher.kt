@@ -19,6 +19,7 @@ class EventDispatcher {
     )
 
     private val mouseQueue = Collections.synchronizedList(ArrayList<processing.event.MouseEvent>())
+    private val keyQueue = Collections.synchronizedList(ArrayList<KeyEvent>())
     private val jsonQueue = Collections.synchronizedList(ArrayList<JsonNode>())
 
     private fun dispatchJson(action: String, obj: JsonNode) {
@@ -50,16 +51,16 @@ class EventDispatcher {
                     val sameElement = topElement == prevGraphicsElement
                     if (!sameElement) {
                         if (prevGraphicsElement != null) {
-                            prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
+                            prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseAction.ELEMENT_EXIT))
                         }
-                        topElement.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_ENTER))
+                        topElement.mouseEvent(MouseEvent(event, MouseAction.ELEMENT_ENTER))
                         prevGraphicsElement = topElement
                     }
                     topElement.mouseEvent(event)
                 }
 
                 if (topElement == null && prevGraphicsElement != null) {
-                    prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseEventAction.ELEMENT_EXIT))
+                    prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseAction.ELEMENT_EXIT))
                     prevGraphicsElement = null
                 }
             }
