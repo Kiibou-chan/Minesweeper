@@ -30,7 +30,7 @@ class Client(private val onConnect: () -> Unit, private val onMessageReceived: (
         return this
     }
 
-    fun stop() {
+    fun disconnect() {
         socket?.close()
     }
 
