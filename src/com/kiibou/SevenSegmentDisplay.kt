@@ -133,15 +133,28 @@ private val segmentMap: PImage = loadImage("pictures/number_segments.png")
 private val digitBuffer: MutableMap<Int, PImage> = HashMap()
 private const val digitWidth = 13
 private const val digitHeight = 23
-private var segmentARenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 1, 9, 3, 2, 1, 9, 3, 13, hasSegment(0))
-private var segmentBRenderer: (PGraphics, Int) -> Unit = segmentRenderer(9, 2, 3, 9, 9, 4, 3, 9, 13, hasSegment(1))
-private var segmentCRenderer: (PGraphics, Int) -> Unit = segmentRenderer(9, 12, 3, 9, 9, 16, 3, 9, 13, hasSegment(2))
-private var segmentDRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 19, 9, 3, 2, 25, 9, 3, 13, hasSegment(3))
-private var segmentERenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 12, 3, 9, 1, 16, 3, 9, 13, hasSegment(4))
-private var segmentFRenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 2, 3, 9, 1, 4, 3, 9, 13, hasSegment(5))
-private var segmentGRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 10, 9, 3, 2, 13, 9, 3, 13, hasSegment(6))
+private val segmentARenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 1, 9, 3, 2, 1, 9, 3, 13, hasSegment(0))
+private val segmentBRenderer: (PGraphics, Int) -> Unit = segmentRenderer(9, 2, 3, 9, 9, 4, 3, 9, 13, hasSegment(1))
+private val segmentCRenderer: (PGraphics, Int) -> Unit = segmentRenderer(9, 12, 3, 9, 9, 16, 3, 9, 13, hasSegment(2))
+private val segmentDRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 19, 9, 3, 2, 25, 9, 3, 13, hasSegment(3))
+private val segmentERenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 12, 3, 9, 1, 16, 3, 9, 13, hasSegment(4))
+private val segmentFRenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 2, 3, 9, 1, 4, 3, 9, 13, hasSegment(5))
+private val segmentGRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 10, 9, 3, 2, 13, 9, 3, 13, hasSegment(6))
 
-private fun segmentRenderer(x: Int, y: Int, w: Int, h: Int, tx: Int, ty: Int, tw: Int, th: Int, offset: Int, condition: (Int) -> Boolean): (PGraphics, Int) -> Unit =
-        { g, seg -> g.image(segmentMap, x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), if (condition(seg)) tx else tx + offset, ty, (if (condition(seg)) tx else tx + offset) + tw, ty + th) }
+private fun segmentRenderer(
+        x: Int, y: Int,
+        w: Int, h: Int,
+        tx: Int, ty: Int,
+        tw: Int, th: Int,
+        offset: Int,
+        condition: (Int) -> Boolean
+): (PGraphics, Int) -> Unit =
+        { g, seg ->
+            g.image(segmentMap,
+                    x.toFloat(), y.toFloat(),
+                    w.toFloat(), h.toFloat(),
+                    if (condition(seg)) tx else tx + offset, ty,
+                    (if (condition(seg)) tx else tx + offset) + tw, ty + th)
+        }
 
 private fun hasSegment(segment: Int): (Int) -> Boolean = { segments: Int -> 1 shl segment and segments > 0 }
