@@ -26,8 +26,8 @@ class GraphicsManager {
     }
 
     fun draw() {
-        mouseX.setValue(app.mouseX)
-        mouseY.setValue(app.mouseY)
+        mouseX.value = app.mouseX
+        mouseY.value = app.mouseY
         elements.forEach(GraphicsElement::draw)
     }
 

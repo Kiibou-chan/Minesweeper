@@ -7,7 +7,7 @@ import javax.imageio.ImageIO
 private var buffer: HashMap<String, PImage> = HashMap()
 
 fun loadImage(path: String): PImage {
-    return buffer.computeIfAbsent(path) { p: String? ->
+    return buffer.computeIfAbsent(path) {
         try {
             val stream = GraphicsElement::class.java.classLoader.getResourceAsStream(path)!!
             PImage(ImageIO.read(stream))

@@ -17,14 +17,14 @@ open class Rectangle(x: Int = 0, y: Int = 0, width: Int = 0, height: Int = 0) {
             yProp.set(value)
         }
 
-    val widthProp = SimpleIntegerProperty(null, "${this.toString()} Width-Property", width)
+    val widthProp = SimpleIntegerProperty(null, "Width-Property", width)
     open var width: Int
         get() = widthProp.value
         set(value) {
             widthProp.set(value)
         }
 
-    val heightProp = SimpleIntegerProperty(null, "${this.toString()} Height-Property", height)
+    val heightProp = SimpleIntegerProperty(null, "Height-Property", height)
     open var height: Int
         get() = heightProp.value
         set(value) {
@@ -32,6 +32,6 @@ open class Rectangle(x: Int = 0, y: Int = 0, width: Int = 0, height: Int = 0) {
         }
 
     fun collides(px: Int, py: Int): Boolean {
-        return px >= x && px < x + width && py >= y && py < y + height
+        return px in x..x + width && py in y..y + height
     }
 }

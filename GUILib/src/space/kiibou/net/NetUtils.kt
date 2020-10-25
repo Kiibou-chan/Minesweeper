@@ -21,8 +21,7 @@ object NetUtils {
                 return true
             }
         } catch (e: Exception) {
-            val errMsg = String.format("Can't connect to [%s:%d] (timeout was %d ms), - %s",
-                    serverHost, serverPort, timeoutMs, e.message)
+            val errMsg = "Can't connect to [$serverHost:$serverPort] (timeout was $timeoutMs ms), - ${e.message}"
             println(errMsg)
             return false
         }
