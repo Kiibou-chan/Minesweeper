@@ -38,68 +38,60 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
         tiles = Array(width) { Array(height) { TileType.EMPTY } }
 
         // Find out where to put bombs
-        bombTiles = (0 until width).flatMap { x ->
-            (0 until height).map { y ->
-                Vec2(x, y)
-            }
-        }.shuffled().stream().limit(bombs.toLong()).peek {
-            tiles[it.x][it.y] = TileType.BOMB
-        }.toList().toTypedArray()
+        bombTiles = placeBombs()
 
         // Set tiles around bombs to the correct number
-        for (x in tiles.indices) {
-            for (y in tiles[x].indices) {
-                if (isBomb(x, y)) continue
-                val count = (-1..1).flatMap { px ->
-                    (-1..1).filter { py -> isValidTile(x + px, y + py) && isBomb(x + px, y + py) }
-                }.count()
-                setTile(x, y, TileType.getTypeFromValue(count))
-            }
-        }
+        createNumberTiles()
 
         gameRunning = false
         revealedTiles = 0
     }
+
+    private fun possibleTilePositions(x: Int = 0, y: Int = 0, width: Int = this.width, height: Int = this.height) =
+            List(width * height) { Vec2(x + it % width, y + it / height) }
+
+    private fun placeBombs() = chooseBombPositions().run(::setTilesToBombs)
+    private fun chooseBombPositions() = possibleTilePositions().shuffled().take(bombs)
+    private fun setTilesToBombs(list: List<Vec2>) = list.onEach { (x, y) -> setTile(x, y, TileType.BOMB) }
+
+    private fun createNumberTiles() = possibleTilePositions()
+            .filterNot { (x, y) -> isBomb(x, y) }
+            .associateWith { (x, y) -> countSurroundingBombs(x, y) }
+            .forEach { (pos, count) -> setTile(pos.x, pos.y, TileType.getTypeFromValue(count)) }
+
+    private fun countSurroundingBombs(x: Int, y: Int) = possibleTilePositions(-1, -1, 3, 3)
+            .filter { (px, py) -> isValidTile(x + px, y + py) && isBomb(x + px, y + py) }.count()
 
     fun reveal(x: Int, y: Int): List<TileInfo> {
         if (!gameRunning) setGameRunning(true)
         val revealed: MutableList<TileInfo> = ArrayList()
 
         if (isValidTile(x, y)) {
-            if (getTile(x, y) == TileType.EMPTY) {
-                for (px in -1..1) {
-                    for (py in -1..1) {
-                        if (revealTile(x + px, y + py, revealed)) {
-                            revealed.addAll(reveal(x + px, y + py))
-                        }
-                    }
-                }
-            } else {
-                if (isBomb(x, y)) {
+            when (getTile(x, y)) {
+                TileType.EMPTY -> possibleTilePositions(x - 1, y - 1, 3, 3)
+                        .filter { (tx, ty) -> revealTile(tx, ty, revealed) }
+                        .forEach { (tx, ty) -> revealed += reveal(tx, ty) }
+                TileType.BOMB -> {
                     setTile(x, y, TileType.RED_BOMB)
                     setGameRunning(false)
 
-                    revealed.addAll(
-                            bombTiles.filter { !(it.x == x && it.y == y) }
-                                    .map { TileInfo(it.x, it.y, TileType.BOMB.lookup) }
-                    )
+                    revealed += bombTiles.filterNot { it == Vec2(x, y) }
+                            .map { (x, y) -> TileInfo(x, y, TileType.BOMB.lookup) }
 
+                    revealTile(x, y, revealed)
                     gameService.sendLoose(handle)
                     setGameRunning(false)
                 }
-
-                revealTile(x, y, revealed)
+                else -> revealTile(x, y, revealed)
             }
         }
 
         if (revealedTiles == width * height - bombs && gameRunning) {
             gameService.sendWin(handle)
 
-            bombTiles.filter { !isFlagged(it.x, it.y) }
-                    .forEach {
-                        flagToggle(it.x, it.y)
-                        gameService.sendFlagStatus(handle, it.x, it.y)
-                    }
+            bombTiles.filter { (x, y) -> !isFlagged(x, y) }
+                    .onEach { (x, y) -> flagToggle(x, y) }
+                    .forEach { (x, y) -> gameService.sendFlagStatus(handle, x, y) }
 
             setGameRunning(false)
         }
@@ -141,11 +133,14 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
     private fun isValidTile(x: Int, y: Int) = x in 0 until width && y >= 0 && y < height
 
     private fun setGameRunning(running: Boolean) {
-        if (!gameRunning && running) {
-            resetTimer()
-            startTimer()
-        } else if (gameRunning && !running) {
-            stopTimer()
+        when {
+            !gameRunning && running -> {
+                resetTimer()
+                startTimer()
+            }
+            gameRunning && !running -> {
+                stopTimer()
+            }
         }
         gameRunning = running
     }
