@@ -2,8 +2,8 @@ package com.kiibou
 
 import com.kiibou.SmileyStatus.NORMAL
 import space.kiibou.GApplet
-import space.kiibou.event.MouseEventAction
-import space.kiibou.event.MouseEventButton
+import space.kiibou.event.MouseAction
+import space.kiibou.event.MouseButton
 import space.kiibou.event.options
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement

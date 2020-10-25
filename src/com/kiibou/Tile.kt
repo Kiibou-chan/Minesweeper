@@ -1,9 +1,9 @@
 package com.kiibou
 
 import space.kiibou.GApplet
-import space.kiibou.event.MouseEventAction.*
-import space.kiibou.event.MouseEventButton.LEFT
-import space.kiibou.event.MouseEventButton.RIGHT
+import space.kiibou.event.MouseAction.*
+import space.kiibou.event.MouseButton.LEFT
+import space.kiibou.event.MouseButton.RIGHT
 import space.kiibou.event.options
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement

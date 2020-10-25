@@ -1,8 +1,8 @@
 package space.kiibou.gui
 
 import space.kiibou.GApplet
-import space.kiibou.event.MouseEventAction.*
-import space.kiibou.event.MouseEventButton.LEFT
+import space.kiibou.event.MouseAction.*
+import space.kiibou.event.MouseButton.LEFT
 import space.kiibou.event.options
 import space.kiibou.gui.BorderStyle.IN
 import space.kiibou.gui.BorderStyle.OUT
