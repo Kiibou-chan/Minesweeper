@@ -4,8 +4,6 @@ package space.kiibou.reflect
 
 import space.kiibou.net.server.Service
 import java.lang.reflect.Field
-import java.util.*
-import kotlin.streams.toList
 
 object ReflectUtils {
     fun <T> createInstance(name: String, parameterTypes: Array<Class<*>>, vararg args: Any): T {
@@ -29,8 +27,8 @@ object ReflectUtils {
     }
 
     fun getAnnotatedFields(obj: Any, annotation: Class<out Annotation>): Array<Field> {
-        return Arrays.stream(obj.javaClass.fields)
+        return obj.javaClass.fields
                 .filter { it.isAnnotationPresent(annotation) }
-                .toList().toTypedArray()
+                .toTypedArray()
     }
 }
