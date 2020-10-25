@@ -32,7 +32,7 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
         it.addChild(smileys[NORMAL.ordinal])
         addChild(it)
 
-        it.registerCallback(options(MouseEventButton.LEFT, MouseEventAction.RELEASE)) {
+        it.registerCallback(options(MouseButton.LEFT, MouseAction.RELEASE)) {
             (app as Minesweeper).client.sendJson(mapper.createObjectNode().put("action", "restart"))
         }
     }
