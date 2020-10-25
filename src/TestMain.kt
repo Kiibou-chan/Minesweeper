@@ -1,87 +1,42 @@
 import processing.core.PApplet
-import processing.core.PImage
 import space.kiibou.GApplet
-import space.kiibou.gui.BorderBox
 import space.kiibou.gui.GGraphics
-import space.kiibou.gui.Picture
-import space.kiibou.gui.VerticalList
 
 class TestMain : GApplet() {
 
     override fun settings() {
-        graphicsManager.scale = 4
-        size(800, 800, GGraphics::class.java.canonicalName)
+        setScale(2)
+        size(1200, 800, GGraphics::class.java.canonicalName)
     }
 
     override fun setup() {
         frameRate(30f)
-        /* TODO: 03/11/2019 \
-         * Primitives:
-         * arc (x, y, w, h, angle: start [radians], angle: stop [radians], mode { PIE, OPEN, CHORD })
-         * circle (x, y, extent)
-         * ellipse (x, y, w, h)
-         * point (x, y)
-         * quad (x1, y1, x2, y2, x3, y3, x4, y4)
-         * square (x, y, extent)
-         * triangle (x1, y1, x2, y2, x3, y3)
-         *
-         * Curves:
-         * bezier (x1, y1, x2, y2, x3, y3, x4, y4)
-         * curve (x1, y1, x2, y2, x3, y3, x4, y4)
-         *  curveTightness (tightness: [-5..5])
-         *
-         * Modes:
-         * ellipseMode (mode { RADIUS, CENTER, CORNER, CORNERS })
-         * rectMode (mode { RADIUS, CENTER, CORNER, CORNERS })
-         *
-         * Vertex:
-         * contour -> beginContour, endContour
-         * bezierVertex (cx2, cy2, cx3, cy3, x4, y4)
-         * curveVertex (x, y)
-         * quadraticVertex (cx, cy, x, y)
-         *
-         * Transforms:
-         * translate
-         * rotate
-         * scale
-         * apply matrix?
-         *
-         * // TODO: 03/11/2019 : Text
-         *
-         * Add Events and Animations?
-         *
-         * Add Binding/Referential Properties
-         */
 
-        val list = VerticalList(this)
-        val p1 = Picture(this, PImage(100, 50))
-        val p2 = Picture(this, PImage(100, 40))
-        val p3 = Picture(this, PImage(100, 30))
+//        val list = VerticalList(this, 3)
+//        list.addChild(TextElement(this, "Hello!", fontColor = RED))
+//        list.addChild(TextElement(this, "Hello, World!", fontColor = GREEN))
+//        list.addChild(TextElement(this, "Hello, Text Element!", fontColor = Color(35, 100, 194)))
+//        list.addChild(TextElement(this, "list.addChild(TextElement(", fontName = "Consolas", fontColor = WHITE, fontSize = 15))
+//        list.addChild(Button(this).also { button ->
+//            button.addChild(TextElement(this, "Test Button", fontName = "Segoe UI", fontSize = 12).also { text ->
+//                val count = SimpleIntegerProperty(0)
+//                text.textProperty.bind(Bindings.concat("Test Button ", count))
+//                button.registerCallback(options(MouseEventButton.LEFT, MouseEventAction.RELEASE)) {
+//                    count.set(count.value + 1)
+//                }
+//            })
+//        })
+//        registerGraphicsElement(list)
 
-        p1.heightProp.bind(graphicsManager.mouseX)
-        p2.heightProp.bind(graphicsManager.mouseY)
-
-        list += BorderBox(this).also {
-            it.addChild(p1)
-            it.bindProps(p1)
-        }
-
-        list += BorderBox(this).also {
-            it.addChild(p2)
-            it.bindProps(p2)
-        }
-
-        list += BorderBox(this).also {
-            it.addChild(p3)
-            it.bindProps(p3)
-        }
-
-        registerGraphicsElement(list)
-
+//        val text = TextFlow(this, """Hello!
+//Hello, World!
+//Hello, Text Element!
+//list.addChild(TextElement(""", fontColor = WHITE, fontName = "Consolas")
+//        registerGraphicsElement(text)
     }
 
     override fun draw() {
-        background(0xAA)
+        background(0x27)
     }
 }
 

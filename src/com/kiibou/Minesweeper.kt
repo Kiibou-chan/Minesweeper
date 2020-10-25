@@ -21,7 +21,7 @@ class Minesweeper : GApplet() {
 
     override fun settings() {
         size(800, 800, GGraphics::class.java.canonicalName)
-        setScale(4)
+        setScale(2)
         //        fullScreen(P2D)
         PJOGL.setIcon("pictures/icon.png")
     }
@@ -30,7 +30,7 @@ class Minesweeper : GApplet() {
         surface.setTitle("Minesweeper")
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 18, 18, 50)
+        map = Map(this, 9, 9, 10)
         registerGraphicsElement(map)
 
         registerJsonCallback("set-time", ::setTime)
@@ -103,17 +103,15 @@ data class MapInfo @JsonCreator constructor(
 
 fun main() {
     if (!NetUtils.checkServerListening("localhost", 8454, 200)) {
-        /*
-        startServer(GameService::class.java).ifPresent { server: Process ->
-            println("Starting Server")
-            Runtime.getRuntime().addShutdownHook(
-                    Thread {
-                        server.destroy()
-                        println("Stopped Server")
-                    }
-            )
-        }
-         */
+//        startServer(GameService::class.java).ifPresent { server: Process ->
+//            println("Starting Server")
+//            Runtime.getRuntime().addShutdownHook(
+//                    Thread {
+//                        server.destroy()
+//                        println("Stopped Server")
+//                    }
+//            )
+//        }
 
         main(arrayOf("--port=8454", "--services=" + GameService::class.java.canonicalName))
     }
