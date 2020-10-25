@@ -154,12 +154,7 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
     }
 
     private fun startTimer() {
-        timerTask = object : TimerTask() {
-            override fun run() {
-                sendTimeToClients()
-                time++
-            }
-        }
+        timerTask = GameStateTimerTask()
         timer.schedule(timerTask, 0, 1000)
     }
 
@@ -172,7 +167,10 @@ class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, p
 
     private fun sendTimeToClients() = gameService.sendTime(handle, time)
 
-    init {
-        setupVariables(width, height, bombs)
+    private inner class GameStateTimerTask : TimerTask() {
+        override fun run() {
+            sendTimeToClients()
+            time++
+        }
     }
 }
