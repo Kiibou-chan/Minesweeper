@@ -36,8 +36,9 @@ class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private v
                 if (cell != null)
                     h = Bindings.max(h, cell.heightProp)
             }
-            colWidths[yi].first.bind(w)
-            rowHeights[xi].first.bind(h)
+            // TODO (25/10/2020): xi and yi is the wrong way around, but otherwise there is a bug, figure out why!
+            colWidths[xi].first.bind(w)
+            rowHeights[yi].first.bind(h)
         }
     }
 
