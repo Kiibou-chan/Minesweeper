@@ -10,5 +10,4 @@ data class Vec2 @JsonCreator constructor(
     fun scale(scalar: Int): Vec2 {
         return Vec2(x * scalar, y * scalar)
     }
-
 }
