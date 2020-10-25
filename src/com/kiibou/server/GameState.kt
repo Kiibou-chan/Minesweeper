@@ -4,21 +4,21 @@ import com.kiibou.TileInfo
 import com.kiibou.TileType
 import space.kiibou.data.Vec2
 import java.util.*
-import kotlin.streams.toList
 
-class GameState(private val handle: Long, width: Int, height: Int, bombs: Int, private val gameService: GameService) {
-    private var width = 0
-    private var height = 0
-    private var bombs = 0
+class GameState(private val handle: Long, private var width: Int, private var height: Int, private var bombs: Int, private val gameService: GameService) {
     private lateinit var revealed: Array<BooleanArray>
     private lateinit var flagged: Array<BooleanArray>
     private lateinit var tiles: Array<Array<TileType>>
-    private lateinit var bombTiles: Array<Vec2>
+    private lateinit var bombTiles: List<Vec2>
     private var gameRunning = false
     private var revealedTiles = 0
     private val timer = Timer("Timer", true)
     private lateinit var timerTask: TimerTask
     private var time = 0
+
+    init {
+        setupVariables()
+    }
 
     fun setupVariables() = setupVariables(width, height, bombs)
 
