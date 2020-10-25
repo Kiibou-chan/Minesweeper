@@ -24,9 +24,4 @@ class VerticalList(app: GApplet, margin: Int = 0) : GraphicsElement(app) {
         }
     }
 
-    override fun preInitImpl() {}
-    override fun initImpl() {}
-    override fun postInitImpl() {}
-    override fun drawImpl() {}
-
 }

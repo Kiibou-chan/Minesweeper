@@ -47,11 +47,6 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
         heightProp.bind(scaleProp.multiply(margin * 2).add(bombsLeft.heightProp))
     }
 
-    override fun preInitImpl() {}
-    override fun initImpl() {}
-    override fun postInitImpl() {}
-    override fun drawImpl() {}
-
     fun setSmiley(status: SmileyStatus) {
         restartButton.border.removeChild(0)
         restartButton.border.addChild(smileys[status.ordinal])

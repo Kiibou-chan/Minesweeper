@@ -46,11 +46,6 @@ class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private v
         heightProp.bind(rowHeights.last().let { it.first.add(it.second) })
     }
 
-    override fun preInitImpl() {}
-    public override fun initImpl() {}
-    override fun postInitImpl() {}
-    override fun drawImpl() {}
-
     operator fun set(x: Int, y: Int, element: T) {
         if (isValidCell(x, y)) {
             remove(x, y)

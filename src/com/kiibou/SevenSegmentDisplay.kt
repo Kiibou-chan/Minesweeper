@@ -34,10 +34,7 @@ class SevenSegmentDisplay(app: GApplet, private val digits: Int, var value: Int)
     private var hasLowerLimit = false
     private var hasUpperLimit = false
 
-    override fun preInitImpl() {}
-    public override fun initImpl() {}
-    override fun postInitImpl() {}
-    public override fun drawImpl() {
+    override fun drawImpl() {
         var number = value
 
         if (hasUpperLimit && number > upperLimit) {

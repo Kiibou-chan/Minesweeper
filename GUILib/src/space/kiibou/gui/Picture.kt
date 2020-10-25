@@ -18,9 +18,6 @@ class Picture(app: GApplet, private val image: PImage)
             throw RuntimeException("Picture must have non-zero width and height")
     }
 
-    override fun preInitImpl() {}
-    override fun initImpl() {}
-    override fun postInitImpl() {}
     override fun drawImpl() {
         g.image(image, x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat())
     }

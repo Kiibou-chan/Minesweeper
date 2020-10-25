@@ -7,10 +7,6 @@ import kotlin.math.min
 class Line(app: GApplet, private val data: LineData)
     : GraphicsElement(app, min(data.start.x, data.end.x), min(data.start.y, data.end.y), min(data.start.x, data.end.x), min(data.start.y, data.end.y)) {
 
-    override fun preInitImpl() {}
-    override fun initImpl() {}
-    override fun postInitImpl() {}
-
     override fun drawImpl() {
         app.gg.scaled(scale) {
             if (!data.style.noStroke) {

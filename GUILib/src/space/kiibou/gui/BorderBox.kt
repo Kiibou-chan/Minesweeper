@@ -40,11 +40,7 @@ class BorderBox(app: GApplet) : GraphicsElement(app) {
         heightProp.addListener { _, _, _ -> redraw = true }
     }
 
-    override fun preInitImpl() {}
-    public override fun initImpl() {}
-    override fun postInitImpl() {}
-
-    public override fun drawImpl() {
+    override fun drawImpl() {
         if (redraw) {
             createBuffer()
             buffer.beginDraw()

@@ -20,9 +20,7 @@ class GraphicsManager {
         }
 
     fun pre() {
-        elements.forEach(GraphicsElement::preInit)
         elements.forEach(GraphicsElement::init)
-        elements.forEach(GraphicsElement::postInit)
         app.unregisterMethod("pre", this)
         app.gg = app.graphics as GGraphics
     }

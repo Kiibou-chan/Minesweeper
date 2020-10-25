@@ -33,9 +33,7 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
     override var active: Boolean = true
     var hierarchyDepth: Int = 0
         private set
-    private var preInitialized: Boolean = false
     private var initialized: Boolean = false
-    private var postInitialized: Boolean = false
     private var insideDraw: Boolean = false
     private val deferredActions = Collections.synchronizedList(ArrayList<() -> Unit>())
 
@@ -51,17 +49,6 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
         if (mouseOptionMap.isEmpty()) app.unregisterMethod("mouseEvent", this)
     }
 
-    fun preInit() {
-        preInitImpl()
-        preInitialized = true
-        children.forEach(GraphicsElement::preInit)
-    }
-
-    /**
-     * Called before children are pre initialized
-     */
-    protected abstract fun preInitImpl()
-
     fun init() {
         children.forEach(GraphicsElement::init)
         initImpl()
@@ -71,18 +58,7 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
     /**
      * Called after children are initialized
      */
-    protected abstract fun initImpl()
-
-    fun postInit() {
-        children.forEach(GraphicsElement::postInit)
-        postInitImpl()
-        postInitialized = true
-    }
-
-    /**
-     * Called before children are post initialized
-     */
-    protected abstract fun postInitImpl()
+    protected open fun initImpl() {}
 
     fun draw() {
         if (!hidden) {
@@ -120,7 +96,7 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
         }
     }
 
-    protected abstract fun drawImpl()
+    protected open fun drawImpl() {}
 
     fun deferAfterDraw(action: () -> Unit) {
         if (insideDraw) deferredActions.add(action)
@@ -224,6 +200,14 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
         } else {
             throw IllegalArgumentException("The passed GraphicsElement is not a child of this GraphicsElement.")
         }
+    }
+
+    fun removeAllChildren() {
+        if (insideDraw)
+            throw IllegalStateException("Can not modify children during draw")
+
+        while (children.isNotEmpty())
+            removeChild(0)
     }
 
     fun isChild(child: GraphicsElement?): Boolean {

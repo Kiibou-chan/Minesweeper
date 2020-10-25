@@ -52,15 +52,11 @@ class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bo
         heightProp.bind(box.heightProp)
     }
 
-    public override fun preInitImpl() {}
-    public override fun initImpl() {
+    override fun initImpl() {
         (app as Minesweeper).client.sendJson(mapper.valueToTree(MapInfo(tilesX, tilesY, bombs)))
     }
 
-    public override fun postInitImpl() {}
-    public override fun drawImpl() {}
-
-    fun revealTile(x: Int, y: Int, type: TileType) {
+    private fun revealTile(x: Int, y: Int, type: TileType) {
         tiles[x, y]!!.type = type
         tiles[x, y]!!.revealed = true
     }

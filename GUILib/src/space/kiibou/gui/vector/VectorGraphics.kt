@@ -10,7 +10,8 @@ typealias GraphicsElementFactory = (GApplet) -> GraphicsElement
 
 class VectorGraphics(app: GApplet, x: Int, y: Int, width: Int, height: Int, scale: Int, dataPath: String) : GraphicsElement(app, x, y, width, height) {
     private val data = mapper.readTree(VectorGraphics::class.java.classLoader.getResourceAsStream(dataPath))
-    override fun preInitImpl() {
+
+    init {
         data.at("/elements").forEach { node ->
             val type = node.at("/type").asText()
             val data = node.at("/data")
@@ -32,10 +33,6 @@ class VectorGraphics(app: GApplet, x: Int, y: Int, width: Int, height: Int, scal
             }
         }
     }
-
-    override fun initImpl() {}
-    override fun postInitImpl() {}
-    override fun drawImpl() {}
 
 }
 

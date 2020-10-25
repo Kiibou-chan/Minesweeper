@@ -82,13 +82,7 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
     init {
         widthProp.bind(scaleProp.multiply(tileWidth))
         heightProp.bind(scaleProp.multiply(tileHeight))
-    }
 
-    override fun preInitImpl() {}
-    override fun initImpl() {
-        /* GUI stuff */
-
-        /* Button and Mouse Stuff */
         /* Reveal the tile, if possible, and set the smiley back to normal */
         button.registerCallback(options(LEFT, RELEASE)) {
             map.controlBar.setSmiley(SmileyStatus.NORMAL)
@@ -115,9 +109,6 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
             map.controlBar.setSmiley(SmileyStatus.NORMAL)
         }
     }
-
-    override fun postInitImpl() {}
-    public override fun drawImpl() {}
 
     private fun reveal() {
         (app as Minesweeper).client.sendJson(mapper.createObjectNode()

@@ -4,9 +4,6 @@ import space.kiibou.GApplet
 import space.kiibou.gui.GraphicsElement
 
 class Vertex(app: GApplet?, private val data: VertexData) : GraphicsElement(app!!, data.start.x, data.start.y, data.dim.x, data.dim.y) {
-    override fun preInitImpl() {}
-    override fun initImpl() {}
-    override fun postInitImpl() {}
 
     override fun drawImpl() {
         with(app.graphics) {

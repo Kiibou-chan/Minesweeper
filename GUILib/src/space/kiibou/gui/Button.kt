@@ -25,11 +25,6 @@ class Button(app: GApplet) : GraphicsElement(app) {
         registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_EXIT))) { border.borderStyle = OUT }
     }
 
-    override fun preInitImpl() {}
-    override fun initImpl() {}
-    override fun postInitImpl() {}
-    override fun drawImpl() {}
-
     override fun addChild(element: GraphicsElement) {
         border.addChild(element)
         border.bindProps(element)
