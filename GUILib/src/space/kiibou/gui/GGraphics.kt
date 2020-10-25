@@ -1,7 +1,9 @@
 package space.kiibou.gui
 
 import processing.opengl.PGraphicsOpenGL
+import space.kiibou.data.Color
 import space.kiibou.data.Vec2
+import space.kiibou.data.toInt
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedDeque
 
@@ -26,6 +28,14 @@ class GGraphics : PGraphicsOpenGL() {
     override fun strokeWeight(weight: Float) {
         val scalar = scalar
         super.strokeWeight(weight * scalar)
+    }
+
+    fun fill(color: Color) {
+        fill(color.toInt())
+    }
+
+    fun stroke(color: Color) {
+        stroke(color.toInt())
     }
 
     private val scalar: Int
