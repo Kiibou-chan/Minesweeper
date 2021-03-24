@@ -1,8 +1,8 @@
-val serializationVersion = "1.0.0"
+val serializationVersion = "1.1.0"
 
 plugins {
-    kotlin("multiplatform") version "1.4.10"
-    kotlin("plugin.serialization") version "1.4.10"
+    kotlin("multiplatform") version "1.4.31"
+    kotlin("plugin.serialization") version "1.4.31"
 }
 
 repositories {
