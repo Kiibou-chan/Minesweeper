@@ -3,8 +3,7 @@ package com.kiibou
 import space.kiibou.GApplet
 import space.kiibou.gui.*
 
-class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bombs: Int)
-    : GraphicsElement(app) {
+class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bombs: Int) : GraphicsElement(app) {
 
     private val margin = tileWidth / 4
     private val marginProp = scaleProp.multiply(margin)
@@ -92,8 +91,12 @@ class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bo
         tiles[flagInfo.x, flagInfo.y]!!.flagged = flagInfo.toggle
     }
 
+    override fun move(dx: Int, dy: Int): GraphicsElement {
+        box.move(dx, dy)
+        return super.move(dx, dy)
+    }
+
     private inline fun forEachTile(action: (Tile) -> Unit) {
         tiles.forEach(action)
     }
-
 }

@@ -1,3 +1,5 @@
+@file:JvmName("MinesweeperMain")
+
 package com.kiibou
 
 import com.fasterxml.jackson.annotation.JsonCreator
@@ -29,6 +31,7 @@ class Minesweeper : GApplet() {
 
     override fun setup() {
         surface.setTitle("Minesweeper")
+        surface.setResizable(true)
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
         map = Map(this, 9, 9, 10)
@@ -42,9 +45,9 @@ class Minesweeper : GApplet() {
         registerJsonCallback("toggle-flag", ::toggleFlag)
 
         client = Client(
-                ::onServerConnect,
-                eventDispatcher::jsonEvent,
-                ::onServerDisconnect
+            ::onServerConnect,
+            eventDispatcher::jsonEvent,
+            ::onServerDisconnect
         ).connect("localhost", 8454)
     }
 
@@ -58,11 +61,16 @@ class Minesweeper : GApplet() {
     }
 
     override fun draw() {
-        if (width != map.width || height != map.height) {
-            surface.setSize(map.width, map.height)
-        }
+        if (width < map.width) surface.setSize(map.width, height)
+        if (height < map.height) surface.setSize(width, map.height)
 
-        background(204)
+        val cX = width / 2 - map.width / 2
+        if (map.x != cX) map.moveTo(cX, map.y)
+
+        val cY = height / 2 - map.height / 2
+        if (map.y != cY) map.moveTo(map.x, cY)
+
+        background(0xFF)
     }
 
     private fun revealTiles(o: JsonNode) = map.revealTiles(mapper.treeToValue(o, RevealTiles::class.java))
@@ -74,7 +82,7 @@ class Minesweeper : GApplet() {
     private fun toggleFlag(o: JsonNode) = map.tileFlag(mapper.treeToValue(o, FlagInfo::class.java))
 
     private fun registerJsonCallback(action: String, callback: (JsonNode) -> Unit) =
-            eventDispatcher.registerJsonCallback(action, callback)
+        eventDispatcher.registerJsonCallback(action, callback)
 }
 
 val json = Json(Json.Default) {
@@ -82,29 +90,34 @@ val json = Json(Json.Default) {
 }
 
 val mapper: ObjectMapper = ObjectMapper()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
 data class TileInfo @JsonCreator constructor(
-        @param:JsonProperty("x") val x: Int,
-        @param:JsonProperty("y") val y: Int,
-        @param:JsonProperty("type") val type: Int)
+    @param:JsonProperty("x") val x: Int,
+    @param:JsonProperty("y") val y: Int,
+    @param:JsonProperty("type") val type: Int
+)
 
 data class FlagInfo @JsonCreator constructor(
-        @param:JsonProperty("x") val x: Int,
-        @param:JsonProperty("y") val y: Int,
-        @param:JsonProperty("toggle") val toggle: Boolean)
+    @param:JsonProperty("x") val x: Int,
+    @param:JsonProperty("y") val y: Int,
+    @param:JsonProperty("toggle") val toggle: Boolean
+)
 
 data class RevealTiles @JsonCreator constructor(
-        @param:JsonProperty("tiles") val tiles: List<TileInfo>)
+    @param:JsonProperty("tiles") val tiles: List<TileInfo>
+)
 
 data class TimeInfo @JsonCreator constructor(
-        @param:JsonProperty("time") val time: Int)
+    @param:JsonProperty("time") val time: Int
+)
 
 data class MapInfo @JsonCreator constructor(
-        @param:JsonProperty("width") val width: Int,
-        @param:JsonProperty("height") val height: Int,
-        @param:JsonProperty("bombs") val bombs: Int,
-        @param:JsonProperty("action") val action: String = "init-map")
+    @param:JsonProperty("width") val width: Int,
+    @param:JsonProperty("height") val height: Int,
+    @param:JsonProperty("bombs") val bombs: Int,
+    @param:JsonProperty("action") val action: String = "init-map"
+)
 
 fun main() {
     if (!NetUtils.checkServerListening("localhost", 8454, 200)) {
