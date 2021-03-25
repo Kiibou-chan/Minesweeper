@@ -31,6 +31,7 @@ kotlin {
             }
         }
 
+        @Suppress("UNUSED_VARIABLE")
         val minesweeperMain by getting {
             dependsOn(guiLibMain)
         }
