@@ -13,7 +13,7 @@ fun loadImage(path: String): PImage {
             val stream = GraphicsElement::class.java.classLoader.getResourceAsStream(path)!!
             PImageAWT(ImageIO.read(stream))
         } catch (e: Exception) {
-            System.out.printf("Error loading image \"%s\"%n", path)
+            println("""Error loading image "$path""")
             PImage(0, 0)
         }
     }
