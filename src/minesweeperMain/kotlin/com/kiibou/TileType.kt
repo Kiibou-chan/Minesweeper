@@ -3,6 +3,7 @@ package com.kiibou
 import java.util.*
 
 enum class TileType(val path: String, val lookup: Int) {
+    NO_BOMB("tiles/no_bomb_tile.png", -3),
     RED_BOMB("tiles/red_bomb_tile.png", -2),
     BOMB("tiles/bomb_tile.png", -1),
     EMPTY("tiles/empty_tile.png", 0),

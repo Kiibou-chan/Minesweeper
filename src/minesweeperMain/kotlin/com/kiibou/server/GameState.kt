@@ -5,7 +5,13 @@ import com.kiibou.TileType
 import space.kiibou.data.Vec2
 import java.util.*
 
-class GameState(private val handle: Long, private var width: Int, private var height: Int, private var bombs: Int, private val gameService: GameService) {
+class GameState(
+    private val handle: Long,
+    private var width: Int,
+    private var height: Int,
+    private var bombs: Int,
+    private val gameService: GameService
+) {
     private lateinit var revealed: Array<BooleanArray>
     private lateinit var flagged: Array<BooleanArray>
     private lateinit var tiles: Array<Array<TileType>>
@@ -48,19 +54,19 @@ class GameState(private val handle: Long, private var width: Int, private var he
     }
 
     private fun possibleTilePositions(x: Int = 0, y: Int = 0, width: Int = this.width, height: Int = this.height) =
-            List(width * height) { Vec2(x + it % width, y + it / height) }
+        List(width * height) { Vec2(x + it % width, y + it / height) }
 
     private fun placeBombs() = chooseBombPositions().run(::setTilesToBombs)
     private fun chooseBombPositions() = possibleTilePositions().shuffled().take(bombs)
     private fun setTilesToBombs(list: List<Vec2>) = list.onEach { (x, y) -> setTile(x, y, TileType.BOMB) }
 
     private fun createNumberTiles() = possibleTilePositions()
-            .filterNot { (x, y) -> isBomb(x, y) }
-            .associateWith { (x, y) -> countSurroundingBombs(x, y) }
-            .forEach { (pos, count) -> setTile(pos.x, pos.y, TileType.getTypeFromValue(count)) }
+        .filterNot { (x, y) -> isBomb(x, y) }
+        .associateWith { (x, y) -> countSurroundingBombs(x, y) }
+        .forEach { (pos, count) -> setTile(pos.x, pos.y, TileType.getTypeFromValue(count)) }
 
     private fun countSurroundingBombs(x: Int, y: Int) = possibleTilePositions(-1, -1, 3, 3)
-            .filter { (px, py) -> isValidTile(x + px, y + py) && isBomb(x + px, y + py) }.count()
+        .filter { (px, py) -> isValidTile(x + px, y + py) && isBomb(x + px, y + py) }.count()
 
     fun reveal(x: Int, y: Int): List<TileInfo> {
         if (!gameRunning) setGameRunning(true)
@@ -69,14 +75,22 @@ class GameState(private val handle: Long, private var width: Int, private var he
         if (isValidTile(x, y)) {
             when (getTile(x, y)) {
                 TileType.EMPTY -> possibleTilePositions(x - 1, y - 1, 3, 3)
-                        .filter { (tx, ty) -> revealTile(tx, ty, revealed) }
-                        .forEach { (tx, ty) -> revealed += reveal(tx, ty) }
+                    .filter { (tx, ty) -> revealTile(tx, ty, revealed) }
+                    .forEach { (tx, ty) -> revealed += reveal(tx, ty) }
                 TileType.BOMB -> {
                     setTile(x, y, TileType.RED_BOMB)
                     setGameRunning(false)
 
                     revealed += bombTiles.filterNot { it == Vec2(x, y) }
-                            .map { (x, y) -> TileInfo(x, y, TileType.BOMB.lookup) }
+                        .map { (x, y) -> TileInfo(x, y, TileType.BOMB.lookup) }
+
+                    for (flagX in 0 until width) {
+                        for (flagY in 0 until height) {
+                            if (x != flagX && y != flagY && isFlagged(flagX, flagY) && !isBomb(flagX, flagY)) {
+                                revealed.add(TileInfo(flagX, flagY, TileType.NO_BOMB.lookup))
+                            }
+                        }
+                    }
 
                     revealTile(x, y, revealed)
                     gameService.sendLoose(handle)
@@ -90,8 +104,8 @@ class GameState(private val handle: Long, private var width: Int, private var he
             gameService.sendWin(handle)
 
             bombTiles.filter { (x, y) -> !isFlagged(x, y) }
-                    .onEach { (x, y) -> flagToggle(x, y) }
-                    .forEach { (x, y) -> gameService.sendFlagStatus(handle, x, y) }
+                .onEach { (x, y) -> flagToggle(x, y) }
+                .forEach { (x, y) -> gameService.sendFlagStatus(handle, x, y) }
 
             setGameRunning(false)
         }
