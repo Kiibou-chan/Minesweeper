@@ -22,14 +22,10 @@ class EventDispatcher {
     private val keyQueue = Collections.synchronizedList(ArrayList<KeyEvent>())
     private val jsonQueue = Collections.synchronizedList(ArrayList<JsonNode>())
 
-    private fun dispatchJson(action: String, obj: JsonNode) {
-        jsonDispatcher.dispatchAction(action, obj)
-    }
-
     private val jsonDispatcher = ActionDispatcher<JsonNode> {
         if (it.has("action")) {
             val action = it.get("action").textValue()
-            dispatchJson(action, it)
+            dispatchAction(action, it)
         }
     }
 
