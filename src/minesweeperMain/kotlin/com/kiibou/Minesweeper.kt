@@ -26,7 +26,7 @@ class Minesweeper : GApplet() {
         size(800, 800, GGraphics::class.java.canonicalName)
         setScale(2)
         //        fullScreen(P2D)
-        PJOGL.setIcon("pictures/icon.png")
+        PJOGL.setIcon("pictures/icon_30.png")
     }
 
     override fun setup() {
