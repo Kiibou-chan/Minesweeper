@@ -1,44 +1,44 @@
 package space.kiibou.net.client
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import space.kiibou.net.common.SocketConnection
-import java.io.IOException
 import java.net.Socket
 
-private val mapper = ObjectMapper()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+interface Client<T> {
+    val onConnect: () -> Unit
+    val onMessageReceived: (T) -> Unit
+    val onDisconnect: () -> Unit
 
-class Client(private val onConnect: () -> Unit, private val onMessageReceived: (JsonNode) -> Unit, private val onDisconnect: () -> Unit) {
-    private var socket: Socket? = null
-    private var connection: SocketConnection? = null
+    var socket: Socket?
+    var connection: SocketConnection?
 
-    fun connect(address: String, port: Int): Client {
+    fun stringToObj(string: String): T
+
+    fun objToString(t: T): String
+
+    fun connect(address: String, port: Int): Client<T> {
         try {
             socket = Socket(address, port)
-            SocketConnection.create(socket!!).ifPresent { conn: SocketConnection ->
+            SocketConnection.create(socket!!).ifPresent { connection ->
                 onConnect()
-                connection = conn
-                conn.registerMessageCallback { _, msg -> onMessageReceived(mapper.readTree(msg)) }
-                conn.registerDisconnectCallback { onDisconnect() }
+                this.connection = connection
+                connection.registerMessageCallback { _, message -> onMessageReceived(stringToObj(message)) }
+                connection.registerDisconnectCallback { onDisconnect() }
             }
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             println("Failed to connect to $address:$port")
+            ex.printStackTrace()
         }
 
         return this
     }
 
     fun disconnect() {
-        socket?.close()
+        if (socket?.isClosed == false)
+            socket?.close()
     }
 
-    fun sendJson(obj: JsonNode) {
-        sendMessage(mapper.writeValueAsString(obj))
+    fun send(t: T) {
+        connection?.sendMessage(objToString(t))
     }
 
-    private fun sendMessage(message: String) {
-        connection?.sendMessage(message)
-    }
 }
