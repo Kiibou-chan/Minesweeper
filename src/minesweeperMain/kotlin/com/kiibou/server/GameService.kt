@@ -69,6 +69,6 @@ class GameService(server: Server) : Service(server) {
         actionService.send(handle, "set-time", json.mapper.valueToTree(TimeInfo(time)))
 
     private fun getGameState(handle: Long) =
-            gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }
+        gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }
 
 }

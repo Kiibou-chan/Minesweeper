@@ -19,13 +19,13 @@ class ActionService(server: Server) : Service(server) {
             if (message.has("action")) {
                 val action = message.at("/action").textValue()
                 val jsonMessage = Message(handle.toLong(), message)
-                dispatch(action, jsonMessage)
+                dispatchAction(action, jsonMessage)
             }
         }
     }
 
     override fun initialize() {
-        json.registerCallback(dispatcher.messageReceived)
+        json.registerCallback(dispatcher::messageReceived)
     }
 
     fun send(handle: Long, action: String, message: ObjectNode = json.mapper.createObjectNode()) {
@@ -39,9 +39,5 @@ class ActionService(server: Server) : Service(server) {
 
     fun removeCallback(action: String, callbackHandle: Int) {
         dispatcher.removeActionCallback(action, callbackHandle)
-    }
-
-    private fun dispatch(action: String, jsonMessage: Message<JsonNode>) {
-        dispatcher.dispatchAction(action, jsonMessage)
     }
 }

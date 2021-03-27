@@ -69,9 +69,7 @@ class EventDispatcher {
         }
 
         synchronized(jsonQueue) {
-            jsonQueue.forEach {
-                jsonDispatcher.messageReceived(it)
-            }
+            jsonQueue.forEach(jsonDispatcher::messageReceived)
             jsonQueue.clear()
         }
     }
