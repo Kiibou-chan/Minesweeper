@@ -92,7 +92,7 @@ class EventDispatcher {
     }
 
     fun registerJsonCallback(action: String, callback: (JsonNode) -> Unit) {
-        jsonDispatcher.addActionCallback(action, callback)
+        jsonDispatcher.addCallback(action, callback)
     }
 
     fun registerMethod(eventType: String, element: GraphicsElement) {

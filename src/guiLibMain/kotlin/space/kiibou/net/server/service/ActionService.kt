@@ -13,14 +13,11 @@ class ActionService(server: Server) : Service(server) {
     lateinit var json: JsonService
 
     private val dispatcher: ActionDispatcher<Message<JsonNode>> = ActionDispatcher {
-        if (it.has("handle") && it.has("message")) {
-            val handle = it.at("/handle").intValue()
-            val message = it.at("/message")
-            if (message.has("action")) {
-                val action = message.at("/action").textValue()
-                val jsonMessage = Message(handle.toLong(), message)
-                dispatchAction(action, jsonMessage)
-            }
+        val message = it.content
+        if (message.has("action")) {
+            val action = message.at("/action").textValue()
+            val jsonMessage = Message(it.connectionHandle, message)
+            dispatchAction(action, jsonMessage)
         }
     }
 
@@ -34,10 +31,10 @@ class ActionService(server: Server) : Service(server) {
     }
 
     fun registerCallback(action: String, callback: (Message<JsonNode>) -> Unit): Long {
-        return dispatcher.addActionCallback(action, callback)
+        return dispatcher.addCallback(action, callback)
     }
 
     fun removeCallback(action: String, callbackHandle: Int) {
-        dispatcher.removeActionCallback(action, callbackHandle)
+        dispatcher.removeCallback(action, callbackHandle)
     }
 }
