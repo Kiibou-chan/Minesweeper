@@ -111,17 +111,21 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
     }
 
     private fun reveal() {
-        (app as Minesweeper).client.sendJson(mapper.createObjectNode()
+        (app as Minesweeper).client.send(
+            mapper.createObjectNode()
                 .put("action", "reveal-tiles")
                 .put("x", tileX)
-                .put("y", tileY))
+                .put("y", tileY)
+        )
     }
 
     private fun flag() {
-        (app as Minesweeper).client.sendJson(mapper.createObjectNode()
+        (app as Minesweeper).client.send(
+            mapper.createObjectNode()
                 .put("action", "flag-toggle")
                 .put("x", tileX)
-                .put("y", tileY))
+                .put("y", tileY)
+        )
     }
 
     fun reset() {

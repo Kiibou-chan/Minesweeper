@@ -52,7 +52,7 @@ class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bo
     }
 
     override fun initImpl() {
-        (app as Minesweeper).client.sendJson(mapper.valueToTree(MapInfo(tilesX, tilesY, bombs)))
+        (app as Minesweeper).client.send(mapper.valueToTree(MapInfo(tilesX, tilesY, bombs)))
     }
 
     private fun revealTile(x: Int, y: Int, type: TileType) {

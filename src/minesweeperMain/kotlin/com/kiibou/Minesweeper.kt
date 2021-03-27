@@ -15,12 +15,12 @@ import processing.opengl.PJOGL
 import space.kiibou.GApplet
 import space.kiibou.gui.GGraphics
 import space.kiibou.net.NetUtils
-import space.kiibou.net.client.Client
+import space.kiibou.net.client.JacksonClient
 import space.kiibou.net.server.main
 
 class Minesweeper : GApplet() {
     private lateinit var map: Map
-    lateinit var client: Client
+    lateinit var client: JacksonClient
 
     override fun settings() {
         size(800, 800, GGraphics::class.java.canonicalName)
@@ -44,7 +44,7 @@ class Minesweeper : GApplet() {
         registerJsonCallback("restart") { map.restart() }
         registerJsonCallback("toggle-flag", ::toggleFlag)
 
-        client = Client(
+        client = JacksonClient(
             ::onServerConnect,
             eventDispatcher::jsonEvent,
             ::onServerDisconnect
