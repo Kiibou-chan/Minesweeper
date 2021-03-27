@@ -1,8 +1,8 @@
 package space.kiibou.net.server
 
 import space.kiibou.net.common.Callbacks
+import space.kiibou.net.common.Message
 import space.kiibou.net.common.SocketConnection
-import space.kiibou.net.common.TextMessage
 import space.kiibou.net.server.service.ActionService
 import space.kiibou.net.server.service.JsonService
 import space.kiibou.reflect.Inject
@@ -17,9 +17,10 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class Server internal constructor(vararg serviceNames: String) {
-    private val connections: MutableMap<Long, SocketConnection> = Collections.synchronizedMap(HashMap<Long, SocketConnection>())
+    private val connections: MutableMap<Long, SocketConnection> =
+        Collections.synchronizedMap(HashMap<Long, SocketConnection>())
     private val services: MutableList<Service> = Collections.synchronizedList(ArrayList())
-    private val messageCallbacks: Callbacks<TextMessage, Unit> = Callbacks()
+    private val messageCallbacks: Callbacks<Message<String>, Unit> = Callbacks()
     private lateinit var serverSocket: ServerSocket
     private val connectionListenerThread: Thread
     private val servicesMap: MutableMap<String, Service> = Collections.synchronizedMap(HashMap())
@@ -59,12 +60,12 @@ class Server internal constructor(vararg serviceNames: String) {
 
     fun registerMessageReceivedCallback(callback: (Long, String) -> Unit): Long {
         return messageCallbacks.addCallback { message ->
-            callback(message.connectionHandle, message.message)
+            callback(message.connectionHandle, message.content)
         }
     }
 
     private fun messageReceived(handle: Long, message: String) {
-        val msg = TextMessage(handle, message)
+        val msg = Message(handle, message)
         messageCallbacks.callAll(msg)
     }
 

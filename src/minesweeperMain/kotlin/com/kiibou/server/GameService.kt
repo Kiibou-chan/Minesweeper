@@ -1,8 +1,9 @@
 package com.kiibou.server
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.kiibou.*
 import space.kiibou.data.Vec2
-import space.kiibou.net.server.JsonMessage
+import space.kiibou.net.common.Message
 import space.kiibou.net.server.Server
 import space.kiibou.net.server.Service
 import space.kiibou.net.server.service.ActionService
@@ -24,29 +25,29 @@ class GameService(server: Server) : Service(server) {
         actionService.addActionCallback("init-map", ::initMap)
     }
 
-    private fun initMap(message: JsonMessage) {
+    private fun initMap(message: Message<JsonNode>) {
         val gameState = getGameState(message.connectionHandle)
-        val (width, height, bombs) = json.mapper.treeToValue(message.node, MapInfo::class.java)
+        val (width, height, bombs) = json.mapper.treeToValue(message.content, MapInfo::class.java)
         gameState.setupVariables(width, height, bombs)
         actionService.sendActionToClient(message.connectionHandle, "restart")
     }
 
-    private fun revealTiles(message: JsonMessage) {
+    private fun revealTiles(message: Message<JsonNode>) {
         val gameState = getGameState(message.connectionHandle)
-        val (x, y) = json.mapper.treeToValue(message.node, Vec2::class.java)
+        val (x, y) = json.mapper.treeToValue(message.content, Vec2::class.java)
         val revealed = gameState.reveal(x, y)
         sendRevealTiles(message.connectionHandle, revealed)
     }
 
-    private fun restart(message: JsonMessage) {
+    private fun restart(message: Message<JsonNode>) {
         val gameState = getGameState(message.connectionHandle)
         gameState.setupVariables()
         actionService.sendActionToClient(message.connectionHandle, "restart")
     }
 
-    private fun flagToggle(message: JsonMessage) {
+    private fun flagToggle(message: Message<JsonNode>) {
         val gameState = getGameState(message.connectionHandle)
-        val (x, y) = json.mapper.treeToValue(message.node, Vec2::class.java)
+        val (x, y) = json.mapper.treeToValue(message.content, Vec2::class.java)
         gameState.flagToggle(x, y)
         sendFlagStatus(message.connectionHandle, x, y)
     }

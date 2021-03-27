@@ -10,8 +10,8 @@ import space.kiibou.net.server.Service
 class JsonService(server: Server) : Service(server) {
     private val jsonMessageCallbacks: Callbacks<JsonNode, Unit> = Callbacks()
 
-    val mapper = ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    val mapper: ObjectMapper = ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     override fun initialize() {}
 
