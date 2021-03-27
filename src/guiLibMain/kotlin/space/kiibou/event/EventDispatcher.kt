@@ -35,10 +35,11 @@ class EventDispatcher {
 
     private var prevGraphicsElement: GraphicsElement? = null
 
+    // TODO (Svenja 27/03/21): Change return type to Optional<GraphicsElement>
     private fun topElement(x: Int, y: Int, elements: Set<GraphicsElement>): GraphicsElement? {
         return elements
-                .filter { it.collides(x, y) }
-                .maxBy { it.hierarchyDepth }
+            .filter { it.collides(x, y) }
+            .maxBy { it.hierarchyDepth }
     }
 
     private fun dispatchEvents() {
