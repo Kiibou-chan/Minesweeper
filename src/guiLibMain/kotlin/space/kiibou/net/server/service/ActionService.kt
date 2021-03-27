@@ -25,19 +25,19 @@ class ActionService(server: Server) : Service(server) {
     }
 
     override fun initialize() {
-        json.addJSONMessageReceivedCallback(dispatcher.messageReceived)
+        json.registerCallback(dispatcher.messageReceived)
     }
 
-    fun sendActionToClient(handle: Long, action: String, message: ObjectNode = json.mapper.createObjectNode()) {
+    fun send(handle: Long, action: String, message: ObjectNode = json.mapper.createObjectNode()) {
         message.put("action", action)
-        json.sendJsonMessage(handle, message)
+        json.send(handle, message)
     }
 
-    fun addActionCallback(action: String, callback: (Message<JsonNode>) -> Unit): Long {
+    fun registerCallback(action: String, callback: (Message<JsonNode>) -> Unit): Long {
         return dispatcher.addActionCallback(action, callback)
     }
 
-    fun removeActionCallback(action: String, callbackHandle: Int) {
+    fun removeCallback(action: String, callbackHandle: Int) {
         dispatcher.removeActionCallback(action, callbackHandle)
     }
 

@@ -15,31 +15,31 @@ class JsonService(server: Server) : Service(server) {
 
     override fun initialize() {}
 
-    private fun onMessageReceived(handle: Long, message: String) {
-        val parsedMessage = mapper.readTree(message)
-        val result = mapper.createObjectNode().put("handle", handle).set<JsonNode>("message", parsedMessage)
-        jsonMessageCallbacks.callAll(result)
-    }
-
-    fun addJSONMessageReceivedCallback(callback: (JsonNode) -> Unit): Long {
+    fun registerCallback(callback: (JsonNode) -> Unit): Long {
         return jsonMessageCallbacks.addCallback { message ->
             callback(message)
         }
     }
 
-    fun removeJSONMessageReceivedCallback(callbackHandle: Long) {
+    fun removeCallback(callbackHandle: Long) {
         jsonMessageCallbacks.removeCallback(callbackHandle)
     }
 
-    fun sendJsonMessage(handle: Long, obj: JsonNode) {
+    fun send(handle: Long, obj: JsonNode) {
         server.sendMessage(handle, mapper.writeValueAsString(obj))
     }
 
-    fun broadcastJsonMessage(obj: JsonNode) {
+    fun broadcast(obj: JsonNode) {
         server.broadcastMessage(mapper.writeValueAsString(obj))
     }
 
     init {
-        server.registerMessageReceivedCallback(::onMessageReceived)
+        server.registerMessageReceivedCallback { handle, message ->
+            val parsedMessage = mapper.readTree(message)
+            val result = mapper.createObjectNode()
+                .put("handle", handle)
+                .set<JsonNode>("message", parsedMessage)
+            jsonMessageCallbacks.callAll(result)
+        }
     }
 }

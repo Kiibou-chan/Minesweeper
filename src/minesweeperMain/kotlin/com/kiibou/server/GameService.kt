@@ -19,17 +19,17 @@ class GameService(server: Server) : Service(server) {
     private val gameStates: HashMap<Long, GameState> = HashMap()
 
     override fun initialize() {
-        actionService.addActionCallback("reveal-tiles", ::revealTiles)
-        actionService.addActionCallback("restart", ::restart)
-        actionService.addActionCallback("flag-toggle", ::flagToggle)
-        actionService.addActionCallback("init-map", ::initMap)
+        actionService.registerCallback("reveal-tiles", ::revealTiles)
+        actionService.registerCallback("restart", ::restart)
+        actionService.registerCallback("flag-toggle", ::flagToggle)
+        actionService.registerCallback("init-map", ::initMap)
     }
 
     private fun initMap(message: Message<JsonNode>) {
         val gameState = getGameState(message.connectionHandle)
         val (width, height, bombs) = json.mapper.treeToValue(message.content, MapInfo::class.java)
         gameState.setupVariables(width, height, bombs)
-        actionService.sendActionToClient(message.connectionHandle, "restart")
+        actionService.send(message.connectionHandle, "restart")
     }
 
     private fun revealTiles(message: Message<JsonNode>) {
@@ -42,7 +42,7 @@ class GameService(server: Server) : Service(server) {
     private fun restart(message: Message<JsonNode>) {
         val gameState = getGameState(message.connectionHandle)
         gameState.setupVariables()
-        actionService.sendActionToClient(message.connectionHandle, "restart")
+        actionService.send(message.connectionHandle, "restart")
     }
 
     private fun flagToggle(message: Message<JsonNode>) {
@@ -54,19 +54,19 @@ class GameService(server: Server) : Service(server) {
 
     fun sendFlagStatus(handle: Long, x: Int, y: Int) {
         val gameState = getGameState(handle)
-        actionService.sendActionToClient(handle, "toggle-flag", json.mapper.valueToTree(FlagInfo(x, y, gameState.isFlagged(x, y))))
+        actionService.send(handle, "toggle-flag", json.mapper.valueToTree(FlagInfo(x, y, gameState.isFlagged(x, y))))
     }
 
     private fun sendRevealTiles(handle: Long, revealed: List<TileInfo>) {
-        actionService.sendActionToClient(handle, "reveal-tiles", json.mapper.valueToTree(RevealTiles(revealed)))
+        actionService.send(handle, "reveal-tiles", json.mapper.valueToTree(RevealTiles(revealed)))
     }
 
-    fun sendWin(handle: Long) = actionService.sendActionToClient(handle, "win")
+    fun sendWin(handle: Long) = actionService.send(handle, "win")
 
-    fun sendLoose(handle: Long) = actionService.sendActionToClient(handle, "loose")
+    fun sendLoose(handle: Long) = actionService.send(handle, "loose")
 
     fun sendTime(handle: Long, time: Int) =
-            actionService.sendActionToClient(handle, "set-time", json.mapper.valueToTree(TimeInfo(time)))
+        actionService.send(handle, "set-time", json.mapper.valueToTree(TimeInfo(time)))
 
     private fun getGameState(handle: Long) =
             gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }
