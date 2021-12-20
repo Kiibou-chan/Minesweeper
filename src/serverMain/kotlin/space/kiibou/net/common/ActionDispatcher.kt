@@ -3,7 +3,6 @@ package space.kiibou.net.common
 import java.util.*
 
 class ActionDispatcher<T>(private val messageReceivedCallback: ActionDispatcher<T>.(T) -> Unit) {
-
     private val actionCallbackMap = Collections.synchronizedMap(HashMap<String, Callbacks<T, Unit>>())
 
     fun dispatchAction(action: String, jsonMessage: T) {
@@ -29,5 +28,4 @@ class ActionDispatcher<T>(private val messageReceivedCallback: ActionDispatcher<
     fun messageReceived(node: T) {
         messageReceivedCallback(node)
     }
-
 }

@@ -7,22 +7,19 @@ import space.kiibou.GApplet
 import space.kiibou.data.Rectangle
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.loadImage
-import java.util.*
 
-class SevenSegmentDisplay(app: GApplet, private val digits: Int, var value: Int)
-    : GraphicsElement(app) {
-
+class SevenSegmentDisplay(app: GApplet, private val digits: Int, var value: Int) : GraphicsElement(app) {
     private val g: PGraphics = app.graphics
     private val digitRenderer: PGraphics = app.createGraphics(digitWidth, digitHeight, PConstants.P2D)
     private val digitCoordinates: Array<Rectangle> =
-            (0 until digits).map { digitPos ->
-                Rectangle().also { rec ->
-                    rec.xProp.bind(xProp.add(widthProp.divide(digits).multiply(digitPos)))
-                    rec.yProp.bind(yProp)
-                    rec.widthProp.bind(scaleProp.multiply(digitWidth))
-                    rec.heightProp.bind(scaleProp.multiply(digitHeight))
-                }
-            }.toTypedArray()
+        (0 until digits).map { digitPos ->
+            Rectangle().also { rec ->
+                rec.xProp.bind(xProp.add(widthProp.divide(digits).multiply(digitPos)))
+                rec.yProp.bind(yProp)
+                rec.widthProp.bind(scaleProp.multiply(digitWidth))
+                rec.heightProp.bind(scaleProp.multiply(digitHeight))
+            }
+        }.toTypedArray()
 
     init {
         widthProp.bind(scaleProp.multiply(digitWidth * digits))

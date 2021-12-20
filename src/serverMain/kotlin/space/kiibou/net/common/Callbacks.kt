@@ -30,5 +30,4 @@ class Callbacks<R, S> {
             return handleCounter++
         }
     }
-
 }

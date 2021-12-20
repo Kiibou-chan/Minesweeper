@@ -1,6 +1,6 @@
 @file:Suppress("UNCHECKED_CAST")
 
-package space.kiibou.reflect
+package space.kiibou.net.reflect
 
 import space.kiibou.net.server.Service
 import java.lang.reflect.Field

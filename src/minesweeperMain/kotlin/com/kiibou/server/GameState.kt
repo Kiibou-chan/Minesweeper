@@ -1,7 +1,7 @@
 package com.kiibou.server
 
-import com.kiibou.TileInfo
 import com.kiibou.TileType
+import com.kiibou.common.TileInfo
 import space.kiibou.data.Vec2
 import java.util.*
 
@@ -66,7 +66,7 @@ class GameState(
         .forEach { (pos, count) -> setTile(pos.x, pos.y, TileType.getTypeFromValue(count)) }
 
     private fun countSurroundingBombs(x: Int, y: Int) = possibleTilePositions(-1, -1, 3, 3)
-        .filter { (px, py) -> isValidTile(x + px, y + py) && isBomb(x + px, y + py) }.count()
+        .count { (px, py) -> isValidTile(x + px, y + py) && isBomb(x + px, y + py) }
 
     fun reveal(x: Int, y: Int): List<TileInfo> {
         if (!gameRunning) setGameRunning(true)
@@ -139,6 +139,7 @@ class GameState(
             flagToggle(x, y)
             gameService.sendFlagStatus(handle, x, y)
         }
+        
         revealed[x][y] = r
     }
 

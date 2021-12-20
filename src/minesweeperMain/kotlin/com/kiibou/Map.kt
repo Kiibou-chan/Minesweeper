@@ -1,5 +1,7 @@
 package com.kiibou
 
+import com.kiibou.common.MapInfo
+import com.kiibou.common.MinesweeperAction
 import space.kiibou.GApplet
 import space.kiibou.gui.*
 
@@ -52,7 +54,7 @@ class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bo
     }
 
     override fun initImpl() {
-        (app as Minesweeper).client.send(mapper.valueToTree(MapInfo(tilesX, tilesY, bombs)))
+        (app as Minesweeper).client.send(MinesweeperAction.InitMap(MapInfo(tilesX, tilesY, bombs)))
     }
 
     private fun revealTile(x: Int, y: Int, type: TileType) {
@@ -60,29 +62,34 @@ class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bo
         tiles[x, y]!!.revealed = true
     }
 
-    fun revealTiles(revealTiles: RevealTiles) {
-        revealTiles.tiles.forEach {
+    fun revealTiles(action: MinesweeperAction.RevealTiles) {
+        action.data.tiles.forEach {
             revealTile(it.x, it.y, TileType.getTypeFromValue(it.type))
         }
     }
 
-    fun win() {
+    @Suppress("UNUSED_PARAMETER")
+    fun win(ignored: MinesweeperAction.Win) {
         controlBar.setSmiley(SmileyStatus.GLASSES)
         forEachTile(Tile::deactivate)
     }
 
-    fun loose() {
+    @Suppress("UNUSED_PARAMETER")
+    fun loose(ignored: MinesweeperAction.Loose) {
         forEachTile(Tile::deactivate)
         controlBar.setSmiley(SmileyStatus.DEAD)
     }
 
-    fun restart() {
+    @Suppress("UNUSED_PARAMETER")
+    fun restart(ignored: MinesweeperAction.Restart) {
         forEachTile(Tile::reset)
         controlBar.setSmiley(SmileyStatus.NORMAL)
         controlBar.bombsLeft.value = bombs
     }
 
-    fun tileFlag(flagInfo: FlagInfo) {
+    fun tileFlag(action: MinesweeperAction.ToggleFlag) {
+        val flagInfo = action.data
+
         when (flagInfo.toggle) {
             true -> controlBar.bombsLeft.dec()
             false -> controlBar.bombsLeft.inc()

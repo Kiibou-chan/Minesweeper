@@ -21,7 +21,11 @@ interface Client<T> {
             SocketConnection.create(socket!!).ifPresent { connection ->
                 onConnect()
                 this.connection = connection
-                connection.registerMessageCallback { _, message -> onMessageReceived(stringToObj(message)) }
+                connection.registerMessageCallback { _, message ->
+                    println("Client < $message")
+
+                    onMessageReceived(stringToObj(message))
+                }
                 connection.registerDisconnectCallback { onDisconnect() }
             }
         } catch (ex: Exception) {
@@ -38,7 +42,11 @@ interface Client<T> {
     }
 
     fun send(t: T) {
-        connection?.sendMessage(objToString(t))
+        val message = objToString(t)
+
+        println("Client > $message")
+
+        connection?.sendMessage(message)
     }
 
 }

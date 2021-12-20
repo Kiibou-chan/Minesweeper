@@ -35,10 +35,8 @@ class InputStreamListener(private val input: InputStream) : Runnable {
         return disconnectCallbacks.addCallback(callback)
     }
 
-    @Throws(IOException::class)
     fun stop() {
         Thread.currentThread().interrupt()
         input.close()
     }
-
 }

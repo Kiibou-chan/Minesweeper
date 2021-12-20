@@ -3,18 +3,15 @@ package space.kiibou.net.server
 import space.kiibou.net.common.Callbacks
 import space.kiibou.net.common.Message
 import space.kiibou.net.common.SocketConnection
+import space.kiibou.net.reflect.Inject
+import space.kiibou.net.reflect.ReflectUtils.createInstance
+import space.kiibou.net.reflect.ReflectUtils.getAnnotatedFields
 import space.kiibou.net.server.service.ActionService
-import space.kiibou.net.server.service.JsonService
-import space.kiibou.reflect.Inject
-import space.kiibou.reflect.ReflectUtils.createInstance
-import space.kiibou.reflect.ReflectUtils.getAnnotatedFields
 import java.io.File
 import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class Server internal constructor(vararg serviceNames: String) {
     private val connections: MutableMap<Long, SocketConnection> =
@@ -54,7 +51,7 @@ class Server internal constructor(vararg serviceNames: String) {
             conn.registerMessageCallback(::messageReceived)
             conn.registerDisconnectCallback(::connectionClosed)
             connections[conn.handle] = conn
-            System.out.printf("Registered connection with handle %d%n", conn.handle)
+            println("Registered connection with handle ${conn.handle}")
         }
     }
 
@@ -66,20 +63,28 @@ class Server internal constructor(vararg serviceNames: String) {
 
     private fun messageReceived(handle: Long, message: String) {
         val msg = Message(handle, message)
+
+        println("Server $handle < $message ")
+
         messageCallbacks.callAll(msg)
     }
 
     fun sendMessage(handle: Long, message: String): Boolean {
+        println("Server $handle > $message")
+
         connections[handle]?.sendMessage(message) ?: return false
+
         return true
     }
 
     fun broadcastMessage(message: String) {
+        println("Server > message")
+
         connections.forEach { (_, conn) -> conn.sendMessage(message) }
     }
 
     private fun connectionClosed(handle: Long) {
-        System.out.printf("Client %d disconnected%n", handle)
+        println("Client $handle disconnected")
         connections.remove(handle)
     }
 
@@ -99,7 +104,6 @@ class Server internal constructor(vararg serviceNames: String) {
             registerService(serviceName)
         }
 
-        registerService(JsonService::class.java.canonicalName)
         registerService(ActionService::class.java.canonicalName)
 
         for (service in services) injectServices(service)
@@ -128,9 +132,9 @@ fun main(args: Array<String>) {
 
 fun startServer(vararg services: Class<*>): Optional<Process> {
     val javaHome = System.getProperty("java.home")
-    val javaBin = javaHome + File.separator + "bin" + File.separator + "java"
+    val javaBin = "$javaHome${File.separator}bin${File.separator}java"
     val classpath = System.getProperty("java.class.path")
-    val className = Server::class.qualifiedName + "Kt"
+    val className = "${Server::class.qualifiedName}Kt"
     val port = "--port=8454"
     val servicesArg = "--services=" + services.joinToString(";") { it.canonicalName }
     val builder = ProcessBuilder(javaBin, "-cp", classpath, className, port, servicesArg)

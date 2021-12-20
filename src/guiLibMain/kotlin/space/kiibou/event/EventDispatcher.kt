@@ -2,31 +2,30 @@
 
 package space.kiibou.event
 
-import com.fasterxml.jackson.databind.JsonNode
 import processing.event.KeyEvent
 import processing.event.TouchEvent
 import space.kiibou.GApplet
 import space.kiibou.gui.GraphicsElement
+import space.kiibou.net.common.Action
 import space.kiibou.net.common.ActionDispatcher
 import java.util.*
+import kotlin.reflect.jvm.jvmName
 
 class EventDispatcher {
     private lateinit var app: GApplet
     private val registry = mapOf(
-            "keyEvent" to HashSet<GraphicsElement>(),
-            "mouseEvent" to HashSet(),
-            "touchEvent" to HashSet()
+        "keyEvent" to HashSet<GraphicsElement>(),
+        "mouseEvent" to HashSet(),
+        "touchEvent" to HashSet()
     )
 
     private val mouseQueue = Collections.synchronizedList(ArrayList<processing.event.MouseEvent>())
     private val keyQueue = Collections.synchronizedList(ArrayList<KeyEvent>())
-    private val jsonQueue = Collections.synchronizedList(ArrayList<JsonNode>())
+    private val actionQueue = Collections.synchronizedList(ArrayList<Action<*>>())
 
-    private val jsonDispatcher = ActionDispatcher<JsonNode> {
-        if (it.has("action")) {
-            val action = it.get("action").textValue()
-            dispatchAction(action, it)
-        }
+    @PublishedApi
+    internal val actionDispatcher = ActionDispatcher<Action<*>> {
+        dispatchAction(it::class.jvmName, it)
     }
 
     private var prevGraphicsElement: GraphicsElement? = null
@@ -63,9 +62,9 @@ class EventDispatcher {
             mouseQueue.clear()
         }
 
-        synchronized(jsonQueue) {
-            jsonQueue.forEach(jsonDispatcher::messageReceived)
-            jsonQueue.clear()
+        synchronized(actionQueue) {
+            actionQueue.forEach(actionDispatcher::messageReceived)
+            actionQueue.clear()
         }
     }
 
@@ -85,14 +84,15 @@ class EventDispatcher {
 
     fun touchEvent(event: TouchEvent) {}
 
-    fun jsonEvent(obj: JsonNode) {
-        synchronized(jsonQueue) {
-            jsonQueue.add(obj)
+    fun actionEvent(obj: Action<*>) {
+        synchronized(actionQueue) {
+            actionQueue.add(obj)
         }
     }
 
-    fun registerJsonCallback(action: String, callback: (JsonNode) -> Unit) {
-        jsonDispatcher.addCallback(action, callback)
+    inline fun <S, reified T : Action<S>> registerActionCallback(noinline callback: (T) -> Unit) {
+        @Suppress("UNCHECKED_CAST")
+        actionDispatcher.addCallback(T::class.jvmName, callback as (Action<*>) -> Unit)
     }
 
     fun registerMethod(eventType: String, element: GraphicsElement) {

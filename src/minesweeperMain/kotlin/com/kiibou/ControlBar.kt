@@ -1,6 +1,7 @@
 package com.kiibou
 
 import com.kiibou.SmileyStatus.NORMAL
+import com.kiibou.common.MinesweeperAction
 import space.kiibou.GApplet
 import space.kiibou.event.MouseAction
 import space.kiibou.event.MouseButton
@@ -33,7 +34,7 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
         addChild(it)
 
         it.registerCallback(options(MouseButton.LEFT, MouseAction.RELEASE)) {
-            (app as Minesweeper).client.send(mapper.createObjectNode().put("action", "restart"))
+            (app as Minesweeper).client.send(MinesweeperAction.Restart)
         }
     }
 
@@ -53,4 +54,7 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
         restartButton.border.bindProps(smileys[status.ordinal])
     }
 
+    fun setTime(action: MinesweeperAction.SetTime) {
+        timerDisplay.value = action.data.time
+    }
 }
