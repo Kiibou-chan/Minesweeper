@@ -1,8 +1,8 @@
-val serializationVersion = "1.1.0"
+val serializationVersion = "1.3.1"
 
 plugins {
-    kotlin("multiplatform") version "1.4.31"
-    kotlin("plugin.serialization") version "1.4.31"
+    kotlin("multiplatform") version "1.6.10"
+    kotlin("plugin.serialization") version "1.6.10"
 }
 
 repositories {
@@ -13,6 +13,7 @@ repositories {
 kotlin {
     jvm("minesweeper")
     jvm("guiLib")
+    jvm("server")
 
     sourceSets {
         val commonMain by getting {
@@ -21,24 +22,32 @@ kotlin {
             }
         }
 
-        val guiLibMain by getting {
+        val serverMain by getting {
             dependsOn(commonMain)
             dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
+            }
+        }
+
+        val guiLibMain by getting {
+            dependsOn(commonMain)
+
+            // TODO (Svenja, 20/12/2021): Remove Dependency to Server Main
+            dependsOn(serverMain)
+            dependencies {
                 implementation(fileTree("processing"))
-                implementation("com.fasterxml.jackson.core:jackson-core:2.11.3")
-                implementation("com.fasterxml.jackson.core:jackson-annotations:2.11.3")
-                implementation("com.fasterxml.jackson.core:jackson-databind:2.11.3")
             }
         }
 
         @Suppress("UNUSED_VARIABLE")
         val minesweeperMain by getting {
             dependsOn(guiLibMain)
+            dependsOn(serverMain)
         }
     }
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_15
-    targetCompatibility = JavaVersion.VERSION_15
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }

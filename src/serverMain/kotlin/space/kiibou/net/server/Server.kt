@@ -1,25 +1,23 @@
 package space.kiibou.net.server
 
 import space.kiibou.net.common.Callbacks
+import space.kiibou.net.common.Message
 import space.kiibou.net.common.SocketConnection
-import space.kiibou.net.common.TextMessage
+import space.kiibou.net.reflect.Inject
+import space.kiibou.net.reflect.ReflectUtils.createInstance
+import space.kiibou.net.reflect.ReflectUtils.getAnnotatedFields
 import space.kiibou.net.server.service.ActionService
-import space.kiibou.net.server.service.JsonService
-import space.kiibou.reflect.Inject
-import space.kiibou.reflect.ReflectUtils.createInstance
-import space.kiibou.reflect.ReflectUtils.getAnnotatedFields
 import java.io.File
 import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class Server internal constructor(vararg serviceNames: String) {
-    private val connections: MutableMap<Long, SocketConnection> = Collections.synchronizedMap(HashMap<Long, SocketConnection>())
+    private val connections: MutableMap<Long, SocketConnection> =
+        Collections.synchronizedMap(HashMap())
     private val services: MutableList<Service> = Collections.synchronizedList(ArrayList())
-    private val messageCallbacks: Callbacks<TextMessage, Unit> = Callbacks()
+    private val messageCallbacks: Callbacks<Message<String>, Unit> = Callbacks()
     private lateinit var serverSocket: ServerSocket
     private val connectionListenerThread: Thread
     private val servicesMap: MutableMap<String, Service> = Collections.synchronizedMap(HashMap())
@@ -29,7 +27,7 @@ class Server internal constructor(vararg serviceNames: String) {
         for (field in fields) {
             val name = field.type.canonicalName
             val toInject = servicesMap[name]
-            println("Injecting $name into ${service.javaClass.canonicalName}")
+            println("[Server] Injecting $name into ${service.javaClass.canonicalName}")
             field[service] = toInject
         }
     }
@@ -44,7 +42,7 @@ class Server internal constructor(vararg serviceNames: String) {
         val service = createInstance<Service>(name, arrayOf(Server::class.java), this)
         services.add(service)
         servicesMap[name] = service
-        println("Successfully loaded Service $name")
+        println("[Server] Successfully loaded Service $name")
         return this
     }
 
@@ -53,32 +51,40 @@ class Server internal constructor(vararg serviceNames: String) {
             conn.registerMessageCallback(::messageReceived)
             conn.registerDisconnectCallback(::connectionClosed)
             connections[conn.handle] = conn
-            System.out.printf("Registered connection with handle %d%n", conn.handle)
+            println("[Server] Registered connection with handle ${conn.handle}")
         }
     }
 
     fun registerMessageReceivedCallback(callback: (Long, String) -> Unit): Long {
         return messageCallbacks.addCallback { message ->
-            callback(message.connectionHandle, message.message)
+            callback(message.connectionHandle, message.content)
         }
     }
 
     private fun messageReceived(handle: Long, message: String) {
-        val msg = TextMessage(handle, message)
+        val msg = Message(handle, message)
+
+        println("[Server] RCV Client $handle: $message")
+
         messageCallbacks.callAll(msg)
     }
 
     fun sendMessage(handle: Long, message: String): Boolean {
+        println("[Server] SND Client $handle: $message")
+
         connections[handle]?.sendMessage(message) ?: return false
+
         return true
     }
 
     fun broadcastMessage(message: String) {
+        println("[Server] BCT: $message")
+
         connections.forEach { (_, conn) -> conn.sendMessage(message) }
     }
 
     private fun connectionClosed(handle: Long) {
-        System.out.printf("Client %d disconnected%n", handle)
+        println("[Server] Client $handle disconnected")
         connections.remove(handle)
     }
 
@@ -98,7 +104,6 @@ class Server internal constructor(vararg serviceNames: String) {
             registerService(serviceName)
         }
 
-        registerService(JsonService::class.java.canonicalName)
         registerService(ActionService::class.java.canonicalName)
 
         for (service in services) injectServices(service)
@@ -127,9 +132,9 @@ fun main(args: Array<String>) {
 
 fun startServer(vararg services: Class<*>): Optional<Process> {
     val javaHome = System.getProperty("java.home")
-    val javaBin = javaHome + File.separator + "bin" + File.separator + "java"
+    val javaBin = "$javaHome${File.separator}bin${File.separator}java"
     val classpath = System.getProperty("java.class.path")
-    val className = Server::class.qualifiedName + "Kt"
+    val className = "${Server::class.qualifiedName}Kt"
     val port = "--port=8454"
     val servicesArg = "--services=" + services.joinToString(";") { it.canonicalName }
     val builder = ProcessBuilder(javaBin, "-cp", classpath, className, port, servicesArg)

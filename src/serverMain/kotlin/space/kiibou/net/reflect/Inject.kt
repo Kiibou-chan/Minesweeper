@@ -1,4 +1,4 @@
-package space.kiibou.reflect
+package space.kiibou.net.reflect
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)

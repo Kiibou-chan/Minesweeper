@@ -1,12 +1,9 @@
 package space.kiibou.data
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.serialization.Serializable
 
-data class Vec2 @JsonCreator constructor(
-        @param:JsonProperty("x") val x: Int,
-        @param:JsonProperty("y") val y: Int) {
-
+@Serializable
+data class Vec2(val x: Int, val y: Int) {
     fun scale(scalar: Int): Vec2 {
         return Vec2(x * scalar, y * scalar)
     }

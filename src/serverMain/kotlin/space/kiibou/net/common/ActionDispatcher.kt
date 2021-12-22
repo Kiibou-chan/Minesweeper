@@ -1,9 +1,8 @@
 package space.kiibou.net.common
 
-import com.fasterxml.jackson.databind.JsonNode
 import java.util.*
 
-class ActionDispatcher<T>(val messageReceived: (JsonNode) -> Unit) {
+class ActionDispatcher<T>(private val messageReceivedCallback: ActionDispatcher<T>.(T) -> Unit) {
     private val actionCallbackMap = Collections.synchronizedMap(HashMap<String, Callbacks<T, Unit>>())
 
     fun dispatchAction(action: String, jsonMessage: T) {
@@ -12,20 +11,21 @@ class ActionDispatcher<T>(val messageReceived: (JsonNode) -> Unit) {
         }
     }
 
-    fun addActionCallback(action: String, callback: (T) -> Unit): Long {
+    fun addCallback(action: String, callback: (T) -> Unit): Long {
         if (!actionCallbackMap.containsKey(action)) {
             actionCallbackMap[action] = Callbacks()
         }
 
-        return actionCallbackMap[action]!!.addCallback { message: T ->
-            callback(message)
-        }
+        return actionCallbackMap[action]!!.addCallback(callback)
     }
 
-    fun removeActionCallback(action: String, callbackHandle: Int) {
+    fun removeCallback(action: String, callbackHandle: Int) {
         if (actionCallbackMap.containsKey(action)) {
             actionCallbackMap[action]!!.removeCallback(callbackHandle.toLong())
         }
     }
 
+    fun messageReceived(node: T) {
+        messageReceivedCallback(node)
+    }
 }

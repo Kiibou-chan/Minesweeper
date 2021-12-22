@@ -1,7 +1,5 @@
 package com.kiibou
 
-import java.util.*
-
 enum class TileType(val path: String, val lookup: Int) {
     NO_BOMB("tiles/no_bomb_tile.png", -3),
     RED_BOMB("tiles/red_bomb_tile.png", -2),
@@ -27,5 +25,4 @@ enum class TileType(val path: String, val lookup: Int) {
             values().forEach { map[it.lookup] = it }
         }
     }
-
 }

@@ -134,5 +134,4 @@ enum class MouseAction(private val id: Int) {
 
         fun fromProcessingEvent(event: processing.event.MouseEvent): EnumSet<MouseAction> = EnumSet.of(MAPPER[event.action])
     }
-
 }

@@ -1,10 +1,13 @@
 package com.kiibou
 
+import com.kiibou.common.MinesweeperAction
 import space.kiibou.GApplet
+import space.kiibou.data.Vec2
 import space.kiibou.event.MouseAction.*
 import space.kiibou.event.MouseButton.LEFT
 import space.kiibou.event.MouseButton.RIGHT
 import space.kiibou.event.options
+import space.kiibou.gui.BorderStyle
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Picture
@@ -14,8 +17,7 @@ import java.util.*
  * @param tileX X-Position of the tile on the Map
  * @param tileY Y-Position of the tile on the Map
  */
-class Tile(app: GApplet, private val map: Map, private val tileX: Int, private val tileY: Int)
-    : GraphicsElement(app) {
+class Tile(app: GApplet, private val map: Map, private val tileX: Int, private val tileY: Int) : GraphicsElement(app) {
 
     var type: TileType = TileType.EMPTY
         set(value) {
@@ -111,22 +113,21 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
     }
 
     private fun reveal() {
-        (app as Minesweeper).client.sendJson(mapper.createObjectNode()
-                .put("action", "reveal-tiles")
-                .put("x", tileX)
-                .put("y", tileY))
+        (app as Minesweeper).client.send(
+            MinesweeperAction.RevealTile(Vec2(tileX, tileY))
+        )
     }
 
     private fun flag() {
-        (app as Minesweeper).client.sendJson(mapper.createObjectNode()
-                .put("action", "flag-toggle")
-                .put("x", tileX)
-                .put("y", tileY))
+        (app as Minesweeper).client.send(
+            MinesweeperAction.ToggleFlag(Vec2(tileX, tileY))
+        )
     }
 
     fun reset() {
         type = TileType.EMPTY
         revealed = false
+        button.border.borderStyle = BorderStyle.OUT
     }
 
     override fun activate() {

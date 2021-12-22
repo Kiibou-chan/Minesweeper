@@ -1,73 +1,74 @@
 package com.kiibou.server
 
-import com.kiibou.*
-import space.kiibou.data.Vec2
-import space.kiibou.net.server.JsonMessage
+import com.kiibou.common.*
+import space.kiibou.net.common.Message
+import space.kiibou.net.reflect.Inject
 import space.kiibou.net.server.Server
 import space.kiibou.net.server.Service
 import space.kiibou.net.server.service.ActionService
-import space.kiibou.net.server.service.JsonService
-import space.kiibou.reflect.Inject
-import java.util.*
 
 class GameService(server: Server) : Service(server) {
     @Inject
     lateinit var actionService: ActionService
-    @Inject
-    lateinit var json: JsonService
+
     private val gameStates: HashMap<Long, GameState> = HashMap()
 
     override fun initialize() {
-        actionService.addActionCallback("reveal-tiles", ::revealTiles)
-        actionService.addActionCallback("restart", ::restart)
-        actionService.addActionCallback("flag-toggle", ::flagToggle)
-        actionService.addActionCallback("init-map", ::initMap)
+        MinesweeperAction
+
+        actionService.registerCallback(this::revealTile)
+        actionService.registerCallback(this::restart)
+        actionService.registerCallback(this::flagToggle)
+        actionService.registerCallback(this::initMap)
     }
 
-    private fun initMap(message: JsonMessage) {
+    private fun initMap(message: Message<MinesweeperAction.InitMap>) {
         val gameState = getGameState(message.connectionHandle)
-        val (width, height, bombs) = json.mapper.treeToValue(message.node, MapInfo::class.java)
+        val (width, height, bombs) = message.content.data
         gameState.setupVariables(width, height, bombs)
-        actionService.sendActionToClient(message.connectionHandle, "restart")
+        actionService.send(message.connectionHandle, MinesweeperAction.Restart)
     }
 
-    private fun revealTiles(message: JsonMessage) {
+    private fun revealTile(message: Message<MinesweeperAction.RevealTile>) {
         val gameState = getGameState(message.connectionHandle)
-        val (x, y) = json.mapper.treeToValue(message.node, Vec2::class.java)
+        val (x, y) = message.content.data
         val revealed = gameState.reveal(x, y)
         sendRevealTiles(message.connectionHandle, revealed)
     }
 
-    private fun restart(message: JsonMessage) {
+    private fun restart(message: Message<MinesweeperAction.Restart>) {
         val gameState = getGameState(message.connectionHandle)
         gameState.setupVariables()
-        actionService.sendActionToClient(message.connectionHandle, "restart")
+        actionService.send(message.connectionHandle, MinesweeperAction.Restart)
     }
 
-    private fun flagToggle(message: JsonMessage) {
+    private fun flagToggle(message: Message<MinesweeperAction.ToggleFlag>) {
         val gameState = getGameState(message.connectionHandle)
-        val (x, y) = json.mapper.treeToValue(message.node, Vec2::class.java)
+
+        // TODO (Svenja, 20/12/2021): Change client action to ToggleFlag(x, y) and server action to SetFlag(x, y, status)
+        val (x, y) = message.content.data
         gameState.flagToggle(x, y)
-        sendFlagStatus(message.connectionHandle, x, y)
     }
 
-    fun sendFlagStatus(handle: Long, x: Int, y: Int) {
-        val gameState = getGameState(handle)
-        actionService.sendActionToClient(handle, "toggle-flag", json.mapper.valueToTree(FlagInfo(x, y, gameState.isFlagged(x, y))))
+    fun sendFlagStatus(handle: Long, x: Int, y: Int, status: Boolean) {
+        actionService.send(handle, MinesweeperAction.SetFlag(FlagInfo(x, y, status)))
     }
 
     private fun sendRevealTiles(handle: Long, revealed: List<TileInfo>) {
-        actionService.sendActionToClient(handle, "reveal-tiles", json.mapper.valueToTree(RevealTiles(revealed)))
+        actionService.send(handle, MinesweeperAction.RevealTiles(TilesInfo(revealed)))
     }
 
-    fun sendWin(handle: Long) = actionService.sendActionToClient(handle, "win")
+    fun sendBombsLeft(handle: Long, bombsLeft: Int) {
+        actionService.send(handle, MinesweeperAction.SetBombsLeft(bombsLeft))
+    }
 
-    fun sendLoose(handle: Long) = actionService.sendActionToClient(handle, "loose")
+    fun sendWin(handle: Long) = actionService.send(handle, MinesweeperAction.Win)
+
+    fun sendLoose(handle: Long) = actionService.send(handle, MinesweeperAction.Loose)
 
     fun sendTime(handle: Long, time: Int) =
-            actionService.sendActionToClient(handle, "set-time", json.mapper.valueToTree(TimeInfo(time)))
+        actionService.send(handle, MinesweeperAction.SetTime(TimeInfo(time)))
 
     private fun getGameState(handle: Long) =
-            gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }
-
+        gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }
 }
