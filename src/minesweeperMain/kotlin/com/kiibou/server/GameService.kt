@@ -46,18 +46,20 @@ class GameService(server: Server) : Service(server) {
         val gameState = getGameState(message.connectionHandle)
 
         // TODO (Svenja, 20/12/2021): Change client action to ToggleFlag(x, y) and server action to SetFlag(x, y, status)
-        val (x, y, state) = message.content.data
+        val (x, y) = message.content.data
         gameState.flagToggle(x, y)
-        sendFlagStatus(message.connectionHandle, x, y)
     }
 
-    fun sendFlagStatus(handle: Long, x: Int, y: Int) {
-        val gameState = getGameState(handle)
-        actionService.send(handle, MinesweeperAction.ToggleFlag(FlagInfo(x, y, gameState.isFlagged(x, y))))
+    fun sendFlagStatus(handle: Long, x: Int, y: Int, status: Boolean) {
+        actionService.send(handle, MinesweeperAction.SetFlag(FlagInfo(x, y, status)))
     }
 
     private fun sendRevealTiles(handle: Long, revealed: List<TileInfo>) {
         actionService.send(handle, MinesweeperAction.RevealTiles(TilesInfo(revealed)))
+    }
+
+    fun sendBombsLeft(handle: Long, bombsLeft: Int) {
+        actionService.send(handle, MinesweeperAction.SetBombsLeft(bombsLeft))
     }
 
     fun sendWin(handle: Long) = actionService.send(handle, MinesweeperAction.Win)

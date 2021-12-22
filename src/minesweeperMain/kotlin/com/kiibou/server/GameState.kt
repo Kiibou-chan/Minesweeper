@@ -14,6 +14,7 @@ class GameState(
 ) {
     private lateinit var revealed: Array<BooleanArray>
     private lateinit var flagged: Array<BooleanArray>
+    private var bombsLeft = 0
     private lateinit var tiles: Array<Array<TileType>>
     private lateinit var bombTiles: List<Vec2>
     private var gameRunning = false
@@ -32,6 +33,7 @@ class GameState(
         this.width = width
         this.height = height
         this.bombs = bombs
+        setBombsLeft(bombs)
 
         if (gameRunning) {
             stopTimer()
@@ -104,8 +106,7 @@ class GameState(
             gameService.sendWin(handle)
 
             bombTiles.filter { (x, y) -> !isFlagged(x, y) }
-                .onEach { (x, y) -> flagToggle(x, y) }
-                .forEach { (x, y) -> gameService.sendFlagStatus(handle, x, y) }
+                .forEach { (x, y) -> flagToggle(x, y) }
 
             setGameRunning(false)
         }
@@ -137,9 +138,8 @@ class GameState(
     private fun setRevealed(x: Int, y: Int, r: Boolean) {
         if (isFlagged(x, y)) {
             flagToggle(x, y)
-            gameService.sendFlagStatus(handle, x, y)
         }
-        
+
         revealed[x][y] = r
     }
 
@@ -162,10 +162,26 @@ class GameState(
 
     fun flagToggle(x: Int, y: Int): Boolean {
         if (!gameRunning) setGameRunning(true)
+
         if (isNotRevealed(x, y)) {
             flagged[x][y] = !flagged[x][y]
         }
+
+        gameService.sendFlagStatus(handle, x, y, flagged[x][y])
+
+        if (flagged[x][y]) {
+            setBombsLeft(bombsLeft - 1)
+        } else {
+            setBombsLeft(bombsLeft + 1)
+        }
+
         return flagged[x][y]
+    }
+
+    fun setBombsLeft(left: Int) {
+        bombsLeft = left
+
+        gameService.sendBombsLeft(handle, bombsLeft)
     }
 
     private fun startTimer() {

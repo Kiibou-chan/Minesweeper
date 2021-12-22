@@ -41,7 +41,8 @@ class Minesweeper : GApplet() {
         registerActionCallback(map::win)
         registerActionCallback(map::loose)
         registerActionCallback(map::restart)
-        registerActionCallback(map::tileFlag)
+        registerActionCallback(map::setFlag)
+        registerActionCallback(map.controlBar::setBombsLeft)
 
         client = ActionClient(
             ::onServerConnect,

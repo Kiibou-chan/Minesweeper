@@ -87,15 +87,15 @@ class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bo
         controlBar.bombsLeft.value = bombs
     }
 
-    fun tileFlag(action: MinesweeperAction.ToggleFlag) {
-        val flagInfo = action.data
+    fun setFlag(action: MinesweeperAction.SetFlag) {
+        val (x, y, status) = action.data
 
-        when (flagInfo.toggle) {
+        when (status) {
             true -> controlBar.bombsLeft.dec()
             false -> controlBar.bombsLeft.inc()
         }
 
-        tiles[flagInfo.x, flagInfo.y]!!.flagged = flagInfo.toggle
+        tiles[x, y]!!.flagged = status
     }
 
     override fun move(dx: Int, dy: Int): GraphicsElement {

@@ -15,7 +15,7 @@ import java.util.*
 
 class Server internal constructor(vararg serviceNames: String) {
     private val connections: MutableMap<Long, SocketConnection> =
-        Collections.synchronizedMap(HashMap<Long, SocketConnection>())
+        Collections.synchronizedMap(HashMap())
     private val services: MutableList<Service> = Collections.synchronizedList(ArrayList())
     private val messageCallbacks: Callbacks<Message<String>, Unit> = Callbacks()
     private lateinit var serverSocket: ServerSocket
@@ -27,7 +27,7 @@ class Server internal constructor(vararg serviceNames: String) {
         for (field in fields) {
             val name = field.type.canonicalName
             val toInject = servicesMap[name]
-            println("Injecting $name into ${service.javaClass.canonicalName}")
+            println("[Server] Injecting $name into ${service.javaClass.canonicalName}")
             field[service] = toInject
         }
     }
@@ -42,7 +42,7 @@ class Server internal constructor(vararg serviceNames: String) {
         val service = createInstance<Service>(name, arrayOf(Server::class.java), this)
         services.add(service)
         servicesMap[name] = service
-        println("Successfully loaded Service $name")
+        println("[Server] Successfully loaded Service $name")
         return this
     }
 
@@ -51,7 +51,7 @@ class Server internal constructor(vararg serviceNames: String) {
             conn.registerMessageCallback(::messageReceived)
             conn.registerDisconnectCallback(::connectionClosed)
             connections[conn.handle] = conn
-            println("Registered connection with handle ${conn.handle}")
+            println("[Server] Registered connection with handle ${conn.handle}")
         }
     }
 
@@ -64,13 +64,13 @@ class Server internal constructor(vararg serviceNames: String) {
     private fun messageReceived(handle: Long, message: String) {
         val msg = Message(handle, message)
 
-        println("Server $handle < $message ")
+        println("[Server] RCV Client $handle: $message")
 
         messageCallbacks.callAll(msg)
     }
 
     fun sendMessage(handle: Long, message: String): Boolean {
-        println("Server $handle > $message")
+        println("[Server] SND Client $handle: $message")
 
         connections[handle]?.sendMessage(message) ?: return false
 
@@ -78,13 +78,13 @@ class Server internal constructor(vararg serviceNames: String) {
     }
 
     fun broadcastMessage(message: String) {
-        println("Server > message")
+        println("[Server] BCT: $message")
 
         connections.forEach { (_, conn) -> conn.sendMessage(message) }
     }
 
     private fun connectionClosed(handle: Long) {
-        println("Client $handle disconnected")
+        println("[Server] Client $handle disconnected")
         connections.remove(handle)
     }
 

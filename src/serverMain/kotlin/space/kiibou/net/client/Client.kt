@@ -22,7 +22,7 @@ interface Client<T> {
                 onConnect()
                 this.connection = connection
                 connection.registerMessageCallback { _, message ->
-                    println("Client < $message")
+                    println("[Client] RCV: $message")
 
                     onMessageReceived(stringToObj(message))
                 }
@@ -44,7 +44,7 @@ interface Client<T> {
     fun send(t: T) {
         val message = objToString(t)
 
-        println("Client > $message")
+        println("[Client] SND: $message")
 
         connection?.sendMessage(message)
     }

@@ -57,4 +57,8 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
     fun setTime(action: MinesweeperAction.SetTime) {
         timerDisplay.value = action.data.time
     }
+
+    fun setBombsLeft(action: MinesweeperAction.SetBombsLeft) {
+        bombsLeft.value = action.data
+    }
 }

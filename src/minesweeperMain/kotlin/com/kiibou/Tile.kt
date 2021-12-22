@@ -1,6 +1,5 @@
 package com.kiibou
 
-import com.kiibou.common.FlagInfo
 import com.kiibou.common.MinesweeperAction
 import space.kiibou.GApplet
 import space.kiibou.data.Vec2
@@ -121,7 +120,7 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
 
     private fun flag() {
         (app as Minesweeper).client.send(
-            MinesweeperAction.ToggleFlag(FlagInfo(tileX, tileY, !flagged))
+            MinesweeperAction.ToggleFlag(Vec2(tileX, tileY))
         )
     }
 
