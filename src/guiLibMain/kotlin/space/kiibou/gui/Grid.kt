@@ -7,14 +7,15 @@ import javafx.collections.FXCollections
 import javafx.collections.MapChangeListener
 import space.kiibou.GApplet
 
-class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private val cellsY: Int)
-    : GraphicsElement(app), Iterable<T> {
+class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private val cellsY: Int) : GraphicsElement(app),
+    Iterable<T> {
 
     private val colWidths = Array(cellsX) { SimpleIntegerProperty(0) to SimpleIntegerProperty(0) }.also {
         it.forEachIndexed { index, pair ->
             if (index != 0) pair.second.bind(it[index - 1].second.add(pair.first))
         }
     }
+
     private val rowHeights = Array(cellsY) { SimpleIntegerProperty(0) to SimpleIntegerProperty(0) }.also {
         it.forEachIndexed { index, pair ->
             if (index != 0) pair.second.bind(it[index - 1].first.add(it[index - 1].second))
@@ -55,7 +56,7 @@ class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private v
             element.xProp.bind(colWidths[x].second.add(xProp))
             element.yProp.bind(rowHeights[y].second.add(yProp))
         } else {
-            throw IndexOutOfBoundsException(String.format("passed x:%d, y:%d must be in range x:0-%d, y:0-%d", x, y, cellsX, cellsY))
+            throw IndexOutOfBoundsException("passed x:$x, y:$y must be in range x:[0-$cellsX), y:[0-$cellsY)")
         }
     }
 
@@ -63,7 +64,7 @@ class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private v
         return if (isValidCell(x, y)) {
             this.cells[x, y]
         } else {
-            throw IndexOutOfBoundsException(String.format("passed x:%d, y:%d must be in range x:0-%d, y:0-%d", x, y, cellsX, cellsY))
+            throw IndexOutOfBoundsException("passed x:$x, y:$y must be in range x:[0-$cellsX), y:[0-$cellsY)")
         }
     }
 
@@ -80,7 +81,7 @@ class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private v
                 null
             }
         } else {
-            throw IndexOutOfBoundsException(String.format("passed x:%d, y:%d must be in range x:0-%d, y:0-%d", x, y, cellsX, cellsY))
+            throw IndexOutOfBoundsException("passed x:$x, y:$y must be in range x:[0-$cellsX), y:[0-$cellsY)")
         }
     }
 

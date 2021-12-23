@@ -52,11 +52,11 @@ class Minesweeper : GApplet() {
     }
 
     private fun onServerConnect() {
-        println("Connected to Server!")
+        println("[Client] Connected to Server!")
     }
 
     private fun onServerDisconnect() {
-        println("Disconnected from Server!")
+        println("[Client] Disconnected from Server!")
         exit()
     }
 

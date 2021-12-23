@@ -13,7 +13,6 @@ import space.kiibou.event.MouseEventListener
 import space.kiibou.event.MouseEventOption
 import space.kiibou.event.MouseOptionMap
 import java.util.*
-import kotlin.collections.ArrayList
 
 val outline = System.getenv("outline")?.toBoolean() ?: false
 
@@ -22,7 +21,8 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
     val scaleProp = SimpleIntegerProperty(1)
     val scale: Int
         get() = scaleProp.value
-    val childrenProperty: SimpleListProperty<GraphicsElement> = SimpleListProperty(synchronizedObservableList(observableArrayList<GraphicsElement>()))
+    val childrenProperty: SimpleListProperty<GraphicsElement> =
+        SimpleListProperty(synchronizedObservableList(observableArrayList()))
     val children: MutableList<GraphicsElement>
         get() = childrenProperty.value
     final override val mouseOptionMap: MouseOptionMap = MouseOptionMap()

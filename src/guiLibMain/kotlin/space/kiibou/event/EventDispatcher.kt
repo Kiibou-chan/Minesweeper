@@ -1,4 +1,4 @@
-@file:Suppress("MapGetWithNotNullAssertionOperator", "unused", "UNUSED_PARAMETER")
+@file:Suppress("unused", "UNUSED_PARAMETER")
 
 package space.kiibou.event
 

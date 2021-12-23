@@ -24,7 +24,6 @@ object Serial {
 
         Json {
             serializersModule = modules.fold(Json.Default.serializersModule, SerializersModule::plus)
-            encodeDefaults = true
         }
     }
 }
