@@ -1,10 +1,10 @@
-package com.kiibou.server
+package space.kiibou.server
 
-import com.kiibou.TileType
-import com.kiibou.common.FlagInfo
-import com.kiibou.common.MinesweeperAction
-import com.kiibou.common.TileInfo
-import com.kiibou.common.TimeInfo
+import space.kiibou.TileType
+import space.kiibou.common.FlagInfo
+import space.kiibou.common.MinesweeperAction
+import space.kiibou.common.TileInfo
+import space.kiibou.common.TimeInfo
 import space.kiibou.data.Vec2
 import java.util.*
 import kotlin.concurrent.fixedRateTimer

@@ -1,11 +1,11 @@
-package com.kiibou.common
+package space.kiibou.common
 
-import com.kiibou.TileType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import space.kiibou.TileType
 import space.kiibou.data.Vec2
 import space.kiibou.net.common.Action
 import space.kiibou.net.common.Serial

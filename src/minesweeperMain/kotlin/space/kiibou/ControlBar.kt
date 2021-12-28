@@ -1,8 +1,7 @@
-package com.kiibou
+package space.kiibou
 
-import com.kiibou.SmileyStatus.NORMAL
-import com.kiibou.common.MinesweeperAction
-import space.kiibou.GApplet
+import space.kiibou.SmileyStatus.NORMAL
+import space.kiibou.common.MinesweeperAction
 import space.kiibou.event.MouseAction
 import space.kiibou.event.MouseButton
 import space.kiibou.event.options

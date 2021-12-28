@@ -1,19 +1,18 @@
 @file:JvmName("MinesweeperMain")
 
-package com.kiibou
+package space.kiibou
 
-import com.kiibou.common.MinesweeperAction
-import com.kiibou.server.GameService
 import processing.core.PApplet
 import processing.opengl.PGraphicsOpenGL
 import processing.opengl.PJOGL
-import space.kiibou.GApplet
+import space.kiibou.common.MinesweeperAction
 import space.kiibou.gui.GGraphics
 import space.kiibou.net.NetUtils
 import space.kiibou.net.client.ActionClient
 import space.kiibou.net.client.Client
 import space.kiibou.net.common.Action
 import space.kiibou.net.server.main
+import space.kiibou.server.GameService
 
 class Minesweeper : GApplet() {
     private lateinit var map: Map
@@ -33,7 +32,7 @@ class Minesweeper : GApplet() {
         surface.setResizable(true)
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 40, 40, 160)
+        map = Map(this, 18, 18, 40)
         registerGraphicsElement(map)
 
         client = ActionClient(

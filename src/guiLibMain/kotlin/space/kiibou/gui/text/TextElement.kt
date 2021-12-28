@@ -63,5 +63,4 @@ class TextElement(app: GApplet, text: String, fontSize: Int = 15, fontName: Stri
             text(textProperty.valueSafe, x.toFloat(), y.toFloat() + this@TextElement.height)
         }
     }
-
 }

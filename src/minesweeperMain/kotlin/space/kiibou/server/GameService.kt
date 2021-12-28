@@ -1,7 +1,7 @@
-package com.kiibou.server
+package space.kiibou.server
 
-import com.kiibou.common.MinesweeperAction
-import com.kiibou.common.TilesInfo
+import space.kiibou.common.MinesweeperAction
+import space.kiibou.common.TilesInfo
 import space.kiibou.net.common.Action
 import space.kiibou.net.reflect.Inject
 import space.kiibou.net.server.Server

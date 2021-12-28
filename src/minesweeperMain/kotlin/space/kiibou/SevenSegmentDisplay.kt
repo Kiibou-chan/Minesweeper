@@ -1,9 +1,8 @@
-package com.kiibou
+package space.kiibou
 
 import processing.core.PConstants
 import processing.core.PGraphics
 import processing.core.PImage
-import space.kiibou.GApplet
 import space.kiibou.data.Rectangle
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.loadImage
@@ -139,19 +138,21 @@ private val segmentFRenderer: (PGraphics, Int) -> Unit = segmentRenderer(1, 2, 3
 private val segmentGRenderer: (PGraphics, Int) -> Unit = segmentRenderer(2, 10, 9, 3, 2, 13, 9, 3, 13, hasSegment(6))
 
 private fun segmentRenderer(
-        x: Int, y: Int,
-        w: Int, h: Int,
-        tx: Int, ty: Int,
-        tw: Int, th: Int,
-        offset: Int,
-        condition: (Int) -> Boolean
+    x: Int, y: Int,
+    w: Int, h: Int,
+    tx: Int, ty: Int,
+    tw: Int, th: Int,
+    offset: Int,
+    condition: (Int) -> Boolean
 ): (PGraphics, Int) -> Unit =
-        { g, seg ->
-            g.image(segmentMap,
-                    x.toFloat(), y.toFloat(),
-                    w.toFloat(), h.toFloat(),
-                    if (condition(seg)) tx else tx + offset, ty,
-                    (if (condition(seg)) tx else tx + offset) + tw, ty + th)
-        }
+    { g, seg ->
+        g.image(
+            segmentMap,
+            x.toFloat(), y.toFloat(),
+            w.toFloat(), h.toFloat(),
+            if (condition(seg)) tx else tx + offset, ty,
+            (if (condition(seg)) tx else tx + offset) + tw, ty + th
+        )
+    }
 
 private fun hasSegment(segment: Int): (Int) -> Boolean = { segments: Int -> 1 shl segment and segments > 0 }

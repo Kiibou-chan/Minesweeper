@@ -1,7 +1,7 @@
-package com.kiibou
+package space.kiibou
 
-import com.kiibou.common.MapInfo
-import com.kiibou.common.MinesweeperAction
+import space.kiibou.common.MapInfo
+import space.kiibou.common.MinesweeperAction
 import space.kiibou.gui.*
 
 class Map(override val app: Minesweeper, private val tilesX: Int, private val tilesY: Int, val bombs: Int) :
