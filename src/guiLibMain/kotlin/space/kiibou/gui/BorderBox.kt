@@ -1,29 +1,35 @@
 package space.kiibou.gui
 
+import javafx.beans.binding.IntegerBinding
 import javafx.beans.property.SimpleIntegerProperty
 import processing.core.PConstants
 import processing.core.PGraphics
+import processing.core.PImage
 import processing.opengl.PGraphicsOpenGL
 import space.kiibou.GApplet
+
+data class Resolution(val width: Int, val height: Int)
+
+private val buffers: MutableMap<Pair<Resolution, BorderStyle>, PImage> = HashMap()
 
 class BorderBox(app: GApplet) : GraphicsElement(app) {
     private val g: PGraphics = app.graphics
     private var redraw: Boolean = true
-    private lateinit var buffer: PGraphics
+    private lateinit var buffer: PImage
 
-    var borderStyle = BorderStyle.IN
+    var style = BorderStyle.IN
         set(value) {
             field = value
             redraw = true
         }
 
-    val borderWidthProp = scaleProp.multiply(borderStyle.borderWidth)
+    val borderWidthProp: IntegerBinding = scaleProp.multiply(style.borderWidth)
     val borderWidth: Int
-        get() = borderWidthProp.value as Int
+        get() = borderWidthProp.intValue()
 
-    val borderHeightProp = scaleProp.multiply(borderStyle.borderHeight)
+    val borderHeightProp: IntegerBinding = scaleProp.multiply(style.borderHeight)
     val borderHeight: Int
-        get() = borderHeightProp.value as Int
+        get() = borderHeightProp.intValue()
 
     val innerWidthProp = SimpleIntegerProperty(0)
     val innerWidth: Int
@@ -42,36 +48,62 @@ class BorderBox(app: GApplet) : GraphicsElement(app) {
 
     override fun drawImpl() {
         if (redraw) {
-            createBuffer()
-            buffer.beginDraw()
-            val w = width
-            val h = height
-            val bw = borderWidth
-            val bh = borderHeight
-            drawTile(0, 0, bw, bh, borderStyle.corner1)
-            drawTile(w - bw, 0, bw, bh, borderStyle.corner2)
-            drawTile(w - bw, h - bh, bw, bh, borderStyle.corner3)
-            drawTile(0, h - bh, bw, bh, borderStyle.corner4)
-            drawTile(bw, 0, w - 2 * bw, bh, borderStyle.border1)
-            drawTile(w - bw, bh, bw, h - 2 * bh, borderStyle.border2)
-            drawTile(bw, h - bh, w - 2 * bw, bh, borderStyle.border3)
-            drawTile(0, bh, bw, h - 2 * bh, borderStyle.border4)
-            drawTile(bw, bh, w - 2 * bw, h - 2 * bh, borderStyle.center)
-            redraw = false
-            buffer.endDraw()
+            buffer = drawBuffer()
         }
+
         g.image(buffer, x.toFloat(), y.toFloat())
     }
 
-    private fun createBuffer() {
-        buffer = app.createGraphics(width, height, PConstants.P2D)
-        (buffer as PGraphicsOpenGL).textureSampling(3)
-        buffer.beginDraw()
-        buffer.endDraw()
+    private fun drawBuffer(): PImage {
+        val key = Resolution(width, height) to style
+
+        if (buffers.containsKey(key)) {
+            return buffers[key]!!
+        }
+
+        val renderer = getRenderer()
+
+        renderer.beginDraw()
+        val w = width
+        val h = height
+        val bw = borderWidth
+        val bh = borderHeight
+        drawTile(0, 0, bw, bh, style.corner1, renderer)
+        drawTile(w - bw, 0, bw, bh, style.corner2, renderer)
+        drawTile(w - bw, h - bh, bw, bh, style.corner3, renderer)
+        drawTile(0, h - bh, bw, bh, style.corner4, renderer)
+        drawTile(bw, 0, w - 2 * bw, bh, style.border1, renderer)
+        drawTile(w - bw, bh, bw, h - 2 * bh, style.border2, renderer)
+        drawTile(bw, h - bh, w - 2 * bw, bh, style.border3, renderer)
+        drawTile(0, bh, bw, h - 2 * bh, style.border4, renderer)
+        drawTile(bw, bh, w - 2 * bw, h - 2 * bh, style.center, renderer)
+        redraw = false
+        renderer.endDraw()
+
+        val result = renderer[0, 0, width, height]
+
+        buffers[key] = result
+
+        return result
     }
 
-    private inline fun drawTile(x: Int, y: Int, width: Int, height: Int, renderer: TileRenderer) {
-        renderer(buffer, x, y, width, height)
+    private fun getRenderer(): PGraphics {
+        return app.createGraphics(width, height, PConstants.P2D).apply {
+            (this as PGraphicsOpenGL).textureSampling(3)
+            beginDraw()
+            endDraw()
+        }
+    }
+
+    private inline fun drawTile(
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        tileRenderer: TileRenderer,
+        graphics: PGraphics
+    ) {
+        tileRenderer(graphics, x, y, width, height)
     }
 
     fun bindProps(other: GraphicsElement): BorderBox {
@@ -82,5 +114,4 @@ class BorderBox(app: GApplet) : GraphicsElement(app) {
         innerHeightProp.bind(other.heightProp)
         return this
     }
-
 }
