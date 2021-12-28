@@ -1,5 +1,6 @@
 package com.kiibou.common
 
+import com.kiibou.TileType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
@@ -16,7 +17,7 @@ data class TimeInfo(val time: Int)
 data class TilesInfo(val tiles: List<TileInfo>)
 
 @Serializable
-data class TileInfo(val x: Int, val y: Int, val type: Int)
+data class TileInfo(val x: Int, val y: Int, val type: TileType)
 
 @Serializable
 data class FlagInfo(val x: Int, val y: Int, val status: Boolean)

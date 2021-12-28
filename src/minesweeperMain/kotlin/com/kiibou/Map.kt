@@ -61,7 +61,7 @@ class Map(override val app: Minesweeper, private val tilesX: Int, private val ti
 
             registerActionCallback<MinesweeperAction.RevealTiles> {
                 it.data.tiles.forEach { (x, y, type) ->
-                    tiles[x, y]!!.type = TileType.getTypeFromValue(type)
+                    tiles[x, y]!!.type = type
                     tiles[x, y]!!.revealed = true
                 }
             }

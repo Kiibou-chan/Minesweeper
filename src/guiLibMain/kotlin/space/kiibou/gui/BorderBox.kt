@@ -7,10 +7,11 @@ import processing.core.PGraphics
 import processing.core.PImage
 import processing.opengl.PGraphicsOpenGL
 import space.kiibou.GApplet
+import java.util.*
 
 data class Resolution(val width: Int, val height: Int)
 
-private val buffers: MutableMap<Pair<Resolution, BorderStyle>, PImage> = HashMap()
+private val buffers: MutableMap<Pair<Resolution, BorderStyle>, PImage> = WeakHashMap()
 
 class BorderBox(app: GApplet) : GraphicsElement(app) {
     private val g: PGraphics = app.graphics

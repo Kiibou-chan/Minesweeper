@@ -88,12 +88,12 @@ class GameState(
                     setGameRunning(false)
 
                     revealed += bombTiles.filterNot { it == Vec2(x, y) }
-                        .map { (x, y) -> TileInfo(x, y, TileType.BOMB.lookup) }
+                        .map { (x, y) -> TileInfo(x, y, TileType.BOMB) }
 
                     for (flagX in 0 until width) {
                         for (flagY in 0 until height) {
                             if (x != flagX && y != flagY && isFlagged(flagX, flagY) && !isBomb(flagX, flagY)) {
-                                revealed.add(TileInfo(flagX, flagY, TileType.NO_BOMB.lookup))
+                                revealed.add(TileInfo(flagX, flagY, TileType.NO_BOMB))
                             }
                         }
                     }
@@ -125,7 +125,7 @@ class GameState(
 
         if (isValidTile(x, y) && isNotRevealed(x, y)) {
             empty = getTile(x, y) == TileType.EMPTY
-            revealed.add(TileInfo(x, y, getTile(x, y).lookup))
+            revealed.add(TileInfo(x, y, getTile(x, y)))
             setRevealed(x, y)
             revealedTiles++
         }
