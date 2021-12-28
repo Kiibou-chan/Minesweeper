@@ -1,9 +1,13 @@
 package com.kiibou.server
 
 import com.kiibou.TileType
+import com.kiibou.common.FlagInfo
+import com.kiibou.common.MinesweeperAction
 import com.kiibou.common.TileInfo
+import com.kiibou.common.TimeInfo
 import space.kiibou.data.Vec2
 import java.util.*
+import kotlin.concurrent.fixedRateTimer
 
 class GameState(
     private val handle: Long,
@@ -19,8 +23,7 @@ class GameState(
     private lateinit var bombTiles: List<Vec2>
     private var gameRunning = false
     private var revealedTiles = 0
-    private val timer = Timer("Timer", true)
-    private lateinit var timerTask: TimerTask
+    private lateinit var timer: Timer
     private var time = 0
 
     init {
@@ -33,6 +36,7 @@ class GameState(
         this.width = width
         this.height = height
         this.bombs = bombs
+
         setBombsLeft(bombs)
 
         if (gameRunning) {
@@ -95,7 +99,9 @@ class GameState(
                     }
 
                     revealTile(x, y, revealed)
-                    gameService.sendLoose(handle)
+
+                    gameService.send(handle, MinesweeperAction.Loose)
+
                     setGameRunning(false)
                 }
                 else -> revealTile(x, y, revealed)
@@ -103,7 +109,7 @@ class GameState(
         }
 
         if (revealedTiles == width * height - bombs && gameRunning) {
-            gameService.sendWin(handle)
+            gameService.send(handle, MinesweeperAction.Win)
 
             bombTiles.filter { (x, y) -> !isFlagged(x, y) }
                 .forEach { (x, y) -> flagToggle(x, y) }
@@ -120,7 +126,7 @@ class GameState(
         if (isValidTile(x, y) && isNotRevealed(x, y)) {
             empty = getTile(x, y) == TileType.EMPTY
             revealed.add(TileInfo(x, y, getTile(x, y).lookup))
-            setRevealed(x, y, true)
+            setRevealed(x, y)
             revealedTiles++
         }
 
@@ -135,15 +141,15 @@ class GameState(
 
     private fun isNotRevealed(x: Int, y: Int) = !revealed[x][y]
 
-    private fun setRevealed(x: Int, y: Int, r: Boolean) {
+    private fun setRevealed(x: Int, y: Int) {
         if (isFlagged(x, y)) {
             flagToggle(x, y)
         }
 
-        revealed[x][y] = r
+        revealed[x][y] = true
     }
 
-    fun isFlagged(x: Int, y: Int) = flagged[x][y]
+    private fun isFlagged(x: Int, y: Int) = flagged[x][y]
     private fun isBomb(x: Int, y: Int) = getTile(x, y) == TileType.BOMB
     private fun isValidTile(x: Int, y: Int) = x in 0 until width && y >= 0 && y < height
 
@@ -167,7 +173,7 @@ class GameState(
             flagged[x][y] = !flagged[x][y]
         }
 
-        gameService.sendFlagStatus(handle, x, y, flagged[x][y])
+        gameService.send(handle, MinesweeperAction.SetFlag(FlagInfo(x, y, flagged[x][y])))
 
         if (flagged[x][y]) {
             setBombsLeft(bombsLeft - 1)
@@ -178,30 +184,27 @@ class GameState(
         return flagged[x][y]
     }
 
-    fun setBombsLeft(left: Int) {
+    private fun setBombsLeft(left: Int) {
         bombsLeft = left
 
-        gameService.sendBombsLeft(handle, bombsLeft)
+        gameService.send(handle, MinesweeperAction.SetBombsLeft(bombsLeft))
     }
 
     private fun startTimer() {
-        timerTask = GameStateTimerTask()
-        timer.schedule(timerTask, 0, 1000)
-    }
-
-    private fun stopTimer() = timerTask.cancel()
-
-    private fun resetTimer() {
-        time = 0
-        sendTimeToClients()
-    }
-
-    private fun sendTimeToClients() = gameService.sendTime(handle, time)
-
-    private inner class GameStateTimerTask : TimerTask() {
-        override fun run() {
-            sendTimeToClients()
+        timer = fixedRateTimer("Timer $handle", true, 0L, 1000L) {
+            sendTime()
             time++
         }
     }
+
+    private fun stopTimer() {
+        timer.cancel()
+    }
+
+    private fun resetTimer() {
+        time = 0
+        sendTime()
+    }
+
+    private fun sendTime() = gameService.send(handle, MinesweeperAction.SetTime(TimeInfo(time)))
 }

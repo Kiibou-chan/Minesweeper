@@ -16,28 +16,40 @@ import java.util.*
 
 val outline = System.getenv("outline")?.toBoolean() ?: false
 
-abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: Int = 0, height: Int = 0)
-    : Rectangle(x, y, width, height), MouseEventListener {
+abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, width: Int = 0, height: Int = 0) :
+    Rectangle(x, y, width, height), MouseEventListener {
     val scaleProp = SimpleIntegerProperty(1)
-    val scale: Int
-        get() = scaleProp.value
+    val scale: Int get() = scaleProp.value
+
     val childrenProperty: SimpleListProperty<GraphicsElement> =
         SimpleListProperty(synchronizedObservableList(observableArrayList()))
-    val children: MutableList<GraphicsElement>
-        get() = childrenProperty.value
+    val children: MutableList<GraphicsElement> get() = childrenProperty.value
+
     final override val mouseOptionMap: MouseOptionMap = MouseOptionMap()
+
     val id: Int = nextID()
+
     var hidden = false
         protected set
+
     private var parent: GraphicsElement? = null
+
     override var active: Boolean = true
+
     var hierarchyDepth: Int = 0
         private set
-    private var initialized: Boolean = false
+
     private var insideDraw: Boolean = false
+
     private val deferredActions = Collections.synchronizedList(ArrayList<() -> Unit>())
 
-    var clip: Boolean = true
+    var clip: Boolean = false
+
+    val unscaledWidth: Int
+        get() = width / scale
+
+    val unscaledHeight: Int
+        get() = height / scale
 
     override fun registerCallback(option: MouseEventOption, callback: MouseEventConsumer) {
         super.registerCallback(option, callback)
@@ -52,7 +64,6 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
     fun init() {
         children.forEach(GraphicsElement::init)
         initImpl()
-        this.initialized = true
     }
 
     /**
@@ -80,7 +91,12 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
                 with(g) {
                     stroke(255f, 50f, 50f)
                     noFill()
-                    rect(x.toFloat(), y.toFloat(), this@GraphicsElement.width.toFloat(), this@GraphicsElement.height.toFloat())
+                    rect(
+                        x.toFloat(),
+                        y.toFloat(),
+                        this@GraphicsElement.width.toFloat(),
+                        this@GraphicsElement.height.toFloat()
+                    )
                     textSize(5f * scale)
                     textAlign(CENTER, TOP)
                     fill(50f, 155f, 50f)
@@ -128,105 +144,79 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
         return this
     }
 
-    val unscaledWidth: Int
-        get() = width / scale
-
-    val unscaledHeight: Int
-        get() = height / scale
-
     operator fun plusAssign(element: GraphicsElement) {
         addChild(element)
     }
 
-    operator fun plusAssign(p: Pair<Int, GraphicsElement>) {
-        addChild(p.first, p.second)
+    operator fun get(index: Int): GraphicsElement {
+        return children[index]
+    }
+
+    operator fun set(index: Int, element: GraphicsElement) {
+        addChild(index, element)
     }
 
     open fun addChild(element: GraphicsElement) {
         addChild(children.size, element)
     }
 
-    fun addChild(index: Int, element: GraphicsElement) {
-        if (insideDraw)
-            throw IllegalStateException("Can not modify children during draw")
+    open fun addChild(index: Int, element: GraphicsElement) {
+        checkCanModifyChildren()
+        if (element.parent != null) throw IllegalArgumentException("The passed GraphicsElement is already child of another GraphicsElement.")
 
-        if (element.parent == null) {
-            element.parent = this
-            children.add(index, element)
-            element.scaleProp.bind(scaleProp)
-            element.hierarchyDepth = hierarchyDepth + 1
-        } else {
-            throw IllegalArgumentException("The passed GraphicsElement is already child of another GraphicsElement.")
+        children.add(index, element)
+
+        element.let {
+            it.parent = this
+            it.scaleProp.bind(scaleProp)
+            it.hierarchyDepth = hierarchyDepth + 1
         }
     }
 
-    open operator fun get(index: Int): GraphicsElement? {
-        return children[index]
-    }
-
     open fun removeChild(index: Int): GraphicsElement {
-        if (insideDraw)
-            throw IllegalStateException("Can not modify children during draw")
+        checkCanModifyChildren()
 
-        val removed: GraphicsElement = children.removeAt(index)
-        removed.parent = null
-        removed.scaleProp.unbind()
-        return removed
+        return children.removeAt(index).apply {
+            parent = null
+            scaleProp.unbind()
+        }
     }
 
-    fun getChildIndex(child: GraphicsElement?): Int = when {
+    fun removeChild(child: GraphicsElement): GraphicsElement {
+        checkCanModifyChildren()
+
+        val index = children.indexOf(child)
+
+        if (index == -1) throw IllegalArgumentException("The passed GraphicsElement is not a child of this GraphicsElement.")
+
+        return removeChild(index)
+    }
+
+    fun getChildIndex(child: GraphicsElement): Int = when {
         isChild(child) -> children.indexOf(child)
         else -> -1
     }
 
-    fun replace(old: GraphicsElement?, newE: GraphicsElement) {
-        if (insideDraw)
-            throw IllegalStateException("Can not modify children during draw")
+    fun replace(oldElement: GraphicsElement, newElement: GraphicsElement) {
+        checkCanModifyChildren()
 
-        val index = getChildIndex(old)
-        if (index != -1) {
-            removeChild(index)
-            addChild(index, newE)
-        } else addChild(newE)
-    }
+        val index = getChildIndex(oldElement)
 
-    fun removeChild(child: GraphicsElement?): GraphicsElement {
-        if (insideDraw)
-            throw IllegalStateException("Can not modify children during draw")
+        if (index == -1) throw IllegalArgumentException("The passed GraphicsElement can not be replaced because it is not a child of this GraphicsElement")
 
-        val index = children.indexOf(child)
-        return if (index >= 0) {
-            removeChild(index)
-        } else {
-            throw IllegalArgumentException("The passed GraphicsElement is not a child of this GraphicsElement.")
-        }
+        removeChild(index)
+        addChild(index, newElement)
     }
 
     fun removeAllChildren() {
-        if (insideDraw)
-            throw IllegalStateException("Can not modify children during draw")
+        checkCanModifyChildren()
 
         while (children.isNotEmpty())
             removeChild(0)
     }
 
-    fun isChild(child: GraphicsElement?): Boolean {
-        return child != null && equals(child.parent)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || javaClass != other.javaClass) return false
-        val that = other as GraphicsElement
-        return id == that.id
-    }
-
-    final override fun toString(): String {
-        return "${this.javaClass.simpleName}@${hashCode()}"
-    }
-
-    override fun hashCode(): Int {
-        return id
+    fun isChild(child: GraphicsElement): Boolean {
+        return equals(child.parent)
     }
 
     fun hasParent(): Boolean {
@@ -249,6 +239,22 @@ abstract class GraphicsElement(val app: GApplet, x: Int = 0, y: Int = 0, width: 
 
     fun show() {
         hidden = false
+    }
+
+    private fun checkCanModifyChildren() {
+        if (insideDraw) throw IllegalStateException("Can not modify children during draw")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return (other as? GraphicsElement)?.id == id
+    }
+
+    final override fun toString(): String {
+        return "${this.javaClass.simpleName}@${hashCode()}"
+    }
+
+    override fun hashCode(): Int {
+        return id
     }
 }
 

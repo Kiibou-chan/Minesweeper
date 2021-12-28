@@ -127,7 +127,7 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
     fun reset() {
         type = TileType.EMPTY
         revealed = false
-        button.border.borderStyle = BorderStyle.OUT
+        button.border.style = BorderStyle.OUT
     }
 
     override fun activate() {

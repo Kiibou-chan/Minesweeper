@@ -2,7 +2,6 @@ package space.kiibou.gui
 
 import processing.awt.PImageAWT
 import processing.core.PImage
-import java.util.*
 import javax.imageio.ImageIO
 
 private var buffer: HashMap<String, PImage> = HashMap()
@@ -13,8 +12,8 @@ fun loadImage(path: String): PImage {
             val stream = GraphicsElement::class.java.classLoader.getResourceAsStream(path)!!
             PImageAWT(ImageIO.read(stream))
         } catch (e: Exception) {
-            println("""Error loading image "$path""")
-            PImage(0, 0)
+            println("Error loading image <$path>")
+            PImage(-1, -1)
         }
     }
 }

@@ -4,8 +4,7 @@ import processing.core.PGraphics
 import processing.core.PImage
 import space.kiibou.GApplet
 
-class Picture(app: GApplet, private val image: PImage)
-    : GraphicsElement(app) {
+class Picture(app: GApplet, private val image: PImage) : GraphicsElement(app) {
     private val g: PGraphics = app.graphics
 
     constructor(app: GApplet, path: String) : this(app, loadImage(path))
@@ -14,8 +13,7 @@ class Picture(app: GApplet, private val image: PImage)
         widthProp.bind(scaleProp.multiply(image.width))
         heightProp.bind(scaleProp.multiply(image.height))
 
-        if (width == 0 || height == 0)
-            throw RuntimeException("Picture must have non-zero width and height")
+        if (width == 0 || height == 0) throw IllegalArgumentException("Picture must have non-zero width and height")
     }
 
     override fun drawImpl() {

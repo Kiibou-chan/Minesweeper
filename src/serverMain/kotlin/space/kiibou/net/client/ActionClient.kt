@@ -14,11 +14,11 @@ class ActionClient(
     override var socket: Socket? = null
     override var connection: SocketConnection? = null
 
-    override fun stringToObj(string: String): Action<*> {
+    override fun deserialize(string: String): Action<*> {
         return Serial.json.decodeFromString(PolymorphicSerializer(Action::class), string)
     }
 
-    override fun objToString(t: Action<*>): String {
-        return Serial.json.encodeToString(PolymorphicSerializer(Action::class), t)
+    override fun serialize(obj: Action<*>): String {
+        return Serial.json.encodeToString(PolymorphicSerializer(Action::class), obj)
     }
 }

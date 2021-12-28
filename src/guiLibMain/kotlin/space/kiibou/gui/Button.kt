@@ -14,15 +14,15 @@ class Button(app: GApplet) : GraphicsElement(app) {
         it.yProp.bind(yProp)
         widthProp.bind(it.widthProp)
         heightProp.bind(it.heightProp)
-        it.borderStyle = OUT
+        it.style = OUT
         super.addChild(it)
     }
 
     init {
-        registerCallback(options(LEFT, PRESS)) { border.borderStyle = IN }
-        registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_ENTER))) { border.borderStyle = IN }
-        registerCallback(options(LEFT, RELEASE)) { border.borderStyle = OUT }
-        registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_EXIT))) { border.borderStyle = OUT }
+        registerCallback(options(LEFT, PRESS)) { border.style = IN }
+        registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_ENTER))) { border.style = IN }
+        registerCallback(options(LEFT, RELEASE)) { border.style = OUT }
+        registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_EXIT))) { border.style = OUT }
     }
 
     override fun addChild(element: GraphicsElement) {

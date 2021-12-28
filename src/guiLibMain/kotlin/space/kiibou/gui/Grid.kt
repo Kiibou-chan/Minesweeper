@@ -49,39 +49,39 @@ class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private v
     }
 
     operator fun set(x: Int, y: Int, element: T) {
-        if (isValidCell(x, y)) {
-            remove(x, y)
-            cells[x, y] = element
-            addChild(element)
-            element.xProp.bind(colWidths[x].second.add(xProp))
-            element.yProp.bind(rowHeights[y].second.add(yProp))
-        } else {
+        if (!isValidCell(x, y)) {
             throw IndexOutOfBoundsException("passed x:$x, y:$y must be in range x:[0-$cellsX), y:[0-$cellsY)")
         }
+
+        remove(x, y)
+        cells[x, y] = element
+        addChild(element)
+        element.xProp.bind(colWidths[x].second.add(xProp))
+        element.yProp.bind(rowHeights[y].second.add(yProp))
     }
 
     operator fun get(x: Int, y: Int): T? {
-        return if (isValidCell(x, y)) {
-            this.cells[x, y]
-        } else {
+        if (!isValidCell(x, y)) {
             throw IndexOutOfBoundsException("passed x:$x, y:$y must be in range x:[0-$cellsX), y:[0-$cellsY)")
         }
+
+        return cells[x, y]
     }
 
     fun remove(x: Int, y: Int): T? {
-        return if (isValidCell(x, y)) {
-            if (this.cells[x, y] != null) {
-                val index = children.indexOf(this.cells[x, y]!!)
-                removeChild(index).also {
-                    it.xProp.unbind()
-                    it.yProp.unbind()
-                }
-                cells.remove(x, y)
-            } else {
-                null
-            }
-        } else {
+        if (!isValidCell(x, y)) {
             throw IndexOutOfBoundsException("passed x:$x, y:$y must be in range x:[0-$cellsX), y:[0-$cellsY)")
+        }
+
+        return if (this.cells[x, y] != null) {
+            val index = children.indexOf(this.cells[x, y]!!)
+            removeChild(index).also {
+                it.xProp.unbind()
+                it.yProp.unbind()
+            }
+            cells.remove(x, y)
+        } else {
+            null
         }
     }
 
@@ -92,7 +92,6 @@ class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private v
     override fun iterator(): MutableIterator<T> {
         return cells.values.iterator()
     }
-
 }
 
 private operator fun <A, B, C> Map<Pair<A, B>, C>.get(key: A, value: B) = this[key to value]

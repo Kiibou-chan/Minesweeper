@@ -28,7 +28,7 @@ class ActionService(server: Server) : Service(server) {
         server.sendMessage(handle, Serial.json.encodeToString(PolymorphicSerializer(Action::class), action))
     }
 
-    inline fun <S, reified T : Action<S>> registerCallback(noinline callback: (Message<T>) -> Unit): Long {
+    inline fun <reified T : Action<*>> registerCallback(noinline callback: (Message<T>) -> Unit): Long {
         return dispatcher.addCallback(T::class.jvmName) {
             @Suppress("UNCHECKED_CAST")
             callback(it as Message<T>)

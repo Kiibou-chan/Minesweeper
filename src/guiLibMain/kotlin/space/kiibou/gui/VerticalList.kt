@@ -23,5 +23,4 @@ class VerticalList(app: GApplet, margin: Int = 0) : GraphicsElement(app) {
             widthProp.bind(w)
         }
     }
-
 }

@@ -33,16 +33,8 @@ class Minesweeper : GApplet() {
         surface.setResizable(true)
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 9, 9, 10)
+        map = Map(this, 40, 40, 160)
         registerGraphicsElement(map)
-
-        registerActionCallback(map.controlBar::setTime)
-        registerActionCallback(map::revealTiles)
-        registerActionCallback(map::win)
-        registerActionCallback(map::loose)
-        registerActionCallback(map::restart)
-        registerActionCallback(map::setFlag)
-        registerActionCallback(map.controlBar::setBombsLeft)
 
         client = ActionClient(
             ::onServerConnect,
@@ -74,8 +66,9 @@ class Minesweeper : GApplet() {
     }
 
 
-    private inline fun <S, reified T : Action<S>> registerActionCallback(noinline callback: (T) -> Unit) =
+    inline fun <reified T : Action<*>> registerActionCallback(noinline callback: (T) -> Unit) =
         eventDispatcher.registerActionCallback(callback)
+
 }
 
 fun main() {

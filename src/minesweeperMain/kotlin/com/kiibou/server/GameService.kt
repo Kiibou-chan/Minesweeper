@@ -1,7 +1,8 @@
 package com.kiibou.server
 
-import com.kiibou.common.*
-import space.kiibou.net.common.Message
+import com.kiibou.common.MinesweeperAction
+import com.kiibou.common.TilesInfo
+import space.kiibou.net.common.Action
 import space.kiibou.net.reflect.Inject
 import space.kiibou.net.server.Server
 import space.kiibou.net.server.Service
@@ -16,58 +17,40 @@ class GameService(server: Server) : Service(server) {
     override fun initialize() {
         MinesweeperAction
 
-        actionService.registerCallback(this::revealTile)
-        actionService.registerCallback(this::restart)
-        actionService.registerCallback(this::flagToggle)
-        actionService.registerCallback(this::initMap)
+        actionService.registerCallback<MinesweeperAction.InitMap> { (handle, content) ->
+            val gameState = getGameState(handle)
+
+            gameState.setupVariables(content.data.width, content.data.height, content.data.bombs)
+
+            send(handle, MinesweeperAction.Restart)
+        }
+
+        actionService.registerCallback<MinesweeperAction.RevealTile> { (handle, content) ->
+            val gameState = getGameState(handle)
+
+            val revealed = gameState.reveal(content.data.x, content.data.y)
+
+            send(handle, MinesweeperAction.RevealTiles(TilesInfo(revealed)))
+        }
+
+        actionService.registerCallback<MinesweeperAction.ToggleFlag> { (handle, content) ->
+            val gameState = getGameState(handle)
+
+            gameState.flagToggle(content.data.x, content.data.y)
+        }
+
+        actionService.registerCallback<MinesweeperAction.Restart> { (handle, _) ->
+            val gameState = getGameState(handle)
+
+            gameState.setupVariables()
+
+            send(handle, MinesweeperAction.Restart)
+        }
     }
 
-    private fun initMap(message: Message<MinesweeperAction.InitMap>) {
-        val gameState = getGameState(message.connectionHandle)
-        val (width, height, bombs) = message.content.data
-        gameState.setupVariables(width, height, bombs)
-        actionService.send(message.connectionHandle, MinesweeperAction.Restart)
+    fun <S, T : Action<S>> send(handle: Long, action: T) {
+        actionService.send(handle, action)
     }
-
-    private fun revealTile(message: Message<MinesweeperAction.RevealTile>) {
-        val gameState = getGameState(message.connectionHandle)
-        val (x, y) = message.content.data
-        val revealed = gameState.reveal(x, y)
-        sendRevealTiles(message.connectionHandle, revealed)
-    }
-
-    private fun restart(message: Message<MinesweeperAction.Restart>) {
-        val gameState = getGameState(message.connectionHandle)
-        gameState.setupVariables()
-        actionService.send(message.connectionHandle, MinesweeperAction.Restart)
-    }
-
-    private fun flagToggle(message: Message<MinesweeperAction.ToggleFlag>) {
-        val gameState = getGameState(message.connectionHandle)
-
-        // TODO (Svenja, 20/12/2021): Change client action to ToggleFlag(x, y) and server action to SetFlag(x, y, status)
-        val (x, y) = message.content.data
-        gameState.flagToggle(x, y)
-    }
-
-    fun sendFlagStatus(handle: Long, x: Int, y: Int, status: Boolean) {
-        actionService.send(handle, MinesweeperAction.SetFlag(FlagInfo(x, y, status)))
-    }
-
-    private fun sendRevealTiles(handle: Long, revealed: List<TileInfo>) {
-        actionService.send(handle, MinesweeperAction.RevealTiles(TilesInfo(revealed)))
-    }
-
-    fun sendBombsLeft(handle: Long, bombsLeft: Int) {
-        actionService.send(handle, MinesweeperAction.SetBombsLeft(bombsLeft))
-    }
-
-    fun sendWin(handle: Long) = actionService.send(handle, MinesweeperAction.Win)
-
-    fun sendLoose(handle: Long) = actionService.send(handle, MinesweeperAction.Loose)
-
-    fun sendTime(handle: Long, time: Int) =
-        actionService.send(handle, MinesweeperAction.SetTime(TimeInfo(time)))
 
     private fun getGameState(handle: Long) =
         gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }

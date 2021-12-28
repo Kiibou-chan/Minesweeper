@@ -2,25 +2,16 @@ package com.kiibou
 
 import com.kiibou.common.MapInfo
 import com.kiibou.common.MinesweeperAction
-import space.kiibou.GApplet
 import space.kiibou.gui.*
 
-class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bombs: Int) : GraphicsElement(app) {
-
+class Map(override val app: Minesweeper, private val tilesX: Int, private val tilesY: Int, val bombs: Int) :
+    GraphicsElement(app) {
     private val margin = tileWidth / 4
     private val marginProp = scaleProp.multiply(margin)
 
     private val box = BorderBox(app).also {
-        it.borderStyle = BorderStyle.OUT
+        it.style = BorderStyle.OUT
         addChild(it)
-    }
-
-    private val verticalList = VerticalList(app, margin).also {
-        box.addChild(it)
-        it.xProp.bind(box.xProp.add(box.borderWidthProp).add(marginProp))
-        it.yProp.bind(box.yProp.add(box.borderHeightProp).add(marginProp))
-        box.innerWidthProp.bind(it.widthProp.add(marginProp.multiply(2)))
-        box.innerHeightProp.bind(it.heightProp.add(marginProp.multiply(2)))
     }
 
     private val tiles = Grid<Tile>(app, tilesX, tilesY).also {
@@ -45,65 +36,67 @@ class Map(app: GApplet, private val tilesX: Int, private val tilesY: Int, val bo
         it.bindProps(controlBar)
     }
 
+    private val verticalList = VerticalList(app, margin).also {
+        it.xProp.bind(box.xProp.add(box.borderWidthProp).add(marginProp))
+        it.yProp.bind(box.yProp.add(box.borderHeightProp).add(marginProp))
+        box.innerWidthProp.bind(it.widthProp.add(marginProp.multiply(2)))
+        box.innerHeightProp.bind(it.heightProp.add(marginProp.multiply(2)))
+
+        it.addChild(controlBarBox)
+        it.addChild(tilesBox)
+    }
+
     init {
-        verticalList += controlBarBox
-        verticalList += tilesBox
+        box.addChild(verticalList)
 
         widthProp.bind(box.widthProp)
         heightProp.bind(box.heightProp)
     }
 
     override fun initImpl() {
-        (app as Minesweeper).client.send(MinesweeperAction.InitMap(MapInfo(tilesX, tilesY, bombs)))
-    }
+        app.apply {
+            registerActionCallback<MinesweeperAction.SetTime> {
+                controlBar.timerDisplay.value = it.data.time
+            }
 
-    private fun revealTile(x: Int, y: Int, type: TileType) {
-        tiles[x, y]!!.type = type
-        tiles[x, y]!!.revealed = true
-    }
+            registerActionCallback<MinesweeperAction.RevealTiles> {
+                it.data.tiles.forEach { (x, y, type) ->
+                    tiles[x, y]!!.type = TileType.getTypeFromValue(type)
+                    tiles[x, y]!!.revealed = true
+                }
+            }
 
-    fun revealTiles(action: MinesweeperAction.RevealTiles) {
-        action.data.tiles.forEach {
-            revealTile(it.x, it.y, TileType.getTypeFromValue(it.type))
+            registerActionCallback<MinesweeperAction.Win> {
+                tiles.forEach(Tile::deactivate)
+                controlBar.setSmiley(SmileyStatus.GLASSES)
+            }
+
+            registerActionCallback<MinesweeperAction.Loose> {
+                tiles.forEach(Tile::deactivate)
+                controlBar.setSmiley(SmileyStatus.DEAD)
+            }
+
+            registerActionCallback<MinesweeperAction.Restart> {
+                tiles.forEach(Tile::reset)
+                controlBar.setSmiley(SmileyStatus.NORMAL)
+            }
+
+            registerActionCallback<MinesweeperAction.SetFlag> {
+                val (x, y, status) = it.data
+
+                tiles[x, y]!!.flagged = status
+            }
+
+            registerActionCallback<MinesweeperAction.SetBombsLeft> {
+                controlBar.bombsLeft.value = it.data
+            }
+
+            client.send(MinesweeperAction.InitMap(MapInfo(tilesX, tilesY, bombs)))
         }
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun win(ignored: MinesweeperAction.Win) {
-        controlBar.setSmiley(SmileyStatus.GLASSES)
-        forEachTile(Tile::deactivate)
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun loose(ignored: MinesweeperAction.Loose) {
-        forEachTile(Tile::deactivate)
-        controlBar.setSmiley(SmileyStatus.DEAD)
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun restart(ignored: MinesweeperAction.Restart) {
-        forEachTile(Tile::reset)
-        controlBar.setSmiley(SmileyStatus.NORMAL)
-        controlBar.bombsLeft.value = bombs
-    }
-
-    fun setFlag(action: MinesweeperAction.SetFlag) {
-        val (x, y, status) = action.data
-
-        when (status) {
-            true -> controlBar.bombsLeft.dec()
-            false -> controlBar.bombsLeft.inc()
-        }
-
-        tiles[x, y]!!.flagged = status
     }
 
     override fun move(dx: Int, dy: Int): GraphicsElement {
         box.move(dx, dy)
         return super.move(dx, dy)
-    }
-
-    private inline fun forEachTile(action: (Tile) -> Unit) {
-        tiles.forEach(action)
     }
 }

@@ -11,9 +11,9 @@ interface Client<T> {
     var socket: Socket?
     var connection: SocketConnection?
 
-    fun stringToObj(string: String): T
+    fun deserialize(string: String): T
 
-    fun objToString(t: T): String
+    fun serialize(obj: T): String
 
     fun connect(address: String, port: Int): Client<T> {
         try {
@@ -24,12 +24,12 @@ interface Client<T> {
                 connection.registerMessageCallback { _, message ->
                     println("[Client] RCV: $message")
 
-                    onMessageReceived(stringToObj(message))
+                    onMessageReceived(deserialize(message))
                 }
                 connection.registerDisconnectCallback { onDisconnect() }
             }
         } catch (ex: Exception) {
-            println("Failed to connect to $address:$port")
+            println("[Client] Failed to connect to $address:$port")
             ex.printStackTrace()
         }
 
@@ -41,8 +41,8 @@ interface Client<T> {
             socket?.close()
     }
 
-    fun send(t: T) {
-        val message = objToString(t)
+    fun send(obj: T) {
+        val message = serialize(obj)
 
         println("[Client] SND: $message")
 
