@@ -4,9 +4,10 @@ import processing.core.PApplet
 import processing.core.PFont
 import java.awt.Font
 import java.awt.GraphicsEnvironment
+import java.util.*
 
 object FontRegistry {
-    private val fontBuffer: MutableMap<Pair<String, Int>, PFont> = HashMap()
+    private val fontBuffer: MutableMap<Pair<String, Int>, PFont> = WeakHashMap()
 
     fun register(file: String) {
         val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
