@@ -72,7 +72,6 @@ class Tile(override val app: Minesweeper, private val map: Map, private val tile
     }
 
     private val flag: Picture = Picture(app, "tiles/flag_tile.png").also {
-        button.addChild(it)
         it.hide()
     }
 
