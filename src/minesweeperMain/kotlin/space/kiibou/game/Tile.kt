@@ -1,6 +1,5 @@
 package space.kiibou.game
 
-import space.kiibou.GApplet
 import space.kiibou.Minesweeper
 import space.kiibou.common.MinesweeperAction
 import space.kiibou.data.Vec2
@@ -18,7 +17,8 @@ import java.util.*
  * @param tileX X-Position of the tile on the Map
  * @param tileY Y-Position of the tile on the Map
  */
-class Tile(app: GApplet, private val map: Map, private val tileX: Int, private val tileY: Int) : GraphicsElement(app) {
+class Tile(override val app: Minesweeper, private val map: Map, private val tileX: Int, private val tileY: Int) :
+    GraphicsElement(app) {
 
     var type: TileType = TileType.EMPTY
         set(value) {
@@ -89,12 +89,12 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
         /* Reveal the tile, if possible, and set the smiley back to normal */
         button.registerCallback(options(LEFT, RELEASE)) {
             map.controlBar.setSmiley(SmileyStatus.NORMAL)
-            reveal()
+            app.client.send(MinesweeperAction.RevealTile(Vec2(tileX, tileY)))
         }
 
         /* Flag the tile */
         button.registerCallback(options(RIGHT, RELEASE)) {
-            flag()
+            app.client.send(MinesweeperAction.ToggleFlag(Vec2(tileX, tileY)))
         }
 
         /* Set smiley to surprised */
@@ -113,18 +113,6 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
         }
     }
 
-    private fun reveal() {
-        (app as Minesweeper).client.send(
-            MinesweeperAction.RevealTile(Vec2(tileX, tileY))
-        )
-    }
-
-    private fun flag() {
-        (app as Minesweeper).client.send(
-            MinesweeperAction.ToggleFlag(Vec2(tileX, tileY))
-        )
-    }
-
     fun reset() {
         type = TileType.EMPTY
         revealed = false
@@ -138,7 +126,6 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
     override fun deactivate() {
         button.deactivate()
     }
-
 }
 
 const val tileWidth = 16
