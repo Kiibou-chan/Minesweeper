@@ -1,4 +1,4 @@
-package space.kiibou
+package space.kiibou.game
 
 enum class TileType(val path: String, val lookup: Int) {
     NO_BOMB("tiles/no_bomb_tile.png", -3),

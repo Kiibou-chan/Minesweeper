@@ -15,14 +15,14 @@ class SevenSegmentDisplay(app: GApplet, private val digits: Int, var value: Int)
             Rectangle().also { rec ->
                 rec.xProp.bind(xProp.add(widthProp.divide(digits).multiply(digitPos)))
                 rec.yProp.bind(yProp)
-                rec.widthProp.bind(scaleProp.multiply(digitWidth))
-                rec.heightProp.bind(scaleProp.multiply(digitHeight))
+                rec.widthProp.bind(scaleProperty.multiply(digitWidth))
+                rec.heightProp.bind(scaleProperty.multiply(digitHeight))
             }
         }.toTypedArray()
 
     init {
-        widthProp.bind(scaleProp.multiply(digitWidth * digits))
-        heightProp.bind(scaleProp.multiply(digitHeight))
+        widthProp.bind(scaleProperty.multiply(digitWidth * digits))
+        heightProp.bind(scaleProperty.multiply(digitHeight))
     }
 
     private var lowerLimit = 0

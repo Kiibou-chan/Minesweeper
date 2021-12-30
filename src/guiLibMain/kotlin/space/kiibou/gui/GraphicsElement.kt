@@ -18,8 +18,8 @@ val outline = System.getenv("outline")?.toBoolean() ?: false
 
 abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, width: Int = 0, height: Int = 0) :
     Rectangle(x, y, width, height), MouseEventListener {
-    val scaleProp = SimpleIntegerProperty(1)
-    val scale: Int get() = scaleProp.value
+    val scaleProperty = SimpleIntegerProperty(1)
+    val scale: Int get() = scaleProperty.value
 
     val childrenProperty: SimpleListProperty<GraphicsElement> =
         SimpleListProperty(synchronizedObservableList(observableArrayList()))
@@ -168,7 +168,7 @@ abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, wi
 
         element.let {
             it.parent = this
-            it.scaleProp.bind(scaleProp)
+            it.scaleProperty.bind(scaleProperty)
             it.hierarchyDepth = hierarchyDepth + 1
         }
     }
@@ -178,7 +178,7 @@ abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, wi
 
         return children.removeAt(index).apply {
             parent = null
-            scaleProp.unbind()
+            scaleProperty.unbind()
         }
     }
 

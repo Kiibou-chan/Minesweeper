@@ -10,8 +10,8 @@ class Picture(app: GApplet, private val image: PImage) : GraphicsElement(app) {
     constructor(app: GApplet, path: String) : this(app, loadImage(path))
 
     init {
-        widthProp.bind(scaleProp.multiply(image.width))
-        heightProp.bind(scaleProp.multiply(image.height))
+        widthProp.bind(scaleProperty.multiply(image.width))
+        heightProp.bind(scaleProperty.multiply(image.height))
 
         if (width == 0 || height == 0) throw IllegalArgumentException("Picture must have non-zero width and height")
     }

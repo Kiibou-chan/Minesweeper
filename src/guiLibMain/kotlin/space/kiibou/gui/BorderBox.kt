@@ -24,11 +24,11 @@ class BorderBox(app: GApplet) : GraphicsElement(app) {
             redraw = true
         }
 
-    val borderWidthProp: IntegerBinding = scaleProp.multiply(style.borderWidth)
+    val borderWidthProp: IntegerBinding = scaleProperty.multiply(style.borderWidth)
     val borderWidth: Int
         get() = borderWidthProp.intValue()
 
-    val borderHeightProp: IntegerBinding = scaleProp.multiply(style.borderHeight)
+    val borderHeightProp: IntegerBinding = scaleProperty.multiply(style.borderHeight)
     val borderHeight: Int
         get() = borderHeightProp.intValue()
 
@@ -110,7 +110,7 @@ class BorderBox(app: GApplet) : GraphicsElement(app) {
     fun bindProps(other: GraphicsElement): BorderBox {
         other.xProp.bind(xProp.add(borderWidthProp))
         other.yProp.bind(yProp.add(borderHeightProp))
-        other.scaleProp.bind(scaleProp)
+        other.scaleProperty.bind(scaleProperty)
         innerWidthProp.bind(other.widthProp)
         innerHeightProp.bind(other.heightProp)
         return this

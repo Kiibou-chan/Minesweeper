@@ -1,5 +1,6 @@
-package space.kiibou
+package space.kiibou.game
 
+import space.kiibou.Minesweeper
 import space.kiibou.common.MapInfo
 import space.kiibou.common.MinesweeperAction
 import space.kiibou.gui.*
@@ -7,7 +8,7 @@ import space.kiibou.gui.*
 class Map(override val app: Minesweeper, private val tilesX: Int, private val tilesY: Int, val bombs: Int) :
     GraphicsElement(app) {
     private val margin = tileWidth / 4
-    private val marginProp = scaleProp.multiply(margin)
+    private val marginProp = scaleProperty.multiply(margin)
 
     private val box = BorderBox(app).also {
         it.style = BorderStyle.OUT

@@ -6,7 +6,7 @@ import processing.core.PApplet
 import processing.opengl.PGraphicsOpenGL
 import processing.opengl.PJOGL
 import space.kiibou.common.MinesweeperAction
-import space.kiibou.gui.GGraphics
+import space.kiibou.game.Map
 import space.kiibou.net.NetUtils
 import space.kiibou.net.client.ActionClient
 import space.kiibou.net.client.Client
@@ -19,9 +19,8 @@ class Minesweeper : GApplet() {
     lateinit var client: Client<Action<*>>
 
     override fun settings() {
-        size(800, 800, GGraphics::class.java.canonicalName)
+        size(800, 800, G2D)
         setScale(2)
-        //        fullScreen(P2D)
         PJOGL.setIcon("pictures/icon_30.png")
 
         MinesweeperAction

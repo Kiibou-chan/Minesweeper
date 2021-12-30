@@ -6,7 +6,7 @@ import javafx.beans.value.ObservableNumberValue
 import space.kiibou.GApplet
 
 class VerticalList(app: GApplet, margin: Int = 0) : GraphicsElement(app) {
-    private val marginProp = scaleProp.multiply(margin)
+    private val marginProp = scaleProperty.multiply(margin)
 
     init {
         childrenProperty.addListener { _, _, list ->

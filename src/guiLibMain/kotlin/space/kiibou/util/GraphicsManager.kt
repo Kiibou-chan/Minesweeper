@@ -2,9 +2,7 @@ package space.kiibou.util
 
 import javafx.beans.property.SimpleIntegerProperty
 import space.kiibou.GApplet
-import space.kiibou.gui.GGraphics
 import space.kiibou.gui.GraphicsElement
-import java.util.*
 
 class GraphicsManager {
     private lateinit var app: GApplet
@@ -19,12 +17,13 @@ class GraphicsManager {
             scaleProp.value = value
         }
 
+    @Suppress("unused")
     fun pre() {
         elements.forEach(GraphicsElement::init)
         app.unregisterMethod("pre", this)
-        app.gg = app.graphics as GGraphics
     }
 
+    @Suppress("unused")
     fun draw() {
         mouseX.value = app.mouseX
         mouseY.value = app.mouseY
@@ -33,7 +32,7 @@ class GraphicsManager {
 
     fun registerGraphicsElement(element: GraphicsElement) {
         elements.add(element)
-        element.scaleProp.bind(scaleProp)
+        element.scaleProperty.bind(scaleProp)
     }
 
     fun registerApp(app: GApplet) {
@@ -42,4 +41,3 @@ class GraphicsManager {
         app.registerMethod("draw", this)
     }
 }
-

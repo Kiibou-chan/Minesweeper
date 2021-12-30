@@ -1,5 +1,7 @@
-package space.kiibou
+package space.kiibou.game
 
+import space.kiibou.GApplet
+import space.kiibou.Minesweeper
 import space.kiibou.common.MinesweeperAction
 import space.kiibou.data.Vec2
 import space.kiibou.event.MouseAction.*
@@ -81,8 +83,8 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
     }
 
     init {
-        widthProp.bind(scaleProp.multiply(tileWidth))
-        heightProp.bind(scaleProp.multiply(tileHeight))
+        widthProp.bind(scaleProperty.multiply(tileWidth))
+        heightProp.bind(scaleProperty.multiply(tileHeight))
 
         /* Reveal the tile, if possible, and set the smiley back to normal */
         button.registerCallback(options(LEFT, RELEASE)) {

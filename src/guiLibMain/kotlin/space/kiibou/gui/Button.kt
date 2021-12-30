@@ -8,6 +8,8 @@ import space.kiibou.gui.BorderStyle.IN
 import space.kiibou.gui.BorderStyle.OUT
 import java.util.*
 
+// TODO (Svenja, 30/12/2021): Add secondary constructor to immediately pass the child element to the button.
+//  Currently this usually happens with an `also` or `apply` call after instantiation.
 class Button(app: GApplet) : GraphicsElement(app) {
     val border = BorderBox(app).also {
         it.xProp.bind(xProp)
@@ -33,5 +35,4 @@ class Button(app: GApplet) : GraphicsElement(app) {
     override fun removeChild(index: Int): GraphicsElement {
         return border.removeChild(index)
     }
-
 }

@@ -1,10 +1,13 @@
-package space.kiibou
+package space.kiibou.game
 
-import space.kiibou.SmileyStatus.NORMAL
+import space.kiibou.GApplet
+import space.kiibou.Minesweeper
+import space.kiibou.SevenSegmentDisplay
 import space.kiibou.common.MinesweeperAction
 import space.kiibou.event.MouseAction
 import space.kiibou.event.MouseButton
 import space.kiibou.event.options
+import space.kiibou.game.SmileyStatus.NORMAL
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Picture
@@ -20,8 +23,8 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
     }
 
     val bombsLeft = SevenSegmentDisplay(app, 3, map.bombs).also {
-        it.xProp.bind(xProp.add(scaleProp.multiply(margin)))
-        it.yProp.bind(yProp.add(scaleProp.multiply(margin)))
+        it.xProp.bind(xProp.add(scaleProperty.multiply(margin)))
+        it.yProp.bind(yProp.add(scaleProperty.multiply(margin)))
         it.setLowerLimit(0)
         addChild(it)
     }
@@ -38,13 +41,13 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
     }
 
     val timerDisplay: SevenSegmentDisplay = SevenSegmentDisplay(app, 3, 0).also {
-        it.xProp.bind(xProp.add(widthProp).subtract(it.widthProp).subtract(scaleProp.multiply(margin)))
-        it.yProp.bind(yProp.add(scaleProp.multiply(margin)))
+        it.xProp.bind(xProp.add(widthProp).subtract(it.widthProp).subtract(scaleProperty.multiply(margin)))
+        it.yProp.bind(yProp.add(scaleProperty.multiply(margin)))
         addChild(it)
     }
 
     init {
-        heightProp.bind(scaleProp.multiply(margin * 2).add(bombsLeft.heightProp))
+        heightProp.bind(scaleProperty.multiply(margin * 2).add(bombsLeft.heightProp))
     }
 
     fun setSmiley(status: SmileyStatus) {

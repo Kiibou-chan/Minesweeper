@@ -1,13 +1,14 @@
 package space.kiibou.gui
 
+import processing.core.PFont
 import processing.opengl.PGraphicsOpenGL
 import space.kiibou.data.Color
 import space.kiibou.data.Vec2
 
-class GGraphics : PGraphicsOpenGL() {
+class GGraphicsOpenGl : PGraphicsOpenGL() {
     private val scalarStack: ArrayDeque<Int> = ArrayDeque(initialCapacity = 32)
 
-    fun scaled(scale: Int, action: (GGraphics) -> Unit) {
+    fun scaled(scale: Int, action: (GGraphicsOpenGl) -> Unit) {
         scalarStack.addLast(scale)
         action(this)
         scalarStack.removeLast()
@@ -36,4 +37,23 @@ class GGraphics : PGraphicsOpenGL() {
     }
 
     private fun getCurrentScalar(): Int = if (scalarStack.size > 0) scalarStack.last() else 1
+
+    fun textWidth(font: PFont, size: Int, text: String): Int {
+        pushStyle()
+        textFont(font)
+        textSize(size.toFloat())
+        val width = textWidth(text).toInt()
+        popStyle()
+        return width
+    }
+
+    fun textHeight(font: PFont, size: Int, text: String): Int {
+        pushStyle()
+        textFont(font)
+        textSize(size.toFloat())
+        val lineBreaks = text.count { it == '\n' }
+        val height = (textAscent() + textDescent()) * (lineBreaks + 1)
+        popStyle()
+        return height.toInt()
+    }
 }
