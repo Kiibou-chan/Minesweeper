@@ -71,15 +71,15 @@ class Tile(app: GApplet, private val map: Map, private val tileX: Int, private v
         addChild(it)
     }
 
-    private val button = Button(app).also {
-        it.xProp.bind(xProp)
-        it.yProp.bind(yProp)
-        addChild(it)
-    }
-
     private val flag: Picture = Picture(app, "tiles/flag_tile.png").also {
         button.addChild(it)
         it.hide()
+    }
+
+    private val button = Button(app, child = flag).also {
+        it.xProp.bind(xProp)
+        it.yProp.bind(yProp)
+        addChild(it)
     }
 
     init {

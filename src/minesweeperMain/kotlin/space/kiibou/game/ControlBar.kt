@@ -29,10 +29,9 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
         addChild(it)
     }
 
-    private val restartButton = Button(app).also {
+    private val restartButton = Button(app, child = smileys[NORMAL.ordinal]).also {
         it.xProp.bind(xProp.add(widthProp.divide(2).subtract(it.widthProp.divide(2))))
         it.yProp.bind(yProp.add(heightProp.divide(2).subtract(it.heightProp.divide(2))))
-        it.addChild(smileys[NORMAL.ordinal])
         addChild(it)
 
         it.registerCallback(options(MouseButton.LEFT, MouseAction.RELEASE)) {
