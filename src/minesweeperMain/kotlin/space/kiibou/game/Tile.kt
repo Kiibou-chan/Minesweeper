@@ -26,7 +26,7 @@ class Tile(override val app: Minesweeper, private val map: Map, private val tile
 
             deferAfterDraw {
                 val index = getChildIndex(tilePicture)
-                removeChild(tilePicture)
+                removeChildAt(index)
                 tilePicture.xProp.unbind()
                 tilePicture.yProp.unbind()
                 tilePicture.widthProp.unbind()

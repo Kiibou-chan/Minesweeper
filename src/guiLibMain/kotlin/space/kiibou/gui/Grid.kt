@@ -75,7 +75,7 @@ class Grid<T : GraphicsElement>(app: GApplet, private val cellsX: Int, private v
 
         return if (this.cells[x, y] != null) {
             val index = children.indexOf(this.cells[x, y]!!)
-            removeChild(index).also {
+            removeChildAt(index).also {
                 it.xProp.unbind()
                 it.yProp.unbind()
             }

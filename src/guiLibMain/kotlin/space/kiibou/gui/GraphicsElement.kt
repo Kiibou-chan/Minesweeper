@@ -173,15 +173,6 @@ abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, wi
         }
     }
 
-    open fun removeChild(index: Int): GraphicsElement {
-        checkCanModifyChildren()
-
-        return children.removeAt(index).apply {
-            parent = null
-            scaleProperty.unbind()
-        }
-    }
-
     fun removeChild(child: GraphicsElement): GraphicsElement {
         checkCanModifyChildren()
 
@@ -189,7 +180,16 @@ abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, wi
 
         if (index == -1) throw IllegalArgumentException("The passed GraphicsElement is not a child of this GraphicsElement.")
 
-        return removeChild(index)
+        return removeChildAt(index)
+    }
+
+    open fun removeChildAt(index: Int): GraphicsElement {
+        checkCanModifyChildren()
+
+        return children.removeAt(index).apply {
+            parent = null
+            scaleProperty.unbind()
+        }
     }
 
     fun getChildIndex(child: GraphicsElement): Int = when {
@@ -204,7 +204,7 @@ abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, wi
 
         if (index == -1) throw IllegalArgumentException("The passed GraphicsElement can not be replaced because it is not a child of this GraphicsElement")
 
-        removeChild(index)
+        removeChildAt(index)
         addChild(index, newElement)
     }
 
@@ -212,7 +212,7 @@ abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, wi
         checkCanModifyChildren()
 
         while (children.isNotEmpty())
-            removeChild(0)
+            removeChildAt(0)
     }
 
     fun isChild(child: GraphicsElement): Boolean {
