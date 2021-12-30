@@ -113,16 +113,6 @@ class SevenSegmentDisplay(app: GApplet, private val digits: Int, var value: Int)
         removeLowerLimit()
         removeUpperLimit()
     }
-
-    operator fun inc(): SevenSegmentDisplay {
-        value++
-        return this
-    }
-
-    operator fun dec(): SevenSegmentDisplay {
-        value--
-        return this
-    }
 }
 
 private val segmentMap: PImage = loadImage("pictures/number_segments.png")
