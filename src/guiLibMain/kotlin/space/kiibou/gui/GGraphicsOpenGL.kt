@@ -5,10 +5,10 @@ import processing.opengl.PGraphicsOpenGL
 import space.kiibou.data.Color
 import space.kiibou.data.Vec2
 
-class GGraphicsOpenGl : PGraphicsOpenGL() {
+class GGraphicsOpenGL : PGraphicsOpenGL() {
     private val scalarStack: ArrayDeque<Int> = ArrayDeque(initialCapacity = 32)
 
-    fun scaled(scale: Int, action: (GGraphicsOpenGl) -> Unit) {
+    fun scaled(scale: Int, action: (GGraphicsOpenGL) -> Unit) {
         scalarStack.addLast(scale)
         action(this)
         scalarStack.removeLast()

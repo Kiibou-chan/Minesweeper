@@ -2,12 +2,12 @@ package space.kiibou
 
 import processing.core.PApplet
 import space.kiibou.event.EventDispatcher
-import space.kiibou.gui.GGraphicsOpenGl
+import space.kiibou.gui.GGraphicsOpenGL
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.util.GraphicsManager
 
 open class GApplet : PApplet() {
-    val gg: GGraphicsOpenGl get() = g as GGraphicsOpenGl
+    val gg: GGraphicsOpenGL get() = g as GGraphicsOpenGL
 
     @PublishedApi
     internal val eventDispatcher: EventDispatcher = EventDispatcher().also { it.registerApp(this) }
@@ -26,6 +26,6 @@ open class GApplet : PApplet() {
     }
 
     companion object {
-        val G2D: String = GGraphicsOpenGl::class.java.name
+        val G2D: String = GGraphicsOpenGL::class.java.name
     }
 }
