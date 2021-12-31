@@ -64,9 +64,8 @@ class Minesweeper : GApplet() {
     }
 
 
-    inline fun <reified T : Action<*>> registerActionCallback(noinline callback: (T) -> Unit) =
-        eventDispatcher.registerActionCallback(callback)
-
+    inline fun <reified T : Action<*>> onAction(noinline callback: (T) -> Unit) =
+        eventDispatcher.onAction(callback)
 }
 
 fun main() {

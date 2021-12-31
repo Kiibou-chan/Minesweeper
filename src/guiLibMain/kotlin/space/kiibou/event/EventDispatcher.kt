@@ -90,7 +90,7 @@ class EventDispatcher {
         }
     }
 
-    inline fun <reified T : Action<*>> registerActionCallback(noinline callback: (T) -> Unit) {
+    inline fun <reified T : Action<*>> onAction(noinline callback: (T) -> Unit) {
         @Suppress("UNCHECKED_CAST")
         actionDispatcher.addCallback(T::class.jvmName, callback as (Action<*>) -> Unit)
     }
