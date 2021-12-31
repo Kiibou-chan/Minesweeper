@@ -33,7 +33,6 @@ class Button(app: GApplet) : GraphicsElement(app) {
 
     override fun addChild(element: GraphicsElement) {
         border.addChild(element)
-        border.bindProps(element)
     }
 
     override fun removeChildAt(index: Int): GraphicsElement {

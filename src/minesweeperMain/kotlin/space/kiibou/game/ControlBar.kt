@@ -52,6 +52,5 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
     fun setSmiley(status: SmileyStatus) {
         restartButton.border.removeChildAt(0)
         restartButton.border.addChild(smileys[status.ordinal])
-        restartButton.border.bindProps(smileys[status.ordinal])
     }
 }

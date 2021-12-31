@@ -107,7 +107,13 @@ class BorderBox(app: GApplet) : GraphicsElement(app) {
         tileRenderer(graphics, x, y, width, height)
     }
 
-    fun bindProps(other: GraphicsElement): BorderBox {
+    override fun addChild(element: GraphicsElement) {
+        super.addChild(element)
+
+        bindProps(element)
+    }
+
+    private fun bindProps(other: GraphicsElement): BorderBox {
         other.xProp.bind(xProp.add(borderWidthProp))
         other.yProp.bind(yProp.add(borderHeightProp))
         other.scaleProperty.bind(scaleProperty)

@@ -25,7 +25,6 @@ class Map(override val app: Minesweeper, private val tilesX: Int, private val ti
 
     private val tilesBox = BorderBox(app).also {
         it.addChild(tiles)
-        it.bindProps(tiles)
     }
 
     val controlBar = ControlBar(app, margin, this).also {
@@ -34,7 +33,6 @@ class Map(override val app: Minesweeper, private val tilesX: Int, private val ti
 
     private val controlBarBox = BorderBox(app).also {
         it.addChild(controlBar)
-        it.bindProps(controlBar)
     }
 
     private val verticalList = VerticalList(app, margin).also {
