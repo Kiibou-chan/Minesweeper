@@ -41,8 +41,9 @@ class BorderBox(app: GApplet) : GraphicsElement(app) {
         get() = innerHeightProp.intValue()
 
     init {
-        widthProp.bind(innerWidthProp.add(borderHeightProp.multiply(2)))
+        widthProp.bind(innerWidthProp.add(borderWidthProp.multiply(2)))
         heightProp.bind(innerHeightProp.add(borderHeightProp.multiply(2)))
+
         widthProp.addListener { _, _, _ -> redraw = true }
         heightProp.addListener { _, _, _ -> redraw = true }
     }
