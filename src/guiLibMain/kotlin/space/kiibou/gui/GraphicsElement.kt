@@ -4,7 +4,9 @@ import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.collections.FXCollections.observableArrayList
 import javafx.collections.FXCollections.synchronizedObservableList
-import processing.core.PConstants.*
+import processing.core.PConstants
+import processing.core.PConstants.CENTER
+import processing.core.PConstants.TOP
 import processing.core.PImage
 import space.kiibou.GApplet
 import space.kiibou.data.Rectangle
@@ -16,8 +18,7 @@ import java.util.*
 
 val outline = System.getenv("outline")?.toBoolean() ?: false
 
-abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, width: Int = 0, height: Int = 0) :
-    Rectangle(x, y, width, height), MouseEventListener {
+abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventListener {
     val scaleProperty = SimpleIntegerProperty(1)
     val scale: Int get() = scaleProperty.value
 
@@ -97,12 +98,16 @@ abstract class GraphicsElement(open val app: GApplet, x: Int = 0, y: Int = 0, wi
                         this@GraphicsElement.width.toFloat(),
                         this@GraphicsElement.height.toFloat()
                     )
-                    textSize(5f * scale)
+                    textSize(7f * scale)
                     textAlign(CENTER, TOP)
                     fill(50f, 155f, 50f)
                     text(unscaledWidth, x + this@GraphicsElement.width / 2f, y.toFloat())
-                    textAlign(LEFT, CENTER)
-                    text(unscaledHeight, x.toFloat(), y + this@GraphicsElement.height / 2f)
+                    textAlign(CENTER, TOP)
+                    pushMatrix()
+                    translate(x.toFloat() + this@GraphicsElement.width, y + this@GraphicsElement.height / 2f)
+                    rotate(PConstants.HALF_PI)
+                    text(unscaledHeight, 0f, 0f)
+                    popMatrix()
                 }
             }
             insideDraw = false
