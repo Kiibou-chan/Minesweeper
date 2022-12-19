@@ -1,12 +1,11 @@
-val serializationVersion = "1.3.1"
+val serializationVersion = "1.4.1"
 
 plugins {
-    kotlin("multiplatform") version "1.6.10"
-    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("multiplatform") version "1.7.21"
+    kotlin("plugin.serialization") version "1.7.21"
 }
 
 repositories {
-    jcenter()
     mavenCentral()
 }
 
@@ -25,7 +24,7 @@ kotlin {
         val serverMain by getting {
             dependsOn(commonMain)
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
+                implementation(kotlin("reflect"))
             }
         }
 
