@@ -6,10 +6,10 @@ import processing.event.KeyEvent
 import processing.event.TouchEvent
 import space.kiibou.GApplet
 import space.kiibou.gui.GraphicsElement
-import space.kiibou.net.common.Action
-import space.kiibou.net.common.ActionDispatcher
+import space.kiibou.net.common.Message
+import space.kiibou.net.common.MessageType
+import space.kiibou.net.common.Router
 import java.util.*
-import kotlin.reflect.jvm.jvmName
 
 class EventDispatcher {
     private lateinit var app: GApplet
@@ -21,12 +21,9 @@ class EventDispatcher {
 
     private val mouseQueue = Collections.synchronizedList(ArrayList<processing.event.MouseEvent>())
     private val keyQueue = Collections.synchronizedList(ArrayList<KeyEvent>())
-    private val actionQueue = Collections.synchronizedList(ArrayList<Action<*>>())
+    private val messageQueue = Collections.synchronizedList(ArrayList<Message<*>>())
 
-    @PublishedApi
-    internal val actionDispatcher = ActionDispatcher<Action<*>> {
-        dispatchAction(it::class.jvmName, it)
-    }
+    private val router = Router()
 
     private var prevGraphicsElement: GraphicsElement? = null
 
@@ -62,9 +59,9 @@ class EventDispatcher {
             mouseQueue.clear()
         }
 
-        synchronized(actionQueue) {
-            actionQueue.forEach(actionDispatcher::messageReceived)
-            actionQueue.clear()
+        synchronized(messageQueue) {
+            messageQueue.forEach(router::messageReceived)
+            messageQueue.clear()
         }
     }
 
@@ -84,16 +81,14 @@ class EventDispatcher {
 
     fun touchEvent(event: TouchEvent) {}
 
-    fun actionEvent(obj: Action<*>) {
-        synchronized(actionQueue) {
-            actionQueue.add(obj)
+    fun messageEvent(obj: Message<*>) {
+        synchronized(messageQueue) {
+            messageQueue.add(obj)
         }
     }
 
-    inline fun <reified T : Action<*>> onAction(noinline callback: (T) -> Unit) {
-        @Suppress("UNCHECKED_CAST")
-        actionDispatcher.addCallback(T::class.jvmName, callback as (Action<*>) -> Unit)
-    }
+    fun <T : Any> onMessage(type: MessageType<T>, callback: (Message<T>) -> Unit) =
+        router.addCallback(type, callback)
 
     fun registerMethod(eventType: String, element: GraphicsElement) {
         when (eventType) {

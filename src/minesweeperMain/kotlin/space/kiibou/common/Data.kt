@@ -1,14 +1,11 @@
 package space.kiibou.common
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import space.kiibou.data.Vec2
 import space.kiibou.game.TileType
-import space.kiibou.net.common.Action
-import space.kiibou.net.common.Serial
+import space.kiibou.net.common.MessageType
 
 @Serializable
 data class TimeInfo(val time: Int)
@@ -25,69 +22,55 @@ data class FlagInfo(val x: Int, val y: Int, val status: Boolean)
 @Serializable
 data class MapInfo(val width: Int, val height: Int, val bombs: Int)
 
-object MinesweeperAction {
+@Serializable
+data class TilePosition(val x: Int, val y: Int)
+
+@Serializable
+data class BombsLeftInfo(val bombs: Int)
+
+object MinesweeperMessageType {
     @Serializable
-    @SerialName("set-time")
-    data class SetTime(override val data: TimeInfo) : Action<TimeInfo>()
+    object SetTime : MessageType<TimeInfo>(TimeInfo::class)
 
     @Serializable
-    @SerialName("reveal-tiles")
-    data class RevealTiles(override val data: TilesInfo) : Action<TilesInfo>()
+    object RevealTile : MessageType<TilePosition>(TilePosition::class)
 
     @Serializable
-    @SerialName("reveal-tile")
-    data class RevealTile(override val data: Vec2) : Action<Vec2>()
+    object RevealTiles : MessageType<TilesInfo>(TilesInfo::class)
 
     @Serializable
-    @SerialName("win")
-    object Win : Action<Unit>() {
-        override val data: Unit = Unit
-    }
+    object Win : MessageType<Unit>(Unit::class)
 
     @Serializable
-    @SerialName("loose")
-    object Loose : Action<Unit>() {
-        override val data: Unit = Unit
-    }
+    object Loose : MessageType<Unit>(Unit::class)
 
     @Serializable
-    @SerialName("restart")
-    object Restart : Action<Unit>() {
-        override val data: Unit = Unit
-    }
+    object Restart : MessageType<Unit>(Unit::class)
 
     @Serializable
-    @SerialName("toggle-flag")
-    data class ToggleFlag(override val data: Vec2) : Action<Vec2>()
+    object ToggleFlag : MessageType<TilePosition>(TilePosition::class)
 
     @Serializable
-    @SerialName("set-flag")
-    data class SetFlag(override val data: FlagInfo) : Action<FlagInfo>()
+    object SetFlag : MessageType<FlagInfo>(FlagInfo::class)
 
     @Serializable
-    @SerialName("init-map")
-    data class InitMap(override val data: MapInfo) : Action<MapInfo>()
+    object SetBombsLeft : MessageType<BombsLeftInfo>(BombsLeftInfo::class)
 
     @Serializable
-    @SerialName("set-bombs-left")
-    data class SetBombsLeft(override val data: Int) : Action<Int>()
+    object InitMap : MessageType<MapInfo>(MapInfo::class)
 
-    private val serializationModule = SerializersModule {
-        polymorphic(Action::class) {
+    val serializersModule = SerializersModule {
+        polymorphic(MessageType::class) {
             subclass(SetTime::class)
-            subclass(RevealTiles::class)
             subclass(RevealTile::class)
+            subclass(RevealTiles::class)
             subclass(Win::class)
             subclass(Loose::class)
             subclass(Restart::class)
             subclass(ToggleFlag::class)
             subclass(SetFlag::class)
-            subclass(InitMap::class)
             subclass(SetBombsLeft::class)
+            subclass(InitMap::class)
         }
-    }
-
-    init {
-        Serial.addModule(serializationModule)
     }
 }

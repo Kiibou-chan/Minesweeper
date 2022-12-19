@@ -2,14 +2,7 @@ package space.kiibou.game
 
 import space.kiibou.Minesweeper
 import space.kiibou.common.MapInfo
-import space.kiibou.common.MinesweeperAction
-import space.kiibou.common.MinesweeperAction.Loose
-import space.kiibou.common.MinesweeperAction.Restart
-import space.kiibou.common.MinesweeperAction.RevealTiles
-import space.kiibou.common.MinesweeperAction.SetBombsLeft
-import space.kiibou.common.MinesweeperAction.SetFlag
-import space.kiibou.common.MinesweeperAction.SetTime
-import space.kiibou.common.MinesweeperAction.Win
+import space.kiibou.common.MinesweeperMessageType
 import space.kiibou.gui.*
 
 class Map(override val app: Minesweeper, private val tilesX: Int, private val tilesY: Int, val bombs: Int) :
@@ -61,43 +54,46 @@ class Map(override val app: Minesweeper, private val tilesX: Int, private val ti
 
     override fun initImpl() {
         with(app) {
-            onAction<SetTime> {
-                controlBar.timerDisplay.value = it.data.time
+            onMessage(MinesweeperMessageType.SetTime) {
+                controlBar.timerDisplay.value = it.payload.time
             }
 
-            onAction<RevealTiles> {
-                it.data.tiles.forEach { (x, y, type) ->
+            onMessage(MinesweeperMessageType.RevealTiles) {
+                it.payload.tiles.forEach { (x, y, type) ->
                     tiles[x, y]!!.type = type
                     tiles[x, y]!!.revealed = true
                 }
             }
 
-            onAction<Win> {
+            onMessage(MinesweeperMessageType.Win) {
                 tiles.forEach(Tile::deactivate)
                 controlBar.setSmiley(SmileyStatus.GLASSES)
             }
 
-            onAction<Loose> {
+            onMessage(MinesweeperMessageType.Loose) {
                 tiles.forEach(Tile::deactivate)
                 controlBar.setSmiley(SmileyStatus.DEAD)
             }
 
-            onAction<Restart> {
+            onMessage(MinesweeperMessageType.Restart) {
                 tiles.forEach(Tile::reset)
                 controlBar.setSmiley(SmileyStatus.NORMAL)
             }
 
-            onAction<SetFlag> {
-                val (x, y, status) = it.data
+            onMessage(MinesweeperMessageType.SetFlag) {
+                val (x, y, status) = it.payload
 
                 tiles[x, y]!!.flagged = status
             }
 
-            onAction<SetBombsLeft> {
-                controlBar.bombsLeft.value = it.data
+            onMessage(MinesweeperMessageType.SetBombsLeft) {
+                controlBar.bombsLeft.value = it.payload.bombs
             }
 
-            client.send(MinesweeperAction.InitMap(MapInfo(tilesX, tilesY, bombs)))
+            client.send(
+                MinesweeperMessageType.InitMap,
+                MapInfo(tilesX, tilesY, bombs)
+            )
         }
     }
 

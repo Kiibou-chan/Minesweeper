@@ -1,12 +1,12 @@
 package space.kiibou.net.server
 
 import space.kiibou.net.common.Callbacks
-import space.kiibou.net.common.Message
 import space.kiibou.net.common.SocketConnection
 import space.kiibou.net.reflect.Inject
 import space.kiibou.net.reflect.ReflectUtils.createInstance
 import space.kiibou.net.reflect.ReflectUtils.getAnnotatedFields
-import space.kiibou.net.server.service.ActionService
+import space.kiibou.net.server.service.MessageService
+import space.kiibou.net.server.service.RoutingService
 import java.io.File
 import java.io.IOException
 import java.net.ServerSocket
@@ -17,7 +17,9 @@ class Server internal constructor(vararg serviceNames: String) {
     private val connections: MutableMap<Long, SocketConnection> =
         Collections.synchronizedMap(HashMap())
     private val services: MutableList<Service> = Collections.synchronizedList(ArrayList())
-    private val messageCallbacks: Callbacks<Message<String>, Unit> = Callbacks()
+    private val connectCallbacks: Callbacks<Long, Unit> = Callbacks()
+    private val disconnectCallbacks: Callbacks<Long, Unit> = Callbacks()
+    private val messageCallbacks: Callbacks<Pair<Long, String>, Unit> = Callbacks()
     private lateinit var serverSocket: ServerSocket
     private val connectionListenerThread: Thread
     private val servicesMap: MutableMap<String, Service> = Collections.synchronizedMap(HashMap())
@@ -51,22 +53,23 @@ class Server internal constructor(vararg serviceNames: String) {
             conn.registerMessageCallback(::messageReceived)
             conn.registerDisconnectCallback(::connectionClosed)
             connections[conn.handle] = conn
+            connectCallbacks.callAll(conn.handle)
             println("[Server] Registered connection with handle ${conn.handle}")
         }
     }
 
     fun registerMessageReceivedCallback(callback: (Long, String) -> Unit): Long {
-        return messageCallbacks.addCallback { message ->
-            callback(message.connectionHandle, message.content)
-        }
+        return messageCallbacks.addCallback { (handle, message) -> callback(handle, message) }
     }
 
-    private fun messageReceived(handle: Long, message: String) {
-        val msg = Message(handle, message)
+    fun onConnect(callback: (Long) -> Unit): Long = connectCallbacks.addCallback(callback)
 
+    fun onDisconnect(callback: (Long) -> Unit): Long = disconnectCallbacks.addCallback(callback)
+
+    private fun messageReceived(handle: Long, message: String) {
         println("[Server] RCV Client $handle: $message")
 
-        messageCallbacks.callAll(msg)
+        messageCallbacks.callAll(handle to message)
     }
 
     fun sendMessage(handle: Long, message: String): Boolean {
@@ -86,6 +89,7 @@ class Server internal constructor(vararg serviceNames: String) {
     private fun connectionClosed(handle: Long) {
         println("[Server] Client $handle disconnected")
         connections.remove(handle)
+        disconnectCallbacks.callAll(handle)
     }
 
     init {
@@ -104,7 +108,8 @@ class Server internal constructor(vararg serviceNames: String) {
             registerService(serviceName)
         }
 
-        registerService(ActionService::class.java.canonicalName)
+        registerService(MessageService::class.java.canonicalName)
+        registerService(RoutingService::class.java.canonicalName)
 
         for (service in services) injectServices(service)
         for (service in services) service.initialize()

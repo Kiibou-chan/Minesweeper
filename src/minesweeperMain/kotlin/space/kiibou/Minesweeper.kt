@@ -5,25 +5,31 @@ package space.kiibou
 import processing.core.PApplet
 import processing.opengl.PGraphicsOpenGL
 import processing.opengl.PJOGL
-import space.kiibou.common.MinesweeperAction
+import space.kiibou.common.MinesweeperMessageType
 import space.kiibou.game.Map
 import space.kiibou.net.NetUtils
-import space.kiibou.net.client.ActionClient
 import space.kiibou.net.client.Client
-import space.kiibou.net.common.Action
+import space.kiibou.net.common.*
 import space.kiibou.net.server.main
 import space.kiibou.server.GameService
 
 class Minesweeper : GApplet() {
+
+    companion object {
+        init {
+            Serial.addModule(ClientMessageType.serializersModule)
+            Serial.addModule(ServerMessageType.serializersModule)
+            Serial.addModule(MinesweeperMessageType.serializersModule)
+        }
+    }
+
     private lateinit var map: Map
-    lateinit var client: Client<Action<*>>
+    lateinit var client: Client
 
     override fun settings() {
         size(800, 800, G2D)
         setScale(2)
         PJOGL.setIcon("pictures/icon_30.png")
-
-        MinesweeperAction
     }
 
     override fun setup() {
@@ -34,11 +40,21 @@ class Minesweeper : GApplet() {
         map = Map(this, 18, 18, 40)
         registerGraphicsElement(map)
 
-        client = ActionClient(
+        client = Client(
             ::onServerConnect,
-            eventDispatcher::actionEvent,
+            eventDispatcher::messageEvent,
             ::onServerDisconnect
         ).connect("localhost", 8454)
+
+        onMessage(ServerMessageType.SetHandle) {
+            client.handle = it.payload.handle
+        }
+
+        onMessage(ServerMessageType.WrongHandle) {
+            client.handle = it.payload.actualHandle
+        }
+
+        client.send(ClientMessageType.RequestHandle)
     }
 
     private fun onServerConnect() {
@@ -63,9 +79,9 @@ class Minesweeper : GApplet() {
         background(0xFF)
     }
 
+    fun <T : Any> onMessage(type: MessageType<T>, callback: (Message<T>) -> Unit) =
+        eventDispatcher.onMessage(type, callback)
 
-    inline fun <reified T : Action<*>> onAction(noinline callback: (T) -> Unit) =
-        eventDispatcher.onAction(callback)
 }
 
 fun main() {

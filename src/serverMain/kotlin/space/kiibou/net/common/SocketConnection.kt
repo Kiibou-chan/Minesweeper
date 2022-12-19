@@ -7,13 +7,9 @@ import java.net.Socket
 import java.util.*
 
 class SocketConnection private constructor(socket: Socket) {
-    val handle: Long = nextHandle()
-    private val listener: InputStreamListener = InputStreamListener(socket.getInputStream())
-    private val out: PrintWriter = PrintWriter(OutputStreamWriter(socket.getOutputStream()))
-
-    init {
-        Thread(listener, "Listener-Thread $handle").start()
-    }
+    private val out: PrintWriter
+    private val listener: InputStreamListener
+    val handle: Long
 
     fun registerMessageCallback(callback: (Long, String) -> Unit) {
         listener.registerMessageCallback { callback(handle, it) }
@@ -39,9 +35,17 @@ class SocketConnection private constructor(socket: Socket) {
             return try {
                 Optional.of(SocketConnection(socket))
             } catch (e: IOException) {
-                System.err.println("Failed to create Connection!")
+                System.err.println("[Client] Failed to create Connection!")
                 Optional.empty()
             }
         }
+    }
+
+    init {
+        handle = nextHandle()
+        listener = InputStreamListener(socket.getInputStream())
+        out = PrintWriter(OutputStreamWriter(socket.getOutputStream()))
+        val listenerThread = Thread(listener, "Listener-Thread $handle")
+        listenerThread.start()
     }
 }

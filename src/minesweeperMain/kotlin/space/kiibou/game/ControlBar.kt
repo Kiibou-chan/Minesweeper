@@ -3,7 +3,7 @@ package space.kiibou.game
 import space.kiibou.GApplet
 import space.kiibou.Minesweeper
 import space.kiibou.SevenSegmentDisplay
-import space.kiibou.common.MinesweeperAction
+import space.kiibou.common.MinesweeperMessageType
 import space.kiibou.event.MouseAction
 import space.kiibou.event.MouseButton
 import space.kiibou.event.options
@@ -35,7 +35,7 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
         addChild(it)
 
         it.registerCallback(options(MouseButton.LEFT, MouseAction.RELEASE)) {
-            (app as Minesweeper).client.send(MinesweeperAction.Restart)
+            (app as Minesweeper).client.send(MinesweeperMessageType.Restart)
         }
     }
 

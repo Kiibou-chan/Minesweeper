@@ -1,9 +1,6 @@
 package space.kiibou.server
 
-import space.kiibou.common.FlagInfo
-import space.kiibou.common.MinesweeperAction
-import space.kiibou.common.TileInfo
-import space.kiibou.common.TimeInfo
+import space.kiibou.common.*
 import space.kiibou.data.Vec2
 import space.kiibou.game.TileType
 import java.util.*
@@ -100,7 +97,10 @@ class GameState(
 
                     revealTile(x, y, revealed)
 
-                    gameService.send(handle, MinesweeperAction.Loose)
+                    gameService.messageService.send(
+                        handle,
+                        MinesweeperMessageType.Loose
+                    )
 
                     setGameRunning(false)
                 }
@@ -109,7 +109,10 @@ class GameState(
         }
 
         if (revealedTiles == width * height - bombs && gameRunning) {
-            gameService.send(handle, MinesweeperAction.Win)
+            gameService.messageService.send(
+                handle,
+                MinesweeperMessageType.Win
+            )
 
             bombTiles.filter { (x, y) -> !isFlagged(x, y) }
                 .forEach { (x, y) -> flagToggle(x, y) }
@@ -173,7 +176,11 @@ class GameState(
             flagged[x][y] = !flagged[x][y]
         }
 
-        gameService.send(handle, MinesweeperAction.SetFlag(FlagInfo(x, y, flagged[x][y])))
+        gameService.messageService.send(
+            handle,
+            MinesweeperMessageType.SetFlag,
+            FlagInfo(x, y, flagged[x][y])
+        )
 
         if (flagged[x][y]) {
             setBombsLeft(bombsLeft - 1)
@@ -187,7 +194,11 @@ class GameState(
     private fun setBombsLeft(left: Int) {
         bombsLeft = left
 
-        gameService.send(handle, MinesweeperAction.SetBombsLeft(bombsLeft))
+        gameService.messageService.send(
+            handle,
+            MinesweeperMessageType.SetBombsLeft,
+            BombsLeftInfo(left)
+        )
     }
 
     private fun startTimer() {
@@ -206,5 +217,13 @@ class GameState(
         sendTime()
     }
 
-    private fun sendTime() = gameService.send(handle, MinesweeperAction.SetTime(TimeInfo(time)))
+    private fun sendTime() =
+        gameService.messageService.send(
+            handle,
+            MinesweeperMessageType.SetTime,
+            TimeInfo(time)
+        )
+
+    fun stopGame() = setGameRunning(false)
+
 }

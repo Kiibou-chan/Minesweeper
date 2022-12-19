@@ -1,57 +1,90 @@
 package space.kiibou.server
 
-import space.kiibou.common.MinesweeperAction
+import space.kiibou.common.MinesweeperMessageType
 import space.kiibou.common.TilesInfo
-import space.kiibou.net.common.Action
+import space.kiibou.net.common.ClientMessageType
+import space.kiibou.net.common.Serial
+import space.kiibou.net.common.ServerMessageType
 import space.kiibou.net.reflect.Inject
 import space.kiibou.net.server.Server
 import space.kiibou.net.server.Service
-import space.kiibou.net.server.service.ActionService
+import space.kiibou.net.server.service.MessageService
+import space.kiibou.net.server.service.RoutingService
 
 class GameService(server: Server) : Service(server) {
+
+    companion object {
+        init {
+            Serial.addModule(ClientMessageType.serializersModule)
+            Serial.addModule(ServerMessageType.serializersModule)
+            Serial.addModule(MinesweeperMessageType.serializersModule)
+        }
+    }
+
     @Inject
-    lateinit var actionService: ActionService
+    lateinit var routingService: RoutingService
+
+    @Inject
+    lateinit var messageService: MessageService
 
     private val gameStates: HashMap<Long, GameState> = HashMap()
 
     override fun initialize() {
-        MinesweeperAction
+        routingService.registerCallback(MinesweeperMessageType.InitMap) {
+            val gameState = getGameState(it.connectionHandle)
+            val (width, height, bombs) = it.payload
 
-        actionService.registerCallback<MinesweeperAction.InitMap> { (handle, content) ->
-            val gameState = getGameState(handle)
+            gameState.setupVariables(width, height, bombs)
 
-            gameState.setupVariables(content.data.width, content.data.height, content.data.bombs)
-
-            send(handle, MinesweeperAction.Restart)
+            messageService.respond(
+                it,
+                MinesweeperMessageType.Restart
+            )
         }
 
-        actionService.registerCallback<MinesweeperAction.RevealTile> { (handle, content) ->
-            val gameState = getGameState(handle)
+        routingService.registerCallback(MinesweeperMessageType.RevealTile) {
+            val gameState = getGameState(it.connectionHandle)
+            val (x, y) = it.payload
 
-            val revealed = gameState.reveal(content.data.x, content.data.y)
+            val revealed = gameState.reveal(x, y)
 
-            send(handle, MinesweeperAction.RevealTiles(TilesInfo(revealed)))
+            messageService.respond(
+                it,
+                MinesweeperMessageType.RevealTiles,
+                TilesInfo(revealed)
+            )
         }
 
-        actionService.registerCallback<MinesweeperAction.ToggleFlag> { (handle, content) ->
-            val gameState = getGameState(handle)
+        routingService.registerCallback(MinesweeperMessageType.ToggleFlag) {
+            val gameState = getGameState(it.connectionHandle)
+            val (x, y) = it.payload
 
-            gameState.flagToggle(content.data.x, content.data.y)
+            gameState.flagToggle(x, y)
         }
 
-        actionService.registerCallback<MinesweeperAction.Restart> { (handle, _) ->
-            val gameState = getGameState(handle)
+        routingService.registerCallback(MinesweeperMessageType.Restart) {
+            val gameState = getGameState(it.connectionHandle)
 
             gameState.setupVariables()
 
-            send(handle, MinesweeperAction.Restart)
+            messageService.respond(
+                it,
+                MinesweeperMessageType.Restart
+            )
         }
-    }
 
-    fun <S, T : Action<S>> send(handle: Long, action: T) {
-        actionService.send(handle, action)
+        server.onDisconnect {
+            val gameState = getGameState(it)
+
+            gameState.stopGame()
+
+            removeGameState(it)
+        }
     }
 
     private fun getGameState(handle: Long) =
         gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }
+
+    private fun removeGameState(handle: Long) =
+        gameStates.remove(handle)
 }

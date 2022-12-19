@@ -1,21 +1,21 @@
 package space.kiibou.net.client
 
-import space.kiibou.net.common.SocketConnection
+import space.kiibou.net.common.*
 import java.net.Socket
 
-interface Client<T> {
-    val onConnect: () -> Unit
-    val onMessageReceived: (T) -> Unit
-    val onDisconnect: () -> Unit
+class Client(
+    val onConnect: () -> Unit,
+    val onMessageReceived: (Message<*>) -> Unit,
+    val onDisconnect: () -> Unit,
+) {
+    var handle: Long = -1
 
-    var socket: Socket?
-    var connection: SocketConnection?
+    var socket: Socket? = null
+    var connection: SocketConnection? = null
 
-    fun deserialize(string: String): T
+    private val messageSerializer = InternalMessageSerializer(Serial.json)
 
-    fun serialize(obj: T): String
-
-    fun connect(address: String, port: Int): Client<T> {
+    fun connect(address: String, port: Int): Client {
         try {
             socket = Socket(address, port)
             SocketConnection.create(socket!!).ifPresent { connection ->
@@ -24,12 +24,14 @@ interface Client<T> {
                 connection.registerMessageCallback { _, message ->
                     println("[Client] RCV: $message")
 
-                    onMessageReceived(deserialize(message))
+                    onMessageReceived(Serial.json.decodeFromString(messageSerializer, message))
                 }
                 connection.registerDisconnectCallback { onDisconnect() }
             }
+
+            println("[Client] Successfully connected to Server at $address:$port")
         } catch (ex: Exception) {
-            println("[Client] Failed to connect to $address:$port")
+            println("[Client] Failed to connect to Server at $address:$port")
             ex.printStackTrace()
         }
 
@@ -41,9 +43,15 @@ interface Client<T> {
             socket?.close()
     }
 
-    fun send(obj: T) {
-        val message = serialize(obj)
+    fun <T : Any> send(messageType: MessageType<T>, payload: T) {
+        val message: Message<*> = Message(handle, messageType, payload)
 
+        send(Serial.json.encodeToString(messageSerializer, message))
+    }
+
+    fun send(messageType: MessageType<Unit>) = send(messageType, Unit)
+
+    private fun send(message: String) {
         println("[Client] SND: $message")
 
         connection?.sendMessage(message)

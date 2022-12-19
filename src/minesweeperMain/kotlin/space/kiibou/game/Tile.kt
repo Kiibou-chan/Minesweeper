@@ -1,8 +1,8 @@
 package space.kiibou.game
 
 import space.kiibou.Minesweeper
-import space.kiibou.common.MinesweeperAction
-import space.kiibou.data.Vec2
+import space.kiibou.common.MinesweeperMessageType
+import space.kiibou.common.TilePosition
 import space.kiibou.event.MouseAction.*
 import space.kiibou.event.MouseButton.LEFT
 import space.kiibou.event.MouseButton.RIGHT
@@ -88,12 +88,18 @@ class Tile(override val app: Minesweeper, private val map: Map, private val tile
         /* Reveal the tile, if possible, and set the smiley back to normal */
         button.registerCallback(options(LEFT, RELEASE)) {
             map.controlBar.setSmiley(SmileyStatus.NORMAL)
-            app.client.send(MinesweeperAction.RevealTile(Vec2(tileX, tileY)))
+            app.client.send(
+                MinesweeperMessageType.RevealTile,
+                TilePosition(tileX, tileY)
+            )
         }
 
         /* Flag the tile */
         button.registerCallback(options(RIGHT, RELEASE)) {
-            app.client.send(MinesweeperAction.ToggleFlag(Vec2(tileX, tileY)))
+            app.client.send(
+                MinesweeperMessageType.ToggleFlag,
+                TilePosition(tileX, tileY)
+            )
         }
 
         /* Set smiley to surprised */

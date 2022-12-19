@@ -23,6 +23,7 @@ object Serial {
         initialized = true
 
         Json {
+            classDiscriminator = "#class"
             serializersModule = modules.fold(Json.Default.serializersModule, SerializersModule::plus)
         }
     }
