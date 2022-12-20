@@ -60,7 +60,10 @@ class BorderBox(app: GApplet) : GraphicsElement(app) {
         val key = Resolution(width, height) to style
 
         if (buffers.containsKey(key)) {
-            return buffers[key]!!
+            // This extra null check is necessary, because the garbage collector might have collected the object
+            // between checking that it is there and retrieving it.
+            // This way, if that happens, we don't throw a NPE
+            buffers[key]?.let { return it }
         }
 
         val renderer = getRenderer()
