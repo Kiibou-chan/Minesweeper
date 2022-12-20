@@ -1,15 +1,18 @@
 package space.kiibou.net.common
 
+import mu.KotlinLogging
 import java.io.IOException
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.Socket
 import java.util.*
 
+private val logger = KotlinLogging.logger {  }
+
 class SocketConnection private constructor(socket: Socket) {
     private val out: PrintWriter
     private val listener: InputStreamListener
-    val handle: Long
+    val handle: Long = nextHandle()
 
     fun registerMessageCallback(callback: (Long, String) -> Unit) {
         listener.registerMessageCallback { callback(handle, it) }
@@ -35,14 +38,14 @@ class SocketConnection private constructor(socket: Socket) {
             return try {
                 Optional.of(SocketConnection(socket))
             } catch (e: IOException) {
-                System.err.println("[Client] Failed to create Connection!")
+                logger.warn { "Failed to create socket connection to [${socket.inetAddress.hostAddress}:${socket.port}" }
+
                 Optional.empty()
             }
         }
     }
 
     init {
-        handle = nextHandle()
         listener = InputStreamListener(socket.getInputStream())
         out = PrintWriter(OutputStreamWriter(socket.getOutputStream()))
         val listenerThread = Thread(listener, "Listener-Thread $handle")

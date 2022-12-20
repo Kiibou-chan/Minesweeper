@@ -1,7 +1,10 @@
 package space.kiibou.net.client
 
+import mu.KotlinLogging
 import space.kiibou.net.common.*
 import java.net.Socket
+
+private val logger = KotlinLogging.logger { }
 
 class Client(
     val onConnect: () -> Unit,
@@ -20,19 +23,27 @@ class Client(
             socket = Socket(address, port)
             SocketConnection.create(socket!!).ifPresent { connection ->
                 onConnect()
+
+                logger.info { "Connected to [$address:$port]" }
+
                 this.connection = connection
+
                 connection.registerMessageCallback { _, message ->
-                    println("[Client] RCV: $message")
+                    logger.info { "RCV: $message" }
 
                     onMessageReceived(Serial.json.decodeFromString(messageSerializer, message))
                 }
-                connection.registerDisconnectCallback { onDisconnect() }
-            }
 
-            println("[Client] Successfully connected to Server at $address:$port")
+                connection.registerDisconnectCallback {
+                    logger.info { "Disconnected from [$address:$port]" }
+
+                    onDisconnect()
+                }
+            }
         } catch (ex: Exception) {
-            println("[Client] Failed to connect to Server at $address:$port")
-            ex.printStackTrace()
+            logger.error(ex) {
+                "Failed to connect to [$address:$port]"
+            }
         }
 
         return this
@@ -52,7 +63,7 @@ class Client(
     fun send(messageType: MessageType<Unit>) = send(messageType, Unit)
 
     private fun send(message: String) {
-        println("[Client] SND: $message")
+        logger.info { "SND: $message" }
 
         connection?.sendMessage(message)
     }

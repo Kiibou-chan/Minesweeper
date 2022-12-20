@@ -1,5 +1,6 @@
 package space.kiibou.net.server
 
+import mu.KotlinLogging
 import space.kiibou.net.common.Callbacks
 import space.kiibou.net.common.SocketConnection
 import space.kiibou.net.reflect.Inject
@@ -12,6 +13,8 @@ import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.*
+
+private val logger = KotlinLogging.logger { }
 
 class Server internal constructor(vararg serviceNames: String) {
     private val connections: MutableMap<Long, SocketConnection> =
@@ -29,7 +32,9 @@ class Server internal constructor(vararg serviceNames: String) {
         for (field in fields) {
             val name = field.type.canonicalName
             val toInject = servicesMap[name]
-            println("[Server] Injecting $name into ${service.javaClass.canonicalName}")
+
+            logger.info { "Injecting $name into ${service::class.java.canonicalName}" }
+
             field[service] = toInject
         }
     }
@@ -44,7 +49,9 @@ class Server internal constructor(vararg serviceNames: String) {
         val service = createInstance<Service>(name, arrayOf(Server::class.java), this)
         services.add(service)
         servicesMap[name] = service
-        println("[Server] Successfully loaded Service $name")
+
+        logger.info { "Loaded Service $name" }
+
         return this
     }
 
@@ -54,7 +61,8 @@ class Server internal constructor(vararg serviceNames: String) {
             conn.registerDisconnectCallback(::connectionClosed)
             connections[conn.handle] = conn
             connectCallbacks.callAll(conn.handle)
-            println("[Server] Registered connection with handle ${conn.handle}")
+
+            logger.info { "Registered connection with handle ${conn.handle}" }
         }
     }
 
@@ -67,13 +75,13 @@ class Server internal constructor(vararg serviceNames: String) {
     fun onDisconnect(callback: (Long) -> Unit): Long = disconnectCallbacks.addCallback(callback)
 
     private fun messageReceived(handle: Long, message: String) {
-        println("[Server] RCV Client $handle: $message")
+        logger.info { "RCV $handle: $message" }
 
         messageCallbacks.callAll(handle to message)
     }
 
     fun sendMessage(handle: Long, message: String): Boolean {
-        println("[Server] SND Client $handle: $message")
+        logger.info { "SND $handle: $message" }
 
         connections[handle]?.sendMessage(message) ?: return false
 
@@ -81,13 +89,14 @@ class Server internal constructor(vararg serviceNames: String) {
     }
 
     fun broadcastMessage(message: String) {
-        println("[Server] BCT: $message")
+        logger.info { "BTC: $message" }
 
         connections.forEach { (_, conn) -> conn.sendMessage(message) }
     }
 
     private fun connectionClosed(handle: Long) {
-        println("[Server] Client $handle disconnected")
+        logger.info { "Client $handle disconnected" }
+
         connections.remove(handle)
         disconnectCallbacks.callAll(handle)
     }
@@ -147,7 +156,8 @@ fun startServer(vararg services: Class<*>): Optional<Process> {
     return try {
         Optional.of(builder.start())
     } catch (e: IOException) {
-        System.err.println("Failed to start Server!")
+        logger.error(e) { "Failed to start Server" }
+
         Optional.empty()
     }
 }

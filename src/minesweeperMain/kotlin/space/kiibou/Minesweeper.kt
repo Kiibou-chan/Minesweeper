@@ -2,6 +2,7 @@
 
 package space.kiibou
 
+import mu.KotlinLogging
 import processing.core.PApplet
 import processing.opengl.PGraphicsOpenGL
 import processing.opengl.PJOGL
@@ -12,6 +13,8 @@ import space.kiibou.net.client.Client
 import space.kiibou.net.common.*
 import space.kiibou.net.server.main
 import space.kiibou.server.GameService
+
+private val logger = KotlinLogging.logger {  }
 
 class Minesweeper : GApplet() {
 
@@ -58,11 +61,9 @@ class Minesweeper : GApplet() {
     }
 
     private fun onServerConnect() {
-        println("[Client] Connected to Server!")
     }
 
     private fun onServerDisconnect() {
-        println("[Client] Disconnected from Server!")
         exit()
     }
 

@@ -1,7 +1,10 @@
 package space.kiibou.net
 
+import mu.KotlinLogging
 import java.net.InetSocketAddress
 import java.net.Socket
+
+private val logger = KotlinLogging.logger {  }
 
 object NetUtils {
     /**
@@ -21,8 +24,10 @@ object NetUtils {
                 return true
             }
         } catch (e: Exception) {
-            val errMsg = "[Client] Can't connect to [$serverHost:$serverPort] (timeout was $timeoutMs ms), - ${e.message}"
-            println(errMsg)
+            logger.warn(e) {
+                "Can't connect to [$serverHost:$serverPort] (timeout was $timeoutMs ms)"
+            }
+
             return false
         }
     }
