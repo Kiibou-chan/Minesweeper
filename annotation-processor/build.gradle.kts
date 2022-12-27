@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     kotlin("kapt")
+    kotlin("plugin.serialization")
 
     `java-library`
 }
@@ -11,6 +12,8 @@ repositories {
 
 dependencies {
     implementation(libs.kotlin.poet)
+
+    implementation(libs.serialization)
 
     implementation(libs.auto.service)
     kapt(libs.auto.service)

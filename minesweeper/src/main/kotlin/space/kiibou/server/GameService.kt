@@ -1,5 +1,6 @@
 package space.kiibou.server
 
+import space.kiibou.annotations.AutoLoad
 import space.kiibou.annotations.Inject
 import space.kiibou.common.MinesweeperMessageType
 import space.kiibou.common.TilesInfo
@@ -11,6 +12,7 @@ import space.kiibou.net.server.Service
 import space.kiibou.net.server.service.MessageService
 import space.kiibou.net.server.service.RoutingService
 
+@AutoLoad
 class GameService(server: Server) : Service(server) {
 
     companion object {

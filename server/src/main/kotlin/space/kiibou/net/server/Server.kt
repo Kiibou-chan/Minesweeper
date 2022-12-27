@@ -1,8 +1,13 @@
 package space.kiibou.net.server
 
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 import mu.KotlinLogging
 import space.kiibou.annotations.Inject
+import space.kiibou.annotations.meta.ServiceLoadInfo
 import space.kiibou.net.common.Callbacks
+import space.kiibou.net.common.Serial
 import space.kiibou.net.common.SocketConnection
 import space.kiibou.net.reflect.ReflectUtils.createInstance
 import space.kiibou.net.reflect.ReflectUtils.getAnnotatedFields
@@ -16,6 +21,7 @@ import java.util.*
 
 private val logger = KotlinLogging.logger { }
 
+@OptIn(ExperimentalSerializationApi::class)
 class Server internal constructor(vararg serviceNames: String) {
     private val connections: MutableMap<Long, SocketConnection> =
         Collections.synchronizedMap(HashMap())
@@ -53,6 +59,13 @@ class Server internal constructor(vararg serviceNames: String) {
         logger.info { "Loaded Service $name" }
 
         return this
+    }
+
+    private fun getAutoLoadedServices(): Set<ServiceLoadInfo> {
+        val stream = this::class.java.classLoader.getResourceAsStream("META-INF/server/services/Services.json")
+            ?: return emptySet()
+
+        return Json.decodeFromStream(stream)
     }
 
     private fun register(socket: Socket) {
@@ -117,6 +130,12 @@ class Server internal constructor(vararg serviceNames: String) {
             registerService(serviceName)
         }
 
+        val autoLoadedServices = getAutoLoadedServices()
+
+        for (serviceInfo in autoLoadedServices) {
+            registerService(serviceInfo.serviceName)
+        }
+
         registerService(MessageService::class.java.canonicalName)
         registerService(RoutingService::class.java.canonicalName)
 
@@ -127,7 +146,7 @@ class Server internal constructor(vararg serviceNames: String) {
 
 fun main(args: Array<String>) {
     var port = -1
-    lateinit var services: Array<String>
+    var services: Array<String> = emptyArray()
 
     for (arg in args) {
         val index = arg.indexOf('=')

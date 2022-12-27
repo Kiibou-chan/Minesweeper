@@ -1,8 +1,9 @@
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
+    kotlin("kapt")
 
-    `java-library`
+    application
 }
 
 repositories {
@@ -26,6 +27,9 @@ dependencies {
 
     implementation(project(":graphics-library"))
     implementation(project(":server"))
+
+    compileOnly(project(":annotation-processor"))
+    kapt(project(":annotation-processor"))
 
     // Test Dependencies
 
