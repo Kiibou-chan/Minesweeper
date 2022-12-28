@@ -20,7 +20,7 @@ dependencies {
 
     // Subproject Dependencies
 
-    implementation(project(":server"))
+    implementation(project(":annotations"))
 
     // Test Dependencies
 

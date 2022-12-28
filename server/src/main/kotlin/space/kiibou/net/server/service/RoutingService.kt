@@ -1,10 +1,12 @@
 package space.kiibou.net.server.service
 
+import space.kiibou.annotations.AutoLoad
 import space.kiibou.annotations.Inject
 import space.kiibou.net.common.*
 import space.kiibou.net.server.Server
 import space.kiibou.net.server.Service
 
+@AutoLoad
 class RoutingService(server: Server) : Service(server) {
     @Inject
     lateinit var messageService: MessageService

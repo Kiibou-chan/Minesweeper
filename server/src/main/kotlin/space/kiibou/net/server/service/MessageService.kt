@@ -1,9 +1,11 @@
 package space.kiibou.net.server.service
 
+import space.kiibou.annotations.AutoLoad
 import space.kiibou.net.common.*
 import space.kiibou.net.server.Server
 import space.kiibou.net.server.Service
 
+@AutoLoad
 class MessageService(server: Server) : Service(server) {
     private val messageCallbacks: Callbacks<Message<*>, Unit> = Callbacks()
 

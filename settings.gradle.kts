@@ -1,7 +1,7 @@
 rootProject.name = "Minesweeper"
 rootProject.buildFileName = "build.gradle.kts"
 
-include("annotation-processor", "graphics-library", "minesweeper", "server")
+include("annotations", "annotation-processor", "graphics-library", "minesweeper", "server")
 
 dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")

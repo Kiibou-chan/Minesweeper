@@ -1,18 +1,9 @@
 package space.kiibou.net.server
 
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromStream
 import mu.KotlinLogging
-import space.kiibou.annotations.Inject
-import space.kiibou.annotations.meta.ServiceLoadInfo
 import space.kiibou.net.common.Callbacks
-import space.kiibou.net.common.Serial
 import space.kiibou.net.common.SocketConnection
-import space.kiibou.net.reflect.ReflectUtils.createInstance
-import space.kiibou.net.reflect.ReflectUtils.getAnnotatedFields
-import space.kiibou.net.server.service.MessageService
-import space.kiibou.net.server.service.RoutingService
+import space.kiibou.net.server.service.ServiceLoader
 import java.io.File
 import java.io.IOException
 import java.net.ServerSocket
@@ -21,29 +12,16 @@ import java.util.*
 
 private val logger = KotlinLogging.logger { }
 
-@OptIn(ExperimentalSerializationApi::class)
 class Server internal constructor(vararg serviceNames: String) {
     private val connections: MutableMap<Long, SocketConnection> =
         Collections.synchronizedMap(HashMap())
-    private val services: MutableList<Service> = Collections.synchronizedList(ArrayList())
     private val connectCallbacks: Callbacks<Long, Unit> = Callbacks()
     private val disconnectCallbacks: Callbacks<Long, Unit> = Callbacks()
     private val messageCallbacks: Callbacks<Pair<Long, String>, Unit> = Callbacks()
     private lateinit var serverSocket: ServerSocket
     private val connectionListenerThread: Thread
-    private val servicesMap: MutableMap<String, Service> = Collections.synchronizedMap(HashMap())
 
-    private fun injectServices(service: Service) {
-        val fields = getAnnotatedFields(service, Inject::class.java)
-        for (field in fields) {
-            val name = field.type.canonicalName
-            val toInject = servicesMap[name]
-
-            logger.info { "Injecting $name into ${service::class.java.canonicalName}" }
-
-            field[service] = toInject
-        }
-    }
+    private val serviceLoader = ServiceLoader(this, serviceNames)
 
     fun connect(port: Int): Server {
         serverSocket = ServerSocket(port)
@@ -51,24 +29,7 @@ class Server internal constructor(vararg serviceNames: String) {
         return this
     }
 
-    private fun registerService(name: String): Server {
-        val service = createInstance<Service>(name, arrayOf(Server::class.java), this)
-        services.add(service)
-        servicesMap[name] = service
-
-        logger.info { "Loaded Service $name" }
-
-        return this
-    }
-
-    private fun getAutoLoadedServices(): Set<ServiceLoadInfo> {
-        val stream = this::class.java.classLoader.getResourceAsStream("META-INF/server/services/Services.json")
-            ?: return emptySet()
-
-        return Json.decodeFromStream(stream)
-    }
-
-    private fun register(socket: Socket) {
+    private fun registerSocket(socket: Socket) {
         SocketConnection.create(socket).ifPresent { conn: SocketConnection ->
             conn.registerMessageCallback(::messageReceived)
             conn.registerDisconnectCallback(::connectionClosed)
@@ -119,28 +80,12 @@ class Server internal constructor(vararg serviceNames: String) {
             while (!Thread.interrupted()) {
                 try {
                     val conn = serverSocket.accept()
-                    register(conn)
+                    registerSocket(conn)
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
             }
         }, "Server-Connection-Listener-Thread")
-
-        for (serviceName in serviceNames) {
-            registerService(serviceName)
-        }
-
-        val autoLoadedServices = getAutoLoadedServices()
-
-        for (serviceInfo in autoLoadedServices) {
-            registerService(serviceInfo.serviceName)
-        }
-
-        registerService(MessageService::class.java.canonicalName)
-        registerService(RoutingService::class.java.canonicalName)
-
-        for (service in services) injectServices(service)
-        for (service in services) service.initialize()
     }
 }
 

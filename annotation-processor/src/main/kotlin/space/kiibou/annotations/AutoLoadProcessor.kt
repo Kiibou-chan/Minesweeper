@@ -30,7 +30,7 @@ import kotlin.io.path.toPath
 @AutoService(Processor::class)
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @SupportedOptions(AutoLoadProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
-@SupportedAnnotationTypes("*")
+@SupportedAnnotationTypes("space.kiibou.annotations.AutoLoad")
 class AutoLoadProcessor : AbstractProcessor() {
 
     private val serviceInfos = mutableSetOf<ServiceLoadInfo>()
@@ -82,10 +82,8 @@ class AutoLoadProcessor : AbstractProcessor() {
     private fun generateMetaFile(): Boolean {
         val filer = processingEnv.filer
 
-        val servicesFile = "META-INF/server/services/Services.json"
-
         try {
-            val fileObject = filer.getResource(StandardLocation.CLASS_OUTPUT, "", servicesFile)
+            val fileObject = filer.getResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/server/services/Services.json")
 
             val oldServices = Json.decodeFromStream<List<ServiceLoadInfo>>(fileObject.openInputStream())
 
@@ -95,20 +93,23 @@ class AutoLoadProcessor : AbstractProcessor() {
         }
 
         try {
-            val fileObject = filer.getResource(StandardLocation.CLASS_OUTPUT, "", servicesFile)
+            filer.getResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/server/services/Services.json").apply {
+                toUri().toPath().apply {
+                    parent.toFile().mkdirs()
 
-            fileObject.toUri().toPath().parent.toFile().apply {
-                mkdirs()
-            }.resolve("Services.json").apply {
-                createNewFile()
+                    toFile().apply {
+                        createNewFile()
+                    }
+
+                    Files.write(
+                        this,
+                        Json.encodeToString(serviceInfos).toByteArray(Charsets.UTF_8),
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE
+                    )
+                }
             }
 
-            Files.write(
-                fileObject.toUri().toPath(),
-                Json.encodeToString(serviceInfos).toByteArray(Charsets.UTF_8),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.WRITE
-            )
         } catch (ex: Exception) {
             processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Could not create file, $ex")
             return false
