@@ -5,26 +5,28 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.plus
 
 object Serial {
-    private val modules: MutableList<SerializersModule> = mutableListOf()
-    private var initialized = false
+    private val modules: MutableSet<SerializersModule> = mutableSetOf()
+
+    private var module = Json.Default.serializersModule
+
+    var json: Json = Json {
+        classDiscriminator = "#class"
+        serializersModule = module
+    }
+        private set
 
     fun addModule(module: SerializersModule) {
-        if (initialized) {
-            throw IllegalStateException(
-                "Can not add Modules to JSON Serializer after using it.\n" +
-                        "Consider adding it at the start of the program."
-            )
+        if (!modules.contains(module)) {
+            this.module += module
+            modules += module
+            reinitializeJson()
         }
-
-        modules += module
     }
 
-    val json: Json by lazy {
-        initialized = true
-
-        Json {
+    private fun reinitializeJson() {
+        json = Json {
             classDiscriminator = "#class"
-            serializersModule = modules.fold(Json.Default.serializersModule, SerializersModule::plus)
+            serializersModule = module
         }
     }
 }

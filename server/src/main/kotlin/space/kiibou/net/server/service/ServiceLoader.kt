@@ -1,11 +1,11 @@
 package space.kiibou.net.server.service
 
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import mu.KotlinLogging
 import space.kiibou.annotations.Inject
 import space.kiibou.annotations.meta.ServiceLoadInfo
+import space.kiibou.net.common.Serial
 import space.kiibou.net.reflect.ReflectUtils
 import space.kiibou.net.server.Server
 import space.kiibou.net.server.Service
@@ -55,7 +55,7 @@ class ServiceLoader(private val server: Server, serviceNames: Array<out String>)
         resources.forEach {
             val stream = it.openStream() ?: return@forEach
 
-            serviceInfos.addAll(Json.decodeFromStream<Set<ServiceLoadInfo>>(stream))
+            serviceInfos.addAll(Serial.json.decodeFromStream<Set<ServiceLoadInfo>>(stream))
         }
 
         return serviceInfos
