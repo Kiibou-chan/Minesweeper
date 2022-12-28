@@ -2,7 +2,7 @@ package space.kiibou.game
 
 import space.kiibou.GApplet
 import space.kiibou.Minesweeper
-import space.kiibou.SevenSegmentDisplay
+import space.kiibou.ui.SevenSegmentDisplay
 import space.kiibou.common.MinesweeperMessageType
 import space.kiibou.event.MouseAction
 import space.kiibou.event.MouseButton
