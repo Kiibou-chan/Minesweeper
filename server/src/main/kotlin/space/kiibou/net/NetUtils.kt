@@ -24,7 +24,7 @@ object NetUtils {
                 return true
             }
         } catch (e: Exception) {
-            logger.warn(e) {
+            logger.info {
                 "Can't connect to [$serverHost:$serverPort] (timeout was $timeoutMs ms)"
             }
 

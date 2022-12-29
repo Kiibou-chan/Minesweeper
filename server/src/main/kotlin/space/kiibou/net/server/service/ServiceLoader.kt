@@ -67,7 +67,7 @@ class ServiceLoader(private val server: Server, serviceNames: Array<out String>)
             val name = field.type.canonicalName
             val toInject = servicesMap[name]
 
-            logger.info { "Injecting $name into ${service::class.java.canonicalName}" }
+            logger.info { "Injecting $name into ${service::class.qualifiedName}" }
 
             field[service] = toInject
         }

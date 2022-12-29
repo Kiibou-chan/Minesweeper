@@ -3,11 +3,12 @@ package space.kiibou.server
 import space.kiibou.common.*
 import space.kiibou.data.Vec2
 import space.kiibou.game.TileType
+import space.kiibou.net.common.ConnectionHandle
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
 class GameState(
-    private val handle: Long,
+    private val handle: ConnectionHandle,
     private var width: Int,
     private var height: Int,
     private var bombs: Int,

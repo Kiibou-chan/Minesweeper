@@ -12,13 +12,13 @@ private val logger = KotlinLogging.logger {  }
 class SocketConnection private constructor(socket: Socket) {
     private val out: PrintWriter
     private val listener: InputStreamListener
-    val handle: Long = nextHandle()
+    val handle: ConnectionHandle = nextHandle()
 
-    fun registerMessageCallback(callback: (Long, String) -> Unit) {
+    fun registerMessageCallback(callback: (ConnectionHandle, String) -> Unit) {
         listener.registerMessageCallback { callback(handle, it) }
     }
 
-    fun registerDisconnectCallback(callback: (Long) -> Unit) {
+    fun registerDisconnectCallback(callback: (ConnectionHandle) -> Unit) {
         listener.registerDisconnectCallback { callback(handle) }
     }
 
@@ -30,8 +30,8 @@ class SocketConnection private constructor(socket: Socket) {
     companion object {
         private var cHandle: Long = 0
 
-        private fun nextHandle(): Long {
-            return cHandle++
+        private fun nextHandle(): ConnectionHandle {
+            return ConnectionHandle(cHandle++)
         }
 
         fun create(socket: Socket): Optional<SocketConnection> {

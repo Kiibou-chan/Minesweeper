@@ -5,6 +5,7 @@ import space.kiibou.annotations.Inject
 import space.kiibou.common.MinesweeperMessageType
 import space.kiibou.common.TilesInfo
 import space.kiibou.net.common.ClientMessageType
+import space.kiibou.net.common.ConnectionHandle
 import space.kiibou.net.common.Serial
 import space.kiibou.net.common.ServerMessageType
 import space.kiibou.net.server.Server
@@ -29,7 +30,7 @@ class GameService(server: Server) : Service(server) {
     @Inject
     lateinit var messageService: MessageService
 
-    private val gameStates: HashMap<Long, GameState> = HashMap()
+    private val gameStates: HashMap<ConnectionHandle, GameState> = HashMap()
 
     override fun initialize() {
         routingService.registerCallback(MinesweeperMessageType.InitMap) {
@@ -84,9 +85,9 @@ class GameService(server: Server) : Service(server) {
         }
     }
 
-    private fun getGameState(handle: Long) =
+    private fun getGameState(handle: ConnectionHandle) =
         gameStates.computeIfAbsent(handle) { GameState(it, 9, 9, 10, this) }
 
-    private fun removeGameState(handle: Long) =
+    private fun removeGameState(handle: ConnectionHandle) =
         gameStates.remove(handle)
 }

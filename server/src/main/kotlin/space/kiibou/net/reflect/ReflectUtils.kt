@@ -4,6 +4,10 @@ package space.kiibou.net.reflect
 
 import space.kiibou.net.server.Service
 import java.lang.reflect.Field
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.findAnnotations
 
 object ReflectUtils {
     fun <T> createInstance(name: String, parameterTypes: Array<Class<*>>, vararg args: Any): T {
@@ -28,7 +32,7 @@ object ReflectUtils {
 
     fun getAnnotatedFields(obj: Any, annotation: Class<out Annotation>): Array<Field> {
         return obj.javaClass.fields
-                .filter { it.isAnnotationPresent(annotation) }
-                .toTypedArray()
+            .filter { it.isAnnotationPresent(annotation) }
+            .toTypedArray()
     }
 }

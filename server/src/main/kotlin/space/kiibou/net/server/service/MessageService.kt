@@ -7,7 +7,7 @@ import space.kiibou.net.server.Service
 
 @AutoLoad
 class MessageService(server: Server) : Service(server) {
-    private val messageCallbacks: Callbacks<Message<*>, Unit> = Callbacks()
+    private val messageCallbacks: Callbacks<ServerMessage<*>, Unit> = Callbacks()
 
     private val messageSerializer = InternalMessageSerializer(Serial.json)
 
@@ -15,40 +15,11 @@ class MessageService(server: Server) : Service(server) {
         server.registerMessageReceivedCallback { handle, message ->
             val parsedMessage = Serial.json.decodeFromString(messageSerializer, message)
 
-            if (parsedMessage.messageType == ClientMessageType.RequestHandle) {
-                send(
-                    handle,
-                    Message(
-                        handle,
-                        ServerMessageType.SetHandle,
-                        SetHandleData(handle)
-                    )
-                )
-            } else if (parsedMessage.connectionHandle != handle) {
-                send(
-                    handle,
-                    Message(
-                        handle,
-                        ServerMessageType.WrongHandle,
-                        WrongHandleData(handle, parsedMessage.connectionHandle)
-                    )
-                )
-
-                @Suppress("UNCHECKED_CAST")
-                messageCallbacks.callAll(
-                    Message(
-                        handle,
-                        parsedMessage.messageType as MessageType<Any>,
-                        parsedMessage.payload
-                    )
-                )
-            } else {
-                messageCallbacks.callAll(parsedMessage)
-            }
+            messageCallbacks.callAll(parsedMessage.toServerMessage(handle))
         }
     }
 
-    fun registerCallback(callback: (Message<*>) -> Unit): Long {
+    fun registerCallback(callback: (ServerMessage<*>) -> Unit): Long {
         return messageCallbacks.addCallback(callback)
     }
 
@@ -56,30 +27,29 @@ class MessageService(server: Server) : Service(server) {
         messageCallbacks.removeCallback(callbackHandle)
     }
 
-    fun <T : Any> send(handle: Long, message: Message<T>) {
+    fun <T : Any> send(handle: ConnectionHandle, message: Message<T>) {
         server.sendMessage(handle, Serial.json.encodeToString(messageSerializer, message))
     }
 
-    fun <T : Any> send(handle: Long, type: MessageType<T>, payload: T) {
-        send(handle, Message(handle, type, payload))
+    fun <T : Any> send(handle: ConnectionHandle, type: MessageType<T>, payload: T) {
+        send(handle, Message(type, payload))
     }
 
-    fun send(handle: Long, type: MessageType<Unit>) {
-        send(handle, Message(handle, type, Unit))
+    fun send(handle: ConnectionHandle, type: MessageType<Unit>) {
+        send(handle, Message(type, Unit))
     }
 
-    fun <T : Any> respond(original: Message<*>, type: MessageType<T>, payload: T) {
+    fun <T : Any> respond(original: ServerMessage<*>, type: MessageType<T>, payload: T) {
         send(
             original.connectionHandle,
             Message(
-                original.connectionHandle,
                 type,
                 payload
             )
         )
     }
 
-    fun respond(original: Message<*>, type: MessageType<Unit>) {
+    fun respond(original: ServerMessage<*>, type: MessageType<Unit>) {
         respond(original, type, Unit)
     }
 

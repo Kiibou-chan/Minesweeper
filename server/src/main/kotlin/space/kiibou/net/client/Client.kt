@@ -11,8 +11,6 @@ class Client(
     val onMessageReceived: (Message<*>) -> Unit,
     val onDisconnect: () -> Unit,
 ) {
-    var handle: Long = -1
-
     var socket: Socket? = null
     var connection: SocketConnection? = null
 
@@ -55,7 +53,7 @@ class Client(
     }
 
     fun <T : Any> send(messageType: MessageType<T>, payload: T) {
-        val message: Message<*> = Message(handle, messageType, payload)
+        val message: Message<*> = Message(messageType, payload)
 
         send(Serial.json.encodeToString(messageSerializer, message))
     }

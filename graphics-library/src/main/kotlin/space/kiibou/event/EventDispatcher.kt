@@ -23,7 +23,7 @@ class EventDispatcher {
     private val keyQueue = Collections.synchronizedList(ArrayList<KeyEvent>())
     private val messageQueue = Collections.synchronizedList(ArrayList<Message<*>>())
 
-    private val router = Router()
+    private val router: Router<Message<*>> = Router()
 
     private var prevGraphicsElement: GraphicsElement? = null
 

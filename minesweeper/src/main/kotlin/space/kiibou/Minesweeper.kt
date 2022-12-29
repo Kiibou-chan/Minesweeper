@@ -12,9 +12,10 @@ import space.kiibou.net.NetUtils
 import space.kiibou.net.client.Client
 import space.kiibou.net.common.*
 import space.kiibou.net.server.main
+import space.kiibou.net.server.startServer
 import space.kiibou.server.GameService
 
-private val logger = KotlinLogging.logger {  }
+private val logger = KotlinLogging.logger { }
 
 class Minesweeper : GApplet() {
 
@@ -48,16 +49,6 @@ class Minesweeper : GApplet() {
             eventDispatcher::messageEvent,
             ::onServerDisconnect
         ).connect("localhost", 8454)
-
-        onMessage(ServerMessageType.SetHandle) {
-            client.handle = it.payload.handle
-        }
-
-        onMessage(ServerMessageType.WrongHandle) {
-            client.handle = it.payload.actualHandle
-        }
-
-        client.send(ClientMessageType.RequestHandle)
     }
 
     private fun onServerConnect() {
@@ -87,17 +78,17 @@ class Minesweeper : GApplet() {
 
 fun main() {
     if (!NetUtils.checkServerListening("localhost", 8454, 200)) {
-//        startServer(GameService::class.java).ifPresent { server: Process ->
-//            println("Starting Server")
-//            Runtime.getRuntime().addShutdownHook(
-//                    Thread {
-//                        server.destroy()
-//                        println("Stopped Server")
-//                    }
-//            )
-//        }
+        startServer().ifPresent { server: Process ->
+            logger.info { "Starting Server" }
 
-        main(arrayOf("--port=8454", "--services=" + GameService::class.java.canonicalName))
+            Runtime.getRuntime().addShutdownHook(
+                Thread {
+                    server.destroy()
+
+                    logger.info { "Stopped Server" }
+                }
+            )
+        }
     }
 
     PApplet.main(Minesweeper::class.java)

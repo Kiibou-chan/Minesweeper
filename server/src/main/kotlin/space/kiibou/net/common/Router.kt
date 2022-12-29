@@ -2,9 +2,9 @@ package space.kiibou.net.common
 
 import java.util.*
 
-class Router {
+class Router<T : Message<*>> {
 
-    private val messageCallbackMap: MutableMap<MessageType<*>, Callbacks<Message<*>, Unit>> = Collections.synchronizedMap(HashMap())
+    private val messageCallbackMap: MutableMap<MessageType<*>, Callbacks<T, Unit>> = Collections.synchronizedMap(HashMap())
 
     fun <T : Any> addCallback(type: MessageType<T>, callback: (Message<T>) -> Unit): Long {
         if (!messageCallbackMap.containsKey(type)) {
@@ -12,7 +12,7 @@ class Router {
         }
 
         @Suppress("UNCHECKED_CAST")
-        return messageCallbackMap[type]!!.addCallback(callback as (Message<*>) -> Unit)
+        return messageCallbackMap[type]!!.addCallback(callback as (Any) -> Unit)
     }
 
     fun removeCallback(type: MessageType<*>, callbackHandle: Int) {
@@ -21,7 +21,7 @@ class Router {
         }
     }
 
-    fun messageReceived(message: Message<*>) {
+    fun messageReceived(message: T) {
         if (messageCallbackMap.containsKey(message.messageType)) {
             messageCallbackMap[message.messageType]!!.callAll(message)
         }

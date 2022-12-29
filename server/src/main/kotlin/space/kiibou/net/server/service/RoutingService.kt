@@ -11,14 +11,14 @@ class RoutingService(server: Server) : Service(server) {
     @Inject
     lateinit var messageService: MessageService
 
-    private val router: Router = Router()
+    private val router: Router<ServerMessage<*>> = Router()
 
     override fun initialize() {
         messageService.registerCallback(router::messageReceived)
 
     }
 
-    fun <T : Any> registerCallback(type: MessageType<T>, callback: (Message<T>) -> Unit): Long {
+    fun <T : Any> registerCallback(type: MessageType<T>, callback: (ServerMessage<T>) -> Unit): Long {
         @Suppress("UNCHECKED_CAST")
         return router.addCallback(type, callback as (Any) -> Unit)
     }
