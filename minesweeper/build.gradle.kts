@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
@@ -8,6 +10,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -22,6 +25,10 @@ dependencies {
     // Processing
 
     implementation(fileTree("../processing"))
+
+    // reactive kotlin
+
+    implementation("space.kiibou.reactive-kotlin:REKotlin:0.1.1")
 
     // Subproject Dependencies
 
@@ -46,4 +53,8 @@ kapt {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "17"
 }

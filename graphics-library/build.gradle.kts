@@ -1,15 +1,15 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     kotlin("jvm")
 
-    // Apply the application plugin to add support for building a CLI application in Java.
     `java-library`
 }
 
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -23,6 +23,10 @@ dependencies {
 
     implementation(fileTree("../processing"))
 
+    // reactive kotlin
+
+    implementation("space.kiibou.reactive-kotlin:REKotlin:0.1.1")
+
     // Subproject Dependencies
 
     // TODO (Svenja, 2022/12/27): Remove dependency on server
@@ -34,7 +38,14 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+tasks.withType<Test>().all {
+    jvmArgs(
+        "--add-exports jogl.all/com.jogamp.opengl.glu=ALL-UNNAMED",
+        "--add-exports jogl.all/com.jogamp.newt=ALL-UNNAMED",
+        "--add-exports jogl.all/com.jogamp.newt.opengl=ALL-UNNAMED",
+        "--add-exports jogl.all/com.jogamp.newt.event=ALL-UNNAMED",
+        "--add-exports jogl.all/com.jogamp.opengl.util=ALL-UNNAMED",
+        "--add-exports jogl.all/com.jogamp.newt.util=ALL-UNNAMED",
+        "--add-exports jogl.all/com.jogamp.nativewindow.util=ALL-UNNAMED",
+    )
 }
