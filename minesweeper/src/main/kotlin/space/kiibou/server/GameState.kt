@@ -129,7 +129,10 @@ class GameState(
 
                     for (flagX in 0 until width) {
                         for (flagY in 0 until height) {
-                            if (x != flagX && y != flagY && isFlagged(flagX, flagY) && !isBomb(flagX, flagY)) {
+                            // The detonated tile is a bomb, so !isBomb already excludes it; every
+                            // other wrongly-flagged (flagged but safe) tile must be shown, whatever
+                            // its row or column.
+                            if (isFlagged(flagX, flagY) && !isBomb(flagX, flagY)) {
                                 revealed.add(TileInfo(flagX, flagY, TileType.NO_BOMB))
                             }
                         }
@@ -245,6 +248,9 @@ class GameState(
     }
 
     fun stopGame() = setGameRunning(false)
+
+    /** Test-only view of where bombs were placed (empty until the first reveal). */
+    internal val bombPositions: List<Vec2> get() = bombTiles
 
     fun addPlayer(handle: ConnectionHandle) {
         handles += handle

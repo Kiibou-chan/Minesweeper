@@ -1,5 +1,6 @@
 package space.kiibou.server
 
+import space.kiibou.data.Vec2
 import space.kiibou.game.TileType
 import space.kiibou.net.common.ConnectionHandle
 import kotlin.random.Random
@@ -55,5 +56,32 @@ class GameStateTest {
         val (game, events) = newGame(w = 3, h = 3, bombs = 8, seed = 7L)
         game.revealAt(1, 1)
         assertEquals(0, events.loses, "clicked tile is safe even on a maximally dense board")
+    }
+
+    @Test
+    fun wrongly_flagged_tile_in_same_row_is_shown_on_loss() {
+        val (game, events) = newGame(w = 6, h = 6, bombs = 6, seed = 3L)
+        game.revealAt(0, 0) // first click places bombs and is safe
+        val bombs = game.bombPositions.toSet()
+        val revealedSet = events.reveals.flatten().map { it.x to it.y }.toSet()
+
+        // Find a bomb and a safe, still-unrevealed tile in the SAME ROW as that bomb.
+        val bomb = bombs.first { b ->
+            (0 until 6).any { sx -> sx != b.x && Vec2(sx, b.y) !in bombs && (sx to b.y) !in revealedSet }
+        }
+        val safeX = (0 until 6).first { sx ->
+            sx != bomb.x && Vec2(sx, bomb.y) !in bombs && (sx to bomb.y) !in revealedSet
+        }
+
+        game.flagToggle(safeX, bomb.y) // wrongly flag a safe tile in the bomb's row
+        events.reveals.clear()
+        game.revealAt(bomb.x, bomb.y) // detonate
+
+        val lastReveal = events.lastReveal()
+        assertTrue(
+            lastReveal.any { it.x == safeX && it.y == bomb.y && it.type == TileType.NO_BOMB },
+            "a wrongly-flagged tile in the detonated bomb's row must be shown as NO_BOMB",
+        )
+        assertEquals(1, events.loses)
     }
 }
