@@ -4,15 +4,16 @@ import space.kiibou.common.*
 import space.kiibou.data.Vec2
 import space.kiibou.game.TileType
 import space.kiibou.net.common.ConnectionHandle
-import java.util.*
-import kotlin.concurrent.fixedRateTimer
+import kotlin.random.Random
 
 class GameState(
     val handles: MutableList<ConnectionHandle>,
     private var width: Int,
     private var height: Int,
     private var bombs: Int,
-    private val gameService: GameService
+    private val events: GameEvents,
+    private val ticker: Ticker,
+    private val random: Random = Random.Default,
 ) {
     private lateinit var revealed: Array<BooleanArray>
     private lateinit var flagged: Array<BooleanArray>
@@ -21,11 +22,20 @@ class GameState(
     private lateinit var bombTiles: List<Vec2>
     private var gameRunning = false
     private var revealedTiles = 0
-    private lateinit var timer: Timer
     private var time = 0
 
     init {
         setupVariables()
+    }
+
+    fun reset() {
+        setupVariables()
+        events.restart()
+    }
+
+    fun reset(width: Int, height: Int, bombs: Int) {
+        setupVariables(width, height, bombs)
+        events.restart()
     }
 
     fun setupVariables() = setupVariables(width, height, bombs)
@@ -61,7 +71,7 @@ class GameState(
         List(width * height) { Vec2(x + it % width, y + it / height) }
 
     private fun placeBombs() = chooseBombPositions().run(::setTilesToBombs)
-    private fun chooseBombPositions() = possibleTilePositions().shuffled().take(bombs)
+    private fun chooseBombPositions() = possibleTilePositions().shuffled(random).take(bombs)
     private fun setTilesToBombs(list: List<Vec2>) = list.onEach { (x, y) -> setTile(x, y, TileType.BOMB) }
 
     private fun createNumberTiles() = possibleTilePositions()
@@ -72,7 +82,11 @@ class GameState(
     private fun countSurroundingBombs(x: Int, y: Int) = possibleTilePositions(-1, -1, 3, 3)
         .count { (px, py) -> isValidTile(x + px, y + py) && isBomb(x + px, y + py) }
 
-    fun reveal(x: Int, y: Int): List<TileInfo> {
+    fun revealAt(x: Int, y: Int) {
+        events.revealTiles(reveal(x, y))
+    }
+
+    private fun reveal(x: Int, y: Int): List<TileInfo> {
         if (!gameRunning) setGameRunning(true)
         val revealed: MutableList<TileInfo> = ArrayList()
 
@@ -99,12 +113,7 @@ class GameState(
 
                     revealTile(x, y, revealed)
 
-                    handles.forEach { handle ->
-                        gameService.messageService.send(
-                            handle,
-                            MinesweeperMessageType.Loose
-                        )
-                    }
+                    events.lose()
 
                     setGameRunning(false)
                 }
@@ -114,12 +123,7 @@ class GameState(
         }
 
         if (revealedTiles == width * height - bombs && gameRunning) {
-            handles.forEach { handle ->
-                gameService.messageService.send(
-                    handle,
-                    MinesweeperMessageType.Win
-                )
-            }
+            events.win()
 
             bombTiles.filter { (x, y) -> !isFlagged(x, y) }
                 .forEach { (x, y) -> flagToggle(x, y) }
@@ -184,13 +188,7 @@ class GameState(
             flagged[x][y] = !flagged[x][y]
         }
 
-        handles.forEach { handle ->
-            gameService.messageService.send(
-                handle,
-                MinesweeperMessageType.SetFlag,
-                FlagInfo(x, y, flagged[x][y])
-            )
-        }
+        events.setFlag(x, y, flagged[x][y])
 
         if (flagged[x][y]) {
             setBombsLeft(bombsLeft - 1)
@@ -203,40 +201,24 @@ class GameState(
 
     private fun setBombsLeft(left: Int) {
         bombsLeft = left
-
-        handles.forEach { handle ->
-            gameService.messageService.send(
-                handle,
-                MinesweeperMessageType.SetBombsLeft,
-                BombsLeftInfo(left)
-            )
-        }
+        events.setBombsLeft(left)
     }
 
     private fun startTimer() {
-        timer = fixedRateTimer("Timer $handles", true, 0L, 1000L) {
-            sendTime()
+        ticker.start {
+            events.setTime(time)
             time++
         }
     }
 
     private fun stopTimer() {
-        timer.cancel()
+        ticker.stop()
     }
 
     private fun resetTimer() {
         time = 0
-        sendTime()
+        events.setTime(time)
     }
-
-    private fun sendTime() =
-        handles.forEach { handle ->
-            gameService.messageService.send(
-                handle,
-                MinesweeperMessageType.SetTime,
-                TimeInfo(time)
-            )
-        }
 
     fun stopGame() = setGameRunning(false)
 

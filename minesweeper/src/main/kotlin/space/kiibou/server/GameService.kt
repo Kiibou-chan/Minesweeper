@@ -2,11 +2,10 @@ package space.kiibou.server
 
 import space.kiibou.annotations.AutoLoad
 import space.kiibou.annotations.Inject
-import space.kiibou.common.GameHandle
-import space.kiibou.common.MinesweeperMessageType
-import space.kiibou.common.TilesInfo
+import space.kiibou.common.*
 import space.kiibou.net.common.ClientMessageType
 import space.kiibou.net.common.ConnectionHandle
+import space.kiibou.net.common.MessageType
 import space.kiibou.net.common.Serial
 import space.kiibou.net.common.ServerMessageType
 import space.kiibou.net.server.Server
@@ -44,26 +43,14 @@ class GameService(server: Server) : Service(server) {
             val gameState = getGameState(it.connectionHandle)
             val (width, height, bombs) = it.payload
 
-            gameState.setupVariables(width, height, bombs)
-
-            gameState.handles.forEach { handle ->
-                messageService.send(handle, MinesweeperMessageType.Restart)
-            }
+            gameState.reset(width, height, bombs)
         }
 
         routingService.registerCallback(MinesweeperMessageType.RevealTile) {
             val gameState = getGameState(it.connectionHandle)
             val (x, y) = it.payload
 
-            val revealed = gameState.reveal(x, y)
-
-            gameState.handles.forEach { handle ->
-                messageService.send(
-                    handle,
-                    MinesweeperMessageType.RevealTiles,
-                    TilesInfo(revealed)
-                )
-            }
+            gameState.revealAt(x, y)
         }
 
         routingService.registerCallback(MinesweeperMessageType.ToggleFlag) {
@@ -76,11 +63,7 @@ class GameService(server: Server) : Service(server) {
         routingService.registerCallback(MinesweeperMessageType.Restart) {
             val gameState = getGameState(it.connectionHandle)
 
-            gameState.setupVariables()
-
-            gameState.handles.forEach { handle ->
-                messageService.send(handle, MinesweeperMessageType.Restart)
-            }
+            gameState.reset()
         }
 
         server.onDisconnect {
@@ -97,8 +80,44 @@ class GameService(server: Server) : Service(server) {
 
     private fun joinGame(handle: ConnectionHandle, gameHandle: GameHandle) {
         users[handle] = gameHandle
-        gameStates.computeIfAbsent(gameHandle) { GameState(mutableListOf(), 9, 9, 10, this) }
+        gameStates.computeIfAbsent(gameHandle) { gh ->
+            val handles = mutableListOf<ConnectionHandle>()
+            GameState(
+                handles, 9, 9, 10,
+                BroadcastGameEvents(handles, messageService),
+                FixedRateTicker("Timer $gh"),
+            )
+        }
         gameStates[gameHandle]!!.addPlayer(handle)
     }
+}
 
+/** Production [GameEvents] that broadcasts each event to every connection in the game. */
+class BroadcastGameEvents(
+    private val handles: List<ConnectionHandle>,
+    private val messageService: MessageService,
+) : GameEvents {
+    override fun revealTiles(tiles: List<TileInfo>) =
+        broadcast(MinesweeperMessageType.RevealTiles, TilesInfo(tiles))
+
+    override fun setFlag(x: Int, y: Int, flagged: Boolean) =
+        broadcast(MinesweeperMessageType.SetFlag, FlagInfo(x, y, flagged))
+
+    override fun setBombsLeft(count: Int) =
+        broadcast(MinesweeperMessageType.SetBombsLeft, BombsLeftInfo(count))
+
+    override fun setTime(seconds: Int) =
+        broadcast(MinesweeperMessageType.SetTime, TimeInfo(seconds))
+
+    override fun restart() = broadcast(MinesweeperMessageType.Restart)
+
+    override fun win() = broadcast(MinesweeperMessageType.Win)
+
+    override fun lose() = broadcast(MinesweeperMessageType.Loose)
+
+    private fun <T : Any> broadcast(type: MessageType<T>, payload: T) =
+        handles.forEach { messageService.send(it, type, payload) }
+
+    private fun broadcast(type: MessageType<Unit>) =
+        handles.forEach { messageService.send(it, type) }
 }
