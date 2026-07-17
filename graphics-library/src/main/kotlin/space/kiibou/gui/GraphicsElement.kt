@@ -10,15 +10,12 @@ import processing.core.PConstants.TOP
 import processing.core.PImage
 import space.kiibou.GApplet
 import space.kiibou.data.Rectangle
-import space.kiibou.event.MouseEventConsumer
-import space.kiibou.event.MouseEventListener
-import space.kiibou.event.MouseEventOption
-import space.kiibou.event.MouseOptionMap
+import space.kiibou.event.*
 import java.util.*
 
 val outline = System.getenv("outline")?.toBoolean() ?: false
 
-abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventListener {
+abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventListener, KeyEventListener {
     val scaleProperty = SimpleIntegerProperty(1)
     val scale: Int get() = scaleProperty.value
 
@@ -37,6 +34,10 @@ abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventL
 
     override var active: Boolean = true
 
+    final override val keyOptionMap: KeyOptionMap = KeyOptionMap()
+
+    open var focusable: Boolean = false
+
     var hierarchyDepth: Int = 0
         private set
 
@@ -53,13 +54,23 @@ abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventL
         get() = height / scale
 
     override fun registerCallback(option: MouseEventOption, callback: MouseEventConsumer) {
-        super.registerCallback(option, callback)
-        app.registerMethod("mouseEvent", this)
+        if (mouseOptionMap.isEmpty()) app.registerMethod("mouseEvent", this)
+        super<MouseEventListener>.registerCallback(option, callback)
     }
 
     override fun unregisterCallback(option: MouseEventOption) {
-        super.unregisterCallback(option)
+        super<MouseEventListener>.unregisterCallback(option)
         if (mouseOptionMap.isEmpty()) app.unregisterMethod("mouseEvent", this)
+    }
+
+    override fun registerCallback(option: KeyEventOption, callback: KeyEventConsumer) {
+        if (keyOptionMap.isEmpty()) app.registerMethod("keyEvent", this)
+        super<KeyEventListener>.registerCallback(option, callback)
+    }
+
+    override fun unregisterCallback(option: KeyEventOption) {
+        super<KeyEventListener>.unregisterCallback(option)
+        if (keyOptionMap.isEmpty()) app.unregisterMethod("keyEvent", this)
     }
 
     fun init() {
@@ -229,12 +240,14 @@ abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventL
     }
 
     override fun activate() {
-        super.activate()
+        super<KeyEventListener>.activate()
+        super<MouseEventListener>.activate()
         children.forEach(GraphicsElement::activate)
     }
 
     override fun deactivate() {
-        super.deactivate()
+        super<KeyEventListener>.deactivate()
+        super<MouseEventListener>.deactivate()
         children.forEach(GraphicsElement::deactivate)
     }
 

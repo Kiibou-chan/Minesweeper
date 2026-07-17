@@ -25,11 +25,21 @@ class EventDispatcher {
 
     private val router: Router<Message<*>> = Router()
 
-    private var prevGraphicsElement: GraphicsElement? = null
+    /** Stores the last visited graphics element (through hovering the mouse) */
+    private var lastHoveredElement: GraphicsElement? = null
 
-    private fun topElement(x: Int, y: Int, elements: Set<GraphicsElement>): GraphicsElement? {
-        return elements
-            .filter { it.collides(x, y) }
+    /**
+     * Stores the currently focused element.
+     * Elements can only be focused of they are focusable.
+     *
+     * Focus can be achieved through:
+     * - Clicking the element (MouseAction.Press)
+     * - Switching focus to the element though some other keyboard event
+     */
+    private var focusedElement: GraphicsElement? = null
+
+    private fun Collection<GraphicsElement>.topElement(x: Int, y: Int): GraphicsElement? {
+        return filter { it.collides(x, y) }
             .maxByOrNull(GraphicsElement::hierarchyDepth)
     }
 
@@ -37,26 +47,41 @@ class EventDispatcher {
         synchronized(mouseQueue) {
             mouseQueue.forEach {
                 val event = MouseEvent(it)
-                val topElement = topElement(event.x, event.y, registry["mouseEvent"]!!)
+                val topElement = registry["mouseEvent"]?.topElement(event.x, event.y)
 
                 if (topElement != null) {
-                    val sameElement = topElement == prevGraphicsElement
+                    val sameElement = topElement == lastHoveredElement
                     if (!sameElement) {
-                        if (prevGraphicsElement != null) {
-                            prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseAction.ELEMENT_EXIT))
+                        if (lastHoveredElement != null) {
+                            lastHoveredElement!!.mouseEvent(MouseEvent(event, MouseAction.ELEMENT_EXIT))
                         }
                         topElement.mouseEvent(MouseEvent(event, MouseAction.ELEMENT_ENTER))
-                        prevGraphicsElement = topElement
+                        lastHoveredElement = topElement
                     }
+
                     topElement.mouseEvent(event)
                 }
 
-                if (topElement == null && prevGraphicsElement != null) {
-                    prevGraphicsElement!!.mouseEvent(MouseEvent(event, MouseAction.ELEMENT_EXIT))
-                    prevGraphicsElement = null
+                registry["keyEvent"]?.filter(GraphicsElement::focusable)?.topElement(event.x, event.y)?.let {
+                    focusedElement = it
+                }
+
+                if (topElement == null && lastHoveredElement != null) {
+                    lastHoveredElement!!.mouseEvent(MouseEvent(event, MouseAction.ELEMENT_EXIT))
+                    lastHoveredElement = null
                 }
             }
             mouseQueue.clear()
+        }
+
+        synchronized(keyQueue) {
+            keyQueue.forEach {
+                val event = KeyEvent(it)
+
+                focusedElement?.keyEvent(event)
+            }
+
+            keyQueue.clear()
         }
 
         synchronized(messageQueue) {
@@ -69,7 +94,11 @@ class EventDispatcher {
         dispatchEvents()
     }
 
-    fun keyEvent(event: KeyEvent) {}
+    fun keyEvent(event: KeyEvent) {
+        synchronized(keyQueue) {
+            keyQueue += event
+        }
+    }
 
     fun mouseEvent(source: processing.event.MouseEvent) {
         if (source.button == 0) return

@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     kotlin("kapt")
+    id("org.openjfx.javafxplugin") version "0.1.0"
 
     application
 }
@@ -11,6 +12,7 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven("https://jogamp.org/deployment/maven")
 }
 
 dependencies {
@@ -24,7 +26,7 @@ dependencies {
 
     // Processing
 
-    implementation(fileTree("../processing"))
+    implementation(libs.processing)
 
     // reactive kotlin
 
@@ -44,17 +46,20 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 }
 
+javafx {
+    modules("javafx.controls")
+}
+
+application {
+    mainClass.set("space.kiibou.MinesweeperMain")
+}
+
 kapt {
     arguments {
 
     }
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+kotlin {
+    jvmToolchain(24)
 }

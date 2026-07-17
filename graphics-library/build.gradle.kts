@@ -1,15 +1,14 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm")
-
     `java-library`
+    id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
     mavenLocal()
+    maven("https://jogamp.org/deployment/maven")
 }
 
 dependencies {
@@ -21,7 +20,7 @@ dependencies {
 
     // Processing
 
-    implementation(fileTree("../processing"))
+    implementation(libs.processing)
 
     // reactive kotlin
 
@@ -38,14 +37,22 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 }
 
+javafx {
+    modules("javafx.controls")
+}
+
+kotlin {
+    jvmToolchain(24)
+}
+
 tasks.withType<Test>().all {
     jvmArgs(
-        "--add-exports jogl.all/com.jogamp.opengl.glu=ALL-UNNAMED",
-        "--add-exports jogl.all/com.jogamp.newt=ALL-UNNAMED",
-        "--add-exports jogl.all/com.jogamp.newt.opengl=ALL-UNNAMED",
-        "--add-exports jogl.all/com.jogamp.newt.event=ALL-UNNAMED",
-        "--add-exports jogl.all/com.jogamp.opengl.util=ALL-UNNAMED",
-        "--add-exports jogl.all/com.jogamp.newt.util=ALL-UNNAMED",
-        "--add-exports jogl.all/com.jogamp.nativewindow.util=ALL-UNNAMED",
+        "--add-exports=jogl.all/com.jogamp.opengl.glu=ALL-UNNAMED",
+        "--add-exports=jogl.all/com.jogamp.newt=ALL-UNNAMED",
+        "--add-exports=jogl.all/com.jogamp.newt.opengl=ALL-UNNAMED",
+        "--add-exports=jogl.all/com.jogamp.newt.event=ALL-UNNAMED",
+        "--add-exports=jogl.all/com.jogamp.opengl.util=ALL-UNNAMED",
+        "--add-exports=jogl.all/com.jogamp.newt.util=ALL-UNNAMED",
+        "--add-exports=jogl.all/com.jogamp.nativewindow.util=ALL-UNNAMED",
     )
 }

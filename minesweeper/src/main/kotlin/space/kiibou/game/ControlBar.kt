@@ -11,6 +11,7 @@ import space.kiibou.game.SmileyStatus.NORMAL
 import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.Picture
+import space.kiibou.reactive.observe
 
 class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
     private val smileys: Array<Picture> = Picture(app, "pictures/smiley.png").let {
@@ -34,7 +35,7 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
         it.yProp.bind(yProp.add(heightProp.divide(2).subtract(it.heightProp.divide(2))))
         addChild(it)
 
-        it.registerCallback(options(MouseButton.LEFT, MouseAction.RELEASE)) {
+        it.clicked observe {
             (app as Minesweeper).client.send(MinesweeperMessageType.Restart)
         }
     }

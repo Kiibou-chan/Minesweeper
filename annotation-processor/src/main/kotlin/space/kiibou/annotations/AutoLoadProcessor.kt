@@ -62,6 +62,8 @@ class AutoLoadProcessor : AbstractProcessor() {
             }
         }
 
+        // TODO (Svenja, 2023/01/07): Check, that the annotated class implements Service
+
         elements.forEach(::processElement)
 
         return generateMetaFile()

@@ -1,6 +1,7 @@
 package space.kiibou.game
 
 import space.kiibou.Minesweeper
+import space.kiibou.common.GameHandle
 import space.kiibou.common.MapInfo
 import space.kiibou.common.MinesweeperMessageType
 import space.kiibou.gui.*
@@ -90,6 +91,7 @@ class Map(override val app: Minesweeper, private val tilesX: Int, private val ti
                 controlBar.bombsLeft.value = it.payload.bombs
             }
 
+            client.send(MinesweeperMessageType.JoinGame, GameHandle(0))
             client.send(
                 MinesweeperMessageType.InitMap,
                 MapInfo(tilesX, tilesY, bombs)

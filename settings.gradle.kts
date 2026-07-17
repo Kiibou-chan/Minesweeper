@@ -19,6 +19,8 @@ dependencyResolutionManagement {
 
             library("auto-service", "com.google.auto.service:auto-service:1.0.1")
             library("kotlin-poet", "com.squareup:kotlinpoet:1.12.0")
+
+            library("processing", "org.processing:core:4.4.10")
         }
     }
 }

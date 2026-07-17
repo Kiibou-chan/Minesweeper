@@ -11,7 +11,9 @@ import processing.core.PConstants.LEFT
 import space.kiibou.GApplet
 import space.kiibou.data.BLACK
 import space.kiibou.data.Color
+import space.kiibou.data.toFX
 import space.kiibou.gui.GraphicsElement
+import space.kiibou.reactive.reactives.Signal
 
 class TextElement(
     app: GApplet,
@@ -20,6 +22,11 @@ class TextElement(
     fontName: String = "Times New Roman",
     fontColor: Color = BLACK
 ) : GraphicsElement(app) {
+
+    constructor(app: GApplet, text: Signal<String>) : this(app, "") {
+        textProperty.bind(text.toFX)
+    }
+
     val fontSizeProperty = SimpleIntegerProperty(0).also {
         it.bind(scaleProperty.multiply(fontSize))
     }

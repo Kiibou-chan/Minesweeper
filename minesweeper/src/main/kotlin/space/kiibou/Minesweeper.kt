@@ -11,9 +11,7 @@ import space.kiibou.game.Map
 import space.kiibou.net.NetUtils
 import space.kiibou.net.client.Client
 import space.kiibou.net.common.*
-import space.kiibou.net.server.main
 import space.kiibou.net.server.startServer
-import space.kiibou.server.GameService
 
 private val logger = KotlinLogging.logger { }
 
@@ -33,6 +31,7 @@ class Minesweeper : GApplet() {
     override fun settings() {
         size(800, 800, G2D)
         setScale(2)
+        pixelDensity(1)
         PJOGL.setIcon("pictures/icon_30.png")
     }
 
@@ -42,6 +41,7 @@ class Minesweeper : GApplet() {
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
         map = Map(this, 18, 18, 40)
+
         registerGraphicsElement(map)
 
         client = Client(
@@ -68,7 +68,7 @@ class Minesweeper : GApplet() {
         val cY = height / 2 - map.height / 2
         if (map.y != cY) map.moveTo(map.x, cY)
 
-        background(0xFF)
+        background(0xCC)
     }
 
     fun <T : Any> onMessage(type: MessageType<T>, callback: (Message<T>) -> Unit) =

@@ -1,9 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.0.20"
-    kotlin("plugin.serialization") version "2.0.20"
-    kotlin("kapt") version "2.0.20"
+    kotlin("jvm") version "2.2.21"
+    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("kapt") version "2.2.21"
 }
 
 repositories {
@@ -11,5 +11,5 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(24)
 }

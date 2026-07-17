@@ -8,7 +8,7 @@ import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
 class GameState(
-    private val handle: ConnectionHandle,
+    val handles: MutableList<ConnectionHandle>,
     private var width: Int,
     private var height: Int,
     private var bombs: Int,
@@ -81,6 +81,7 @@ class GameState(
                 TileType.EMPTY -> possibleTilePositions(x - 1, y - 1, 3, 3)
                     .filter { (tx, ty) -> revealTile(tx, ty, revealed) }
                     .forEach { (tx, ty) -> revealed += reveal(tx, ty) }
+
                 TileType.BOMB -> {
                     setTile(x, y, TileType.RED_BOMB)
                     setGameRunning(false)
@@ -98,22 +99,27 @@ class GameState(
 
                     revealTile(x, y, revealed)
 
-                    gameService.messageService.send(
-                        handle,
-                        MinesweeperMessageType.Loose
-                    )
+                    handles.forEach { handle ->
+                        gameService.messageService.send(
+                            handle,
+                            MinesweeperMessageType.Loose
+                        )
+                    }
 
                     setGameRunning(false)
                 }
+
                 else -> revealTile(x, y, revealed)
             }
         }
 
         if (revealedTiles == width * height - bombs && gameRunning) {
-            gameService.messageService.send(
-                handle,
-                MinesweeperMessageType.Win
-            )
+            handles.forEach { handle ->
+                gameService.messageService.send(
+                    handle,
+                    MinesweeperMessageType.Win
+                )
+            }
 
             bombTiles.filter { (x, y) -> !isFlagged(x, y) }
                 .forEach { (x, y) -> flagToggle(x, y) }
@@ -163,6 +169,7 @@ class GameState(
                 resetTimer()
                 startTimer()
             }
+
             gameRunning && !running -> {
                 stopTimer()
             }
@@ -177,11 +184,13 @@ class GameState(
             flagged[x][y] = !flagged[x][y]
         }
 
-        gameService.messageService.send(
-            handle,
-            MinesweeperMessageType.SetFlag,
-            FlagInfo(x, y, flagged[x][y])
-        )
+        handles.forEach { handle ->
+            gameService.messageService.send(
+                handle,
+                MinesweeperMessageType.SetFlag,
+                FlagInfo(x, y, flagged[x][y])
+            )
+        }
 
         if (flagged[x][y]) {
             setBombsLeft(bombsLeft - 1)
@@ -195,15 +204,17 @@ class GameState(
     private fun setBombsLeft(left: Int) {
         bombsLeft = left
 
-        gameService.messageService.send(
-            handle,
-            MinesweeperMessageType.SetBombsLeft,
-            BombsLeftInfo(left)
-        )
+        handles.forEach { handle ->
+            gameService.messageService.send(
+                handle,
+                MinesweeperMessageType.SetBombsLeft,
+                BombsLeftInfo(left)
+            )
+        }
     }
 
     private fun startTimer() {
-        timer = fixedRateTimer("Timer $handle", true, 0L, 1000L) {
+        timer = fixedRateTimer("Timer $handles", true, 0L, 1000L) {
             sendTime()
             time++
         }
@@ -219,12 +230,24 @@ class GameState(
     }
 
     private fun sendTime() =
-        gameService.messageService.send(
-            handle,
-            MinesweeperMessageType.SetTime,
-            TimeInfo(time)
-        )
+        handles.forEach { handle ->
+            gameService.messageService.send(
+                handle,
+                MinesweeperMessageType.SetTime,
+                TimeInfo(time)
+            )
+        }
 
     fun stopGame() = setGameRunning(false)
+
+    fun addPlayer(handle: ConnectionHandle) {
+        handles += handle
+    }
+
+    fun removePlayer(handle: ConnectionHandle) {
+        handles -= handle
+
+        if (handles.isEmpty()) stopGame()
+    }
 
 }

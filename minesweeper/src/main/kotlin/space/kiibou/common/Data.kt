@@ -8,6 +8,9 @@ import space.kiibou.game.TileType
 import space.kiibou.net.common.MessageType
 
 @Serializable
+data class GameHandle(val gameId: Long)
+
+@Serializable
 data class TimeInfo(val time: Int)
 
 @Serializable
@@ -59,6 +62,9 @@ object MinesweeperMessageType {
     @Serializable
     object InitMap : MessageType<MapInfo>(MapInfo::class)
 
+    @Serializable
+    object JoinGame : MessageType<GameHandle>(GameHandle::class)
+
     val serializersModule = SerializersModule {
         polymorphic(MessageType::class) {
             subclass(SetTime::class)
@@ -71,6 +77,7 @@ object MinesweeperMessageType {
             subclass(SetFlag::class)
             subclass(SetBombsLeft::class)
             subclass(InitMap::class)
+            subclass(JoinGame::class)
         }
     }
 }
