@@ -19,7 +19,8 @@ class GameState(
     private lateinit var flagged: Array<BooleanArray>
     private var bombsLeft = 0
     private lateinit var tiles: Array<Array<TileType>>
-    private lateinit var bombTiles: List<Vec2>
+    private var bombTiles: List<Vec2> = emptyList()
+    private var bombsPlaced = false
     private var gameRunning = false
     private var revealedTiles = 0
     private var time = 0
@@ -57,11 +58,9 @@ class GameState(
         flagged = Array(width) { BooleanArray(height) { false } }
         tiles = Array(width) { Array(height) { TileType.EMPTY } }
 
-        // Find out where to put bombs
-        bombTiles = placeBombs()
-
-        // Set tiles around bombs to the correct number
-        createNumberTiles()
+        // Bombs are placed on the first reveal so the first click is always safe.
+        bombTiles = emptyList()
+        bombsPlaced = false
 
         gameRunning = false
         revealedTiles = 0
@@ -70,9 +69,32 @@ class GameState(
     private fun possibleTilePositions(x: Int = 0, y: Int = 0, width: Int = this.width, height: Int = this.height) =
         List(width * height) { Vec2(x + it % width, y + it / width) }
 
-    private fun placeBombs() = chooseBombPositions().run(::setTilesToBombs)
-    private fun chooseBombPositions() = possibleTilePositions().shuffled(random).take(bombs)
-    private fun setTilesToBombs(list: List<Vec2>) = list.onEach { (x, y) -> setTile(x, y, TileType.BOMB) }
+    /**
+     * Places bombs on the first reveal, keeping the clicked tile (and, when the board has room,
+     * its eight neighbours) bomb-free so the first click never loses and opens a pocket. If the
+     * board is too dense to exclude the full 3x3, only the clicked tile is excluded.
+     */
+    private fun placeBombsAvoiding(cx: Int, cy: Int) {
+        val fullExclusion = possibleTilePositions(cx - 1, cy - 1, 3, 3)
+            .filter { (px, py) -> isValidTile(px, py) }
+            .toSet()
+
+        val exclusion = if (bombs <= width * height - fullExclusion.size) {
+            fullExclusion
+        } else {
+            setOf(Vec2(cx, cy))
+        }
+
+        bombTiles = possibleTilePositions()
+            .filterNot { it in exclusion }
+            .shuffled(random)
+            .take(bombs)
+            .onEach { (x, y) -> setTile(x, y, TileType.BOMB) }
+
+        createNumberTiles()
+
+        bombsPlaced = true
+    }
 
     private fun createNumberTiles() = possibleTilePositions()
         .filterNot { (x, y) -> isBomb(x, y) }
@@ -91,6 +113,8 @@ class GameState(
         val revealed: MutableList<TileInfo> = ArrayList()
 
         if (isValidTile(x, y)) {
+            if (!bombsPlaced) placeBombsAvoiding(x, y)
+
             when (getTile(x, y)) {
                 TileType.EMPTY -> possibleTilePositions(x - 1, y - 1, 3, 3)
                     .filter { (tx, ty) -> revealTile(tx, ty, revealed) }
