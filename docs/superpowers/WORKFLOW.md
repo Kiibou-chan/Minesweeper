@@ -81,7 +81,7 @@ a hardcoded room `0`).
 
 Decomposed into three sub-projects, each its own spec → plan → build:
 
-- **SP-1 · Game-logic test foundation** *(chosen first)* — loosen the
+- **SP-1 · Game-logic test foundation** *(COMPLETE — see plan doc; 8 tests green)* — loosen the
   `GameState`↔messaging seam, add `kotlin.test` coverage, fix known bugs under
   green tests. Decisions so far:
   - Base: branch off `guilib-reactive-kotlin`; publish cloned reactive-kotlin to
@@ -104,5 +104,13 @@ Decomposed into three sub-projects, each its own spec → plan → build:
 - **SP-3 · Real lobby/rooms** — replace hardcoded `GameHandle(0)` with
   create/join/list rooms. Depends on SP-1's tested `GameState`.
 
-Next action when resuming SP-1: finish brainstorming the seam design (Approach A
-confirmed), then write the spec to `docs/superpowers/specs/`.
+SP-1 is implemented on `claude/project-roadmap-brainstorm-d4466h` (seam + all five
+fixes, RED→GREEN per the plan). Next up is SP-2 (finish the REKotlin event
+migration) or SP-3 (real lobby/rooms), each starting a fresh brainstorm → spec →
+plan cycle.
+
+Session build note (kept local via `git update-index --skip-worktree`, NOT
+committed): this environment has only JDK 21 and blocks jogamp.org, so the 6
+module `jvmToolchain(24)` pins were lowered to 21, REKotlin was published to
+mavenLocal, and `minesweeper`'s test runtime excludes the `org.jogamp.*` groups.
+Reproduce with the Task 0 steps in the SP-1 plan.
