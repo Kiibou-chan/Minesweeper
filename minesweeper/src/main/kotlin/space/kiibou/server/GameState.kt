@@ -68,7 +68,7 @@ class GameState(
     }
 
     private fun possibleTilePositions(x: Int = 0, y: Int = 0, width: Int = this.width, height: Int = this.height) =
-        List(width * height) { Vec2(x + it % width, y + it / height) }
+        List(width * height) { Vec2(x + it % width, y + it / width) }
 
     private fun placeBombs() = chooseBombPositions().run(::setTilesToBombs)
     private fun chooseBombPositions() = possibleTilePositions().shuffled(random).take(bombs)
