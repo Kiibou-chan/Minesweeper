@@ -109,8 +109,16 @@ fixes, RED→GREEN per the plan). Next up is SP-2 (finish the REKotlin event
 migration) or SP-3 (real lobby/rooms), each starting a fresh brainstorm → spec →
 plan cycle.
 
-Session build note (kept local via `git update-index --skip-worktree`, NOT
-committed): this environment has only JDK 21 and blocks jogamp.org, so the 6
-module `jvmToolchain(24)` pins were lowered to 21, REKotlin was published to
-mavenLocal, and `minesweeper`'s test runtime excludes the `org.jogamp.*` groups.
-Reproduce with the Task 0 steps in the SP-1 plan.
+Build note: with full network access the project builds natively on the real
+`jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org
+resolves normally. JDK 24 can be fetched from `corretto.aws` (GitHub-release
+downloads, including Adoptium and the Gradle wrapper dist, may be blocked; use
+system Gradle at `/opt/gradle`). Point Gradle at the JDK with
+`-Porg.gradle.java.installations.paths=/path/to/jdk24`. The full build, all SP-1
+tests, graphics-library tests, and a real app boot (under `xvfb-run`) were
+verified green this way.
+
+If a restricted environment lacks JDK 24 or blocks jogamp.org, the fallback is to
+lower the 6 module `jvmToolchain(24)` pins to an available JDK and exclude the
+`org.jogamp.*` groups from `minesweeper`'s test runtime — kept local via
+`git update-index --skip-worktree`, never committed. See Task 0 in the SP-1 plan.
