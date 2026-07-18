@@ -131,7 +131,21 @@ added (REKotlin `Var<String>` value, TYPE-based editing, Enter submit; visual
 child deferred to `initImpl` so logic tests run headless), TestMain demo, and the
 layout freeze documented in CLAUDE.md ("Reactive boundaries"). Keyboard editing is
 verified at unit level (13 graphics-library tests); typing in a live window is a
-manual check via TestMain. Next: SP-3 client (screen system + lobby UI).
+manual check via TestMain.
+
+**SP-3 client is COMPLETE** (plan `plans/2026-07-18-sp3-client-lobby-ui.md`): the
+app boots into `RoomListScreen`, joins/creates rooms into `RoomLobbyScreen`
+(member ready markers, owner-only presets + Start, Leave), and `GameStarted`
+swaps in a per-game `Map` via the new `graphics-library` `ScreenManager`
+(active-aware event dispatch, late-registration init). `YourId` tells clients
+their member id. Message routing moved from `Map.initImpl` to `Minesweeper`
+(registered once). The solo-compat shim is deleted; `JoinGame`/`InitMap` message
+types remain defined but unrouted. Two connect-ordering bugs found by e2e and
+fixed (client field assignment; `Client.connect` fired `onConnect` before the
+connection was usable). Verified: 24 minesweeper + 16 graphics-library tests
+green, incl. a two-client socket integration test of the full room flow, plus a
+live xvfb run clicking Create Room into a lobby. Remaining stage: SP-3b (typed
+room codes via TextInput).
 
 Build note: with full network access the project builds natively on the real
 `jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org
