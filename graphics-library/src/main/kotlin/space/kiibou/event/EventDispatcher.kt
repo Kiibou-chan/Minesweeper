@@ -38,6 +38,9 @@ class EventDispatcher {
      */
     private var focusedElement: GraphicsElement? = null
 
+    /** The element key events are currently dispatched to, if any. */
+    val focused: GraphicsElement? get() = focusedElement
+
     private fun Collection<GraphicsElement>.topElement(x: Int, y: Int): GraphicsElement? {
         return filter { it.collides(x, y) }
             .maxByOrNull(GraphicsElement::hierarchyDepth)
@@ -62,8 +65,10 @@ class EventDispatcher {
                     topElement.mouseEvent(event)
                 }
 
-                registry["keyEvent"]?.filter(GraphicsElement::focusable)?.topElement(event.x, event.y)?.let {
-                    focusedElement = it
+                if (MouseAction.PRESS in event.actions) {
+                    registry["keyEvent"]?.filter(GraphicsElement::focusable)?.topElement(event.x, event.y)?.let {
+                        focusedElement = it
+                    }
                 }
 
                 if (topElement == null && lastHoveredElement != null) {
