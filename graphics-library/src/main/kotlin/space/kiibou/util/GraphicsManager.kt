@@ -8,6 +8,8 @@ class GraphicsManager {
     private lateinit var app: GApplet
     private val elements: MutableList<GraphicsElement> = ArrayList()
 
+    val roots: List<GraphicsElement> get() = elements.toList()
+
     val mouseX = SimpleIntegerProperty(0)
     val mouseY = SimpleIntegerProperty(0)
     val scaleProp = SimpleIntegerProperty(1)

@@ -27,6 +27,9 @@ abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventL
 
     val id: Int = nextID()
 
+    /** Optional stable identifier for GUI tests; never used by production logic. */
+    var testTag: String? = null
+
     var hidden = false
         protected set
 

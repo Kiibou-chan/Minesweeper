@@ -14,7 +14,8 @@ data class Resolution(val width: Int, val height: Int)
 private val buffers: MutableMap<Pair<Resolution, BorderStyle>, PImage> = WeakHashMap()
 
 class BorderBox(app: GApplet) : GraphicsElement(app) {
-    private val g: PGraphics = app.graphics
+    // Resolved at draw time: the sketch's graphics do not exist in headless tests.
+    private val g: PGraphics get() = app.graphics
     private var redraw: Boolean = true
     private lateinit var buffer: PImage
 

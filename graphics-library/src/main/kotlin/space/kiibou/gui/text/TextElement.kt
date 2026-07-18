@@ -40,13 +40,27 @@ class TextElement(
     val textProperty = SimpleStringProperty(text)
 
     init {
-        widthProp.bind(IntegerBinding(textProperty, fontSizeProperty, fontProperty) {
-            app.gg.textWidth(fontProperty.value, fontSizeProperty.value, textProperty.valueSafe)
-        })
+        // Attaching a listener to a JavaFX binding validates it, so the headless branch
+        // must not even DEPEND on fontProperty — computing it creates a real font.
+        val metrics = app.textMetrics
 
-        heightProp.bind(IntegerBinding(fontSizeProperty, fontProperty, textProperty) {
-            app.gg.textHeight(fontProperty.value, fontSizeProperty.value, textProperty.valueSafe)
-        })
+        if (metrics != null) {
+            widthProp.bind(IntegerBinding(textProperty, fontSizeProperty, fontNameProperty) {
+                metrics.width(fontNameProperty.value, fontSizeProperty.value, textProperty.valueSafe)
+            })
+
+            heightProp.bind(IntegerBinding(fontSizeProperty, fontNameProperty, textProperty) {
+                metrics.height(fontNameProperty.value, fontSizeProperty.value, textProperty.valueSafe)
+            })
+        } else {
+            widthProp.bind(IntegerBinding(textProperty, fontSizeProperty, fontProperty) {
+                app.gg.textWidth(fontProperty.value, fontSizeProperty.value, textProperty.valueSafe)
+            })
+
+            heightProp.bind(IntegerBinding(fontSizeProperty, fontProperty, textProperty) {
+                app.gg.textHeight(fontProperty.value, fontSizeProperty.value, textProperty.valueSafe)
+            })
+        }
     }
 
     override fun drawImpl() {

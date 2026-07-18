@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     `java-library`
+    `java-test-fixtures`
     id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
@@ -35,6 +36,10 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit"))
+
+    // Test fixtures (GuiRobot) drive Processing events directly.
+
+    testFixturesImplementation(libs.processing)
 }
 
 javafx {

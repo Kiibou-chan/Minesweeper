@@ -47,7 +47,8 @@ class TextInput(
 
             it.xProp.bind(xProp)
             it.yProp.bind(yProp)
-            widthProp.bind(it.widthProp)
+            // Minimum width keeps an empty input visible and clickable.
+            widthProp.bind(javafx.beans.binding.Bindings.max(it.widthProp, scaleProperty.multiply(60)))
             heightProp.bind(it.heightProp)
         }
     }
