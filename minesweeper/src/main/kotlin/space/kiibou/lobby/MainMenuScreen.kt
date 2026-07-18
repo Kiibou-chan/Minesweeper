@@ -17,6 +17,7 @@ import space.kiibou.reactive.observe
 class MainMenuScreen(override val app: Minesweeper) : GraphicsElement(app) {
 
     private val nameInput = TextInput(app, initial = "").also { input ->
+        input.testTag = "menu.nameInput"
         input.onSubmit = { app.setPlayerName(it) }
     }
 
@@ -27,6 +28,7 @@ class MainMenuScreen(override val app: Minesweeper) : GraphicsElement(app) {
         list += nameInput
 
         list += Button(app, TextElement(app, "Singleplayer")).also { button ->
+            button.testTag = "menu.singleplayer"
             button.clicked observe {
                 submitPendingName()
                 app.startSingleplayer()
@@ -34,6 +36,7 @@ class MainMenuScreen(override val app: Minesweeper) : GraphicsElement(app) {
         }
 
         list += Button(app, TextElement(app, "Multiplayer")).also { button ->
+            button.testTag = "menu.multiplayer"
             button.clicked observe {
                 submitPendingName()
                 app.showRoomList()
@@ -44,6 +47,7 @@ class MainMenuScreen(override val app: Minesweeper) : GraphicsElement(app) {
     }
 
     init {
+        testTag = "screen.menu"
         list.xProp.bind(xProp)
         list.yProp.bind(yProp)
         widthProp.bind(list.widthProp)

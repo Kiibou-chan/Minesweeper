@@ -23,19 +23,23 @@ class RoomListScreen(override val app: Minesweeper) : GraphicsElement(app) {
         list += TextElement(app, "Rooms", fontSize = 25)
 
         list += Button(app, TextElement(app, "Back to Menu")).also { button ->
+            button.testTag = "rooms.back"
             button.clicked observe { app.showMainMenu() }
         }
 
         list += Button(app, TextElement(app, "Create Room")).also { button ->
+            button.testTag = "rooms.create"
             button.clicked observe { app.client.send(MinesweeperMessageType.CreateRoom) }
         }
 
         list += Button(app, TextElement(app, "Refresh")).also { button ->
+            button.testTag = "rooms.refresh"
             button.clicked observe { app.client.send(MinesweeperMessageType.ListRooms) }
         }
 
         list += TextElement(app, "Join room by number (click, type, Enter):")
         list += TextInput(app).also { input ->
+            input.testTag = "rooms.joinInput"
             input.onSubmit = { text ->
                 text.trim().toLongOrNull()?.let { id ->
                     app.client.send(MinesweeperMessageType.JoinRoom, space.kiibou.common.GameHandle(id))
@@ -49,6 +53,7 @@ class RoomListScreen(override val app: Minesweeper) : GraphicsElement(app) {
     }
 
     init {
+        testTag = "screen.rooms"
         list.xProp.bind(xProp)
         list.yProp.bind(yProp)
         widthProp.bind(list.widthProp)
@@ -64,6 +69,7 @@ class RoomListScreen(override val app: Minesweeper) : GraphicsElement(app) {
             val label = "Room ${summary.handle.gameId} · ${summary.memberCount} player(s) · ${width}x${height}/${bombs}"
 
             rooms += Button(app, TextElement(app, label)).also { button ->
+                button.testTag = "rooms.row.${summary.handle.gameId}"
                 button.clicked observe { app.client.send(MinesweeperMessageType.JoinRoom, summary.handle) }
             }
         }

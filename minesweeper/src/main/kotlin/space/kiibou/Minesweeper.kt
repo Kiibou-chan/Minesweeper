@@ -16,6 +16,9 @@ import space.kiibou.gui.ScreenManager
 import space.kiibou.lobby.MainMenuScreen
 import space.kiibou.lobby.RoomListScreen
 import space.kiibou.lobby.RoomLobbyScreen
+import space.kiibou.gui.text.EstimatingTextMetrics
+import space.kiibou.net.ClientGameConnection
+import space.kiibou.net.GameConnection
 import space.kiibou.net.NetUtils
 import space.kiibou.net.client.Client
 import space.kiibou.net.common.*
@@ -33,7 +36,7 @@ class Minesweeper : GApplet() {
         }
     }
 
-    lateinit var client: Client
+    lateinit var client: GameConnection
 
     private lateinit var screens: ScreenManager
     private lateinit var mainMenuScreen: MainMenuScreen
@@ -57,6 +60,20 @@ class Minesweeper : GApplet() {
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
 
+        initUi()
+
+        // Assign before connecting: connect() may invoke callbacks synchronously and the
+        // client field must already be usable.
+        val socketClient = Client(
+            ::onServerConnect,
+            eventDispatcher::messageEvent,
+            ::onServerDisconnect
+        )
+        client = ClientGameConnection(socketClient)
+        socketClient.connect("localhost", 8454)
+    }
+
+    private fun initUi() {
         screens = ScreenManager(this)
         mainMenuScreen = MainMenuScreen(this).also(screens::add)
         roomListScreen = RoomListScreen(this).also(screens::add)
@@ -64,15 +81,14 @@ class Minesweeper : GApplet() {
         screens.show(mainMenuScreen)
 
         registerMessageHandlers()
+    }
 
-        // Assign before connecting: onServerConnect uses the client field and connect()
-        // invokes it synchronously.
-        client = Client(
-            ::onServerConnect,
-            eventDispatcher::messageEvent,
-            ::onServerDisconnect
-        )
-        client.connect("localhost", 8454)
+    /** Boots screens and message routing without surface, GL, or sockets — for GUI tests. */
+    internal fun initHeadless(connection: GameConnection) {
+        textMetrics = EstimatingTextMetrics
+        client = connection
+        initUi()
+        graphicsManager.pre()
     }
 
     private fun registerMessageHandlers() {

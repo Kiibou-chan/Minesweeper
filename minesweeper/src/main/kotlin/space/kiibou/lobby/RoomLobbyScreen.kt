@@ -20,11 +20,12 @@ class RoomLobbyScreen(override val app: Minesweeper) : GraphicsElement(app) {
 
     private var myReady = false
 
-    private val title = TextElement(app, "Room", fontSize = 25)
+    private val title = TextElement(app, "Room", fontSize = 25).also { it.testTag = "lobby.title" }
     private val settingsText = TextElement(app, "9x9 · 10 bombs")
     private val members = VerticalList(app, 2)
 
     private val readyButton = Button(app, TextElement(app, "Ready / Unready")).also { button ->
+        button.testTag = "lobby.ready"
         button.clicked observe { app.client.send(MinesweeperMessageType.SetReady, ReadyInfo(!myReady)) }
     }
 
@@ -41,10 +42,12 @@ class RoomLobbyScreen(override val app: Minesweeper) : GraphicsElement(app) {
     }
 
     private val startButton = Button(app, TextElement(app, "Start Game")).also { button ->
+        button.testTag = "lobby.start"
         button.clicked observe { app.client.send(MinesweeperMessageType.StartGame) }
     }
 
     private val leaveButton = Button(app, TextElement(app, "Leave Room")).also { button ->
+        button.testTag = "lobby.leave"
         button.clicked observe {
             app.client.send(MinesweeperMessageType.LeaveRoom)
             app.showRoomList()
@@ -64,6 +67,7 @@ class RoomLobbyScreen(override val app: Minesweeper) : GraphicsElement(app) {
     }
 
     init {
+        testTag = "screen.lobby"
         list.xProp.bind(xProp)
         list.yProp.bind(yProp)
         widthProp.bind(list.widthProp)

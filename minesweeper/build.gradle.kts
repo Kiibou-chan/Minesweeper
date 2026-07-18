@@ -44,6 +44,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit"))
+    testImplementation(testFixtures(project(":graphics-library")))
 }
 
 javafx {
