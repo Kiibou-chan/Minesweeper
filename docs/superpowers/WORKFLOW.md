@@ -196,8 +196,33 @@ this finished SP-3b and closed the original brainstormed roadmap:
   live window (replaces the xdotool sweep scripts), pixel probes, `Map`-screen
   coverage.
 
+**SP-6 · GUI testing, Tier 2 (COMPLETE)** — spec
+`specs/2026-07-18-sp6-gui-testing-tier2-design.md`, plan
+`plans/2026-07-18-sp6-gui-testing-tier2.md`:
+- `WindowedAppHarness` boots ONE real windowed `Minesweeper` in the test JVM
+  (in-process server on 8454 first; `suppressSystemExit` on `GApplet` keeps
+  `exit()` from killing the JVM), reuses the Tier-1 `GuiRobot` with a
+  frame-synced pump (`EventDispatcher.isIdle`), and offers draw-thread pixel
+  probes + screenshots (`build/reports/gui-e2e/`).
+- Journeys: boot-to-menu, singleplayer menu→lobby→start→tile reveal (+ pixel
+  probe), and the Expert-resize regression (far-corner tile clickable after the
+  window grows — the scenario that defeated xdotool). All green twice in a row.
+- Opt-in: `xvfb-run -a gradle :minesweeper:test -Dgui.e2e=true --tests
+  "space.kiibou.e2e.*"`; the test task extracts JOGL natives (Gradle-cache jars
+  are not siblings, so JOGL cannot find them) and un-headlesses the worker JVM.
+- Bugs found by this stage: a **server race** — room/game mutations ran
+  unsynchronized on per-connection socket threads (two concurrent SetReady
+  messages could lose an update; now serialized on a lock in `GameService`) —
+  and the **stale-map leak**: discarded boards stayed registered and their
+  duplicate tags shadowed new ones (`ScreenManager.remove` +
+  `GraphicsManager.unregisterGraphicsElement` now dispose them).
+- The xdotool sweep scripts in the session scratchpad are fully superseded.
+- Polish note from the boot screenshot: an empty `TextInput` is clickable but
+  invisible (no border/background) — worth a visual treatment.
+
 Future polish: leaderboard and settings menu entries; win/lose overlay;
-best-times persistence; flag attribution (who flagged what) in multiplayer.
+best-times persistence; flag attribution (who flagged what) in multiplayer;
+TextInput border/background so empty inputs are visible.
 
 Build note: with full network access the project builds natively on the real
 `jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org
