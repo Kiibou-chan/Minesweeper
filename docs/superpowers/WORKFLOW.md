@@ -144,8 +144,25 @@ types remain defined but unrouted. Two connect-ordering bugs found by e2e and
 fixed (client field assignment; `Client.connect` fired `onConnect` before the
 connection was usable). Verified: 24 minesweeper + 16 graphics-library tests
 green, incl. a two-client socket integration test of the full room flow, plus a
-live xvfb run clicking Create Room into a lobby. Remaining stage: SP-3b (typed
-room codes via TextInput).
+live xvfb run clicking Create Room into a lobby.
+
+**SP-4 is COMPLETE** (plan `plans/2026-07-18-sp4-menu-names-typed-join.md`) —
+this finished SP-3b and closed the original brainstormed roadmap:
+- **Main menu** at boot: name `TextInput`, Singleplayer (create room +
+  auto-ready → the lobby doubles as difficulty select), Multiplayer (room list,
+  which gained Back-to-menu). Future entries (Leaderboard, Settings) are
+  additive rows in the menu's button list.
+- **Player names**: `SetName`/`NameInfo`; `MemberState` carries `name`; server
+  keeps connection→name (cleared on disconnect, default "Player <id>", 24-char
+  cap); `Room` resolves names via injected `nameOf`; renaming mid-room
+  rebroadcasts state.
+- **Typed room join (SP-3b)**: join-by-number `TextInput` on the room list.
+- Verified: all suites green (integration test now asserts the chosen name
+  appears in RoomState), plus a full mouse-driven xvfb journey: menu →
+  Singleplayer → lobby → Start → board → reveal.
+
+Future polish noted: auto-ready solo rooms after game over; leaderboard and
+settings menu entries; win/lose overlay; chording; best-times persistence.
 
 Build note: with full network access the project builds natively on the real
 `jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org
