@@ -105,9 +105,17 @@ Decomposed into three sub-projects, each its own spec → plan → build:
   create/join/list rooms. Depends on SP-1's tested `GameState`.
 
 SP-1 is implemented on `claude/project-roadmap-brainstorm-d4466h` (seam + all five
-fixes, RED→GREEN per the plan). Next up is SP-2 (finish the REKotlin event
-migration) or SP-3 (real lobby/rooms), each starting a fresh brainstorm → spec →
-plan cycle.
+fixes, RED→GREEN per the plan).
+
+SP-2/SP-3 brainstorm outcome (specs in `specs/2026-07-18-*`): staged lobby —
+click-list rooms first, typed room codes later (SP-3b, needs SP-2's TextInput).
+Rooms are ready-lobbies: owner sets settings all members see, members ready-up,
+owner starts when all ready; lifecycle LOBBY → PLAYING → back to LOBBY on game
+over (ready flags reset, join window reopens; no mid-game join, so no board
+snapshot subsystem). Ownership passes to the longest-present member; empty rooms
+dissolve. Sequencing: **SP-3 server (room lifecycle) → SP-2 (events/TextInput/
+layout freeze) → SP-3 client (screen system + lobby UI) → SP-3b (typed codes)** —
+screens build on the finished event system.
 
 Build note: with full network access the project builds natively on the real
 `jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org
