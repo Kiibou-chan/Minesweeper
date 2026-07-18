@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 class RoomRegistryTest {
 
     private fun registry() = RoomRegistry { roomHandle ->
-        Room(roomHandle, RecordingRoomEvents()) { settings, handles ->
+        Room(roomHandle, RecordingRoomEvents(), { "Player ${it.handle}" }) { settings, handles ->
             GameState(
                 handles, settings.width, settings.height, settings.bombs,
                 RecordingGameEvents(), ManualTicker(), Random(1L),

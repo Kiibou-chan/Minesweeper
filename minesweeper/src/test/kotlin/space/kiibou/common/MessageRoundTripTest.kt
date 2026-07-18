@@ -40,7 +40,7 @@ class MessageRoundTripTest {
             RoomStateInfo(
                 GameHandle(1),
                 owner = 7L,
-                members = listOf(MemberState(7L, true), MemberState(8L, false)),
+                members = listOf(MemberState(7L, "Alice", true), MemberState(8L, "Player 8", false)),
                 settings = MapInfo(9, 9, 10),
                 phase = RoomPhase.LOBBY,
             ),
@@ -48,6 +48,7 @@ class MessageRoundTripTest {
         Message(MinesweeperMessageType.JoinRefused, GameHandle(2)),
         Message(MinesweeperMessageType.GameStarted, Unit),
         Message(MinesweeperMessageType.YourId, YourIdInfo(7L)),
+        Message(MinesweeperMessageType.SetName, NameInfo("Alice")),
     )
 
     @Test

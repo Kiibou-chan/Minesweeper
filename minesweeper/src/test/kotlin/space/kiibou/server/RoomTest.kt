@@ -16,7 +16,7 @@ class RoomTest {
 
     private fun newRoom(): Pair<Room, RecordingRoomEvents> {
         val events = RecordingRoomEvents()
-        val room = Room(GameHandle(1), events) { settings, handles ->
+        val room = Room(GameHandle(1), events, { "Name-${it.handle}" }) { settings, handles ->
             GameState(
                 handles, settings.width, settings.height, settings.bombs,
                 RecordingGameEvents(), ManualTicker(), Random(1L),
@@ -53,6 +53,23 @@ class RoomTest {
         room.startGame(handle(1))
         room.join(handle(2))
         assertEquals(listOf(handle(1) to 1L), events.memberIds)
+    }
+
+    @Test
+    fun member_names_come_from_the_injected_resolver() {
+        val (room, events) = newRoom()
+        room.join(handle(1))
+        room.join(handle(2))
+        assertEquals(listOf("Name-1", "Name-2"), events.lastState().members.map { it.name })
+    }
+
+    @Test
+    fun refresh_state_rebroadcasts_the_current_state() {
+        val (room, events) = newRoom()
+        room.join(handle(1))
+        val before = events.roomStates.size
+        room.refreshState()
+        assertEquals(before + 1, events.roomStates.size)
     }
 
     @Test

@@ -17,6 +17,7 @@ import space.kiibou.net.common.ConnectionHandle
 class Room(
     val handle: GameHandle,
     private val events: RoomEvents,
+    private val nameOf: (ConnectionHandle) -> String,
     private val createGame: (MapInfo, MutableList<ConnectionHandle>) -> GameState,
 ) {
     var phase: RoomPhase = RoomPhase.LOBBY
@@ -102,10 +103,13 @@ class Room(
     fun stateInfo() = RoomStateInfo(
         handle,
         owner = owner?.handle ?: -1L,
-        members = readyByMember.map { (member, ready) -> MemberState(member.handle, ready) },
+        members = readyByMember.map { (member, ready) -> MemberState(member.handle, nameOf(member), ready) },
         settings = settings,
         phase = phase,
     )
+
+    /** Rebroadcasts the current state, e.g. after a member's name changed. */
+    fun refreshState() = broadcastState()
 
     private fun broadcastState() = events.roomState(stateInfo())
 }

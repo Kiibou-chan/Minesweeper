@@ -60,7 +60,8 @@ class RoomFlowIntegrationTest {
 
         val a = TestClient(port)
 
-        // A creates a room and learns its id.
+        // A picks a name, creates a room, and learns its id.
+        a.client.send(MinesweeperMessageType.SetName, NameInfo("Alice"))
         a.client.send(MinesweeperMessageType.CreateRoom)
         await("A's YourId and RoomState") {
             a.payloads(MinesweeperMessageType.YourId).isNotEmpty() && a.lastRoomState() != null
@@ -68,6 +69,7 @@ class RoomFlowIntegrationTest {
         val room = a.lastRoomState()!!.handle
         val aId = a.payloads(MinesweeperMessageType.YourId).single().id
         assertEquals(aId, a.lastRoomState()!!.owner, "creator owns the room")
+        assertEquals("Alice", a.lastRoomState()!!.members.single().name, "chosen name appears in the room state")
 
         // B lists rooms, sees A's room, joins it.
         val b = TestClient(port)

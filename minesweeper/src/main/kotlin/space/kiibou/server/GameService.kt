@@ -33,12 +33,17 @@ class GameService(server: Server) : Service(server) {
     @Inject
     lateinit var messageService: MessageService
 
+    private val names = mutableMapOf<ConnectionHandle, String>()
+
     private val registry = RoomRegistry(::newRoom)
+
+    private fun nameOf(handle: ConnectionHandle): String =
+        names[handle] ?: "Player ${handle.handle}"
 
     private fun newRoom(roomHandle: GameHandle): Room {
         lateinit var room: Room
 
-        room = Room(roomHandle, BroadcastRoomEvents({ room.members }, messageService)) { settings, handles ->
+        room = Room(roomHandle, BroadcastRoomEvents({ room.members }, messageService), ::nameOf) { settings, handles ->
             GameState(
                 handles, settings.width, settings.height, settings.bombs,
                 GameOverNotifying(BroadcastGameEvents(handles, messageService)) { room.onGameOver() },
@@ -83,6 +88,11 @@ class GameService(server: Server) : Service(server) {
             withRoom(it.connectionHandle) { setSettings(it.connectionHandle, it.payload) }
         }
 
+        routingService.registerCallback(MinesweeperMessageType.SetName) {
+            names[it.connectionHandle] = it.payload.name.take(24)
+            registry.roomFor(it.connectionHandle)?.refreshState()
+        }
+
         routingService.registerCallback(MinesweeperMessageType.StartGame) {
             withRoom(it.connectionHandle) { startGame(it.connectionHandle) }
         }
@@ -97,7 +107,10 @@ class GameService(server: Server) : Service(server) {
             withGame(it.connectionHandle) { flagToggle(x, y) }
         }
 
-        server.onDisconnect { registry.leave(it) }
+        server.onDisconnect {
+            registry.leave(it)
+            names.remove(it)
+        }
     }
 
     private fun withRoom(handle: ConnectionHandle, action: Room.() -> Unit) {

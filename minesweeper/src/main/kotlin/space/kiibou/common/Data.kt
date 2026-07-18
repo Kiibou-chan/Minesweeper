@@ -38,10 +38,13 @@ data class ReadyInfo(val ready: Boolean)
 data class YourIdInfo(val id: Long)
 
 @Serializable
+data class NameInfo(val name: String)
+
+@Serializable
 enum class RoomPhase { LOBBY, PLAYING }
 
 @Serializable
-data class MemberState(val id: Long, val ready: Boolean)
+data class MemberState(val id: Long, val name: String, val ready: Boolean)
 
 @Serializable
 data class RoomSummary(val handle: GameHandle, val memberCount: Int, val settings: MapInfo)
@@ -115,6 +118,9 @@ object MinesweeperMessageType {
     @Serializable
     object StartGame : MessageType<Unit>(Unit::class)
 
+    @Serializable
+    object SetName : MessageType<NameInfo>(NameInfo::class)
+
     // Room lifecycle (server -> client)
 
     @Serializable
@@ -152,6 +158,7 @@ object MinesweeperMessageType {
             subclass(SetReady::class)
             subclass(SetSettings::class)
             subclass(StartGame::class)
+            subclass(SetName::class)
             subclass(RoomList::class)
             subclass(RoomState::class)
             subclass(JoinRefused::class)
