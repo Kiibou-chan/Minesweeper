@@ -31,6 +31,30 @@ data class TilePosition(val x: Int, val y: Int)
 @Serializable
 data class BombsLeftInfo(val bombs: Int)
 
+@Serializable
+data class ReadyInfo(val ready: Boolean)
+
+@Serializable
+enum class RoomPhase { LOBBY, PLAYING }
+
+@Serializable
+data class MemberState(val id: Long, val ready: Boolean)
+
+@Serializable
+data class RoomSummary(val handle: GameHandle, val memberCount: Int, val settings: MapInfo)
+
+@Serializable
+data class RoomListInfo(val rooms: List<RoomSummary>)
+
+@Serializable
+data class RoomStateInfo(
+    val handle: GameHandle,
+    val owner: Long,
+    val members: List<MemberState>,
+    val settings: MapInfo,
+    val phase: RoomPhase,
+)
+
 object MinesweeperMessageType {
     @Serializable
     object SetTime : MessageType<TimeInfo>(TimeInfo::class)
@@ -65,6 +89,43 @@ object MinesweeperMessageType {
     @Serializable
     object JoinGame : MessageType<GameHandle>(GameHandle::class)
 
+    // Room lifecycle (client -> server)
+
+    @Serializable
+    object CreateRoom : MessageType<Unit>(Unit::class)
+
+    @Serializable
+    object ListRooms : MessageType<Unit>(Unit::class)
+
+    @Serializable
+    object JoinRoom : MessageType<GameHandle>(GameHandle::class)
+
+    @Serializable
+    object LeaveRoom : MessageType<Unit>(Unit::class)
+
+    @Serializable
+    object SetReady : MessageType<ReadyInfo>(ReadyInfo::class)
+
+    @Serializable
+    object SetSettings : MessageType<MapInfo>(MapInfo::class)
+
+    @Serializable
+    object StartGame : MessageType<Unit>(Unit::class)
+
+    // Room lifecycle (server -> client)
+
+    @Serializable
+    object RoomList : MessageType<RoomListInfo>(RoomListInfo::class)
+
+    @Serializable
+    object RoomState : MessageType<RoomStateInfo>(RoomStateInfo::class)
+
+    @Serializable
+    object JoinRefused : MessageType<GameHandle>(GameHandle::class)
+
+    @Serializable
+    object GameStarted : MessageType<Unit>(Unit::class)
+
     val serializersModule = SerializersModule {
         polymorphic(MessageType::class) {
             subclass(SetTime::class)
@@ -78,6 +139,17 @@ object MinesweeperMessageType {
             subclass(SetBombsLeft::class)
             subclass(InitMap::class)
             subclass(JoinGame::class)
+            subclass(CreateRoom::class)
+            subclass(ListRooms::class)
+            subclass(JoinRoom::class)
+            subclass(LeaveRoom::class)
+            subclass(SetReady::class)
+            subclass(SetSettings::class)
+            subclass(StartGame::class)
+            subclass(RoomList::class)
+            subclass(RoomState::class)
+            subclass(JoinRefused::class)
+            subclass(GameStarted::class)
         }
     }
 }
