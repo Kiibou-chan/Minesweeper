@@ -42,7 +42,7 @@ class EventDispatcher {
     val focused: GraphicsElement? get() = focusedElement
 
     private fun Collection<GraphicsElement>.topElement(x: Int, y: Int): GraphicsElement? {
-        return filter { it.collides(x, y) }
+        return filter { it.active && it.collides(x, y) }
             .maxByOrNull(GraphicsElement::hierarchyDepth)
     }
 

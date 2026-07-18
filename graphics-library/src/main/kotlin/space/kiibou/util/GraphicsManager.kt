@@ -17,9 +17,12 @@ class GraphicsManager {
             scaleProp.value = value
         }
 
+    private var initialized = false
+
     @Suppress("unused")
     fun pre() {
         elements.forEach(GraphicsElement::init)
+        initialized = true
         app.unregisterMethod("pre", this)
     }
 
@@ -33,6 +36,7 @@ class GraphicsManager {
     fun registerGraphicsElement(element: GraphicsElement) {
         elements.add(element)
         element.scaleProperty.bind(scaleProp)
+        if (initialized) element.init()
     }
 
     fun registerApp(app: GApplet) {
