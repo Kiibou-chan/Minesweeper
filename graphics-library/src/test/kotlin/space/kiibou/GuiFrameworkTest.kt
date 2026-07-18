@@ -81,6 +81,34 @@ class GuiFrameworkTest {
     }
 
     @Test
+    fun dispatcher_reports_idle_only_when_queues_are_empty() {
+        val app = app()
+        assertTrue(app.eventDispatcher.isIdle(), "no events queued yet")
+
+        app.eventDispatcher.mouseEvent(
+            processing.event.MouseEvent(null, 0L, processing.event.MouseEvent.PRESS, 0, 5, 5, processing.core.PConstants.LEFT, 1),
+        )
+        assertTrue(!app.eventDispatcher.isIdle(), "queued event must show as pending")
+
+        app.eventDispatcher.pre()
+        assertTrue(app.eventDispatcher.isIdle(), "drained after pre()")
+    }
+
+    @Test
+    fun robot_uses_a_custom_pump_strategy_when_given() {
+        val app = app()
+        var pumps = 0
+        val robot = GuiRobot(app) { pumps++; app.eventDispatcher.pre() }
+
+        val button = Button(app, TextElement(app, "P")).also { it.testTag = "p" }
+        app.registerGraphicsElement(button)
+        app.manager.pre()
+
+        robot.clickOn("p")
+        assertTrue(pumps > 0, "the injected pump strategy must be used")
+    }
+
+    @Test
     fun empty_text_input_is_clickable() {
         val app = app()
         val input = TextInput(app)

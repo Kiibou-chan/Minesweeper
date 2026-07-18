@@ -99,6 +99,12 @@ class EventDispatcher {
         dispatchEvents()
     }
 
+    /** True when no queued events are waiting to be dispatched. */
+    fun isIdle(): Boolean =
+        synchronized(mouseQueue) { mouseQueue.isEmpty() } &&
+            synchronized(keyQueue) { keyQueue.isEmpty() } &&
+            synchronized(messageQueue) { messageQueue.isEmpty() }
+
     fun keyEvent(event: KeyEvent) {
         synchronized(keyQueue) {
             keyQueue += event

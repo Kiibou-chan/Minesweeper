@@ -17,10 +17,13 @@ fun GraphicsElement.walk(): Sequence<GraphicsElement> = sequence {
  * the click focused. Pair with `GApplet.textMetrics = EstimatingTextMetrics` so layout
  * computes without a sketch.
  */
-class GuiRobot(private val app: GApplet) {
+class GuiRobot(
+    private val app: GApplet,
+    private val pumpStrategy: () -> Unit = { app.eventDispatcher.pre() },
+) {
 
     /** Drains all queued events, like one frame boundary. */
-    fun pump() = app.eventDispatcher.pre()
+    fun pump() = pumpStrategy()
 
     fun findByTagOrNull(tag: String): GraphicsElement? =
         app.elementRoots.asSequence().flatMap { it.walk() }.find { it.testTag == tag }

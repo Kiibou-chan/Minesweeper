@@ -84,6 +84,7 @@ class Tile(override val app: Minesweeper, private val map: Map, private val tile
     }
 
     init {
+        testTag = "tile.$tileX.$tileY"
         widthProp.bind(scaleProperty.multiply(tileWidth))
         heightProp.bind(scaleProperty.multiply(tileHeight))
 

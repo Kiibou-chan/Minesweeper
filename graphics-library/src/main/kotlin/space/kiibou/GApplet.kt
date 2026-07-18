@@ -16,6 +16,13 @@ open class GApplet : PApplet() {
     /** Non-null switches text sizing to a headless implementation (see [TextMetrics]). */
     var textMetrics: TextMetrics? = null
 
+    /** Set by test harnesses: exit() disposes the sketch instead of killing the JVM. */
+    var suppressSystemExit: Boolean = false
+
+    override fun exitActual() {
+        if (!suppressSystemExit) super.exitActual()
+    }
+
     /** Read-only view of the registered top-level elements, for scene queries. */
     val elementRoots: List<GraphicsElement> get() = graphicsManager.roots
 

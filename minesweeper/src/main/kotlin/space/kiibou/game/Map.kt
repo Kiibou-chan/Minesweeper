@@ -50,6 +50,7 @@ class Map(override val app: Minesweeper, private val tilesX: Int, private val ti
     }
 
     init {
+        testTag = "screen.map"
         box.addChild(verticalList)
 
         widthProp.bind(box.widthProp)

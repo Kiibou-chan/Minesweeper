@@ -31,11 +31,12 @@ class RoomLobbyScreen(override val app: Minesweeper) : GraphicsElement(app) {
 
     private val presets = VerticalList(app, 2).also { presets ->
         listOf(
-            "Beginner (9x9, 10)" to MapInfo(9, 9, 10),
-            "Intermediate (16x16, 40)" to MapInfo(16, 16, 40),
-            "Expert (30x16, 99)" to MapInfo(30, 16, 99),
-        ).forEach { (label, settings) ->
+            Triple("Beginner (9x9, 10)", MapInfo(9, 9, 10), "beginner"),
+            Triple("Intermediate (16x16, 40)", MapInfo(16, 16, 40), "intermediate"),
+            Triple("Expert (30x16, 99)", MapInfo(30, 16, 99), "expert"),
+        ).forEach { (label, settings, tag) ->
             presets += Button(app, TextElement(app, label)).also { button ->
+                button.testTag = "lobby.preset.$tag"
                 button.clicked observe { app.client.send(MinesweeperMessageType.SetSettings, settings) }
             }
         }
