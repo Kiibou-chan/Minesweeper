@@ -7,7 +7,12 @@ import processing.core.PApplet
 import processing.opengl.PGraphicsOpenGL
 import processing.opengl.PJOGL
 import space.kiibou.common.MinesweeperMessageType
+import space.kiibou.common.RoomPhase
+import space.kiibou.common.RoomStateInfo
 import space.kiibou.game.Map
+import space.kiibou.gui.ScreenManager
+import space.kiibou.lobby.RoomListScreen
+import space.kiibou.lobby.RoomLobbyScreen
 import space.kiibou.net.NetUtils
 import space.kiibou.net.client.Client
 import space.kiibou.net.common.*
@@ -25,8 +30,15 @@ class Minesweeper : GApplet() {
         }
     }
 
-    private lateinit var map: Map
     lateinit var client: Client
+
+    private lateinit var screens: ScreenManager
+    private lateinit var roomListScreen: RoomListScreen
+    private lateinit var lobbyScreen: RoomLobbyScreen
+
+    private var map: Map? = null
+    private var myId: Long? = null
+    private var lastRoomState: RoomStateInfo? = null
 
     override fun settings() {
         size(800, 800, G2D)
@@ -40,9 +52,13 @@ class Minesweeper : GApplet() {
         surface.setResizable(true)
         (g as PGraphicsOpenGL).textureSampling(2)
         frameRate(60f)
-        map = Map(this, 18, 18, 40)
 
-        registerGraphicsElement(map)
+        screens = ScreenManager(this)
+        roomListScreen = RoomListScreen(this).also(screens::add)
+        lobbyScreen = RoomLobbyScreen(this).also(screens::add)
+        screens.show(roomListScreen)
+
+        registerMessageHandlers()
 
         client = Client(
             ::onServerConnect,
@@ -51,7 +67,56 @@ class Minesweeper : GApplet() {
         ).connect("localhost", 8454)
     }
 
+    private fun registerMessageHandlers() {
+        onMessage(MinesweeperMessageType.RoomList) { roomListScreen.update(it.payload.rooms) }
+
+        onMessage(MinesweeperMessageType.YourId) {
+            myId = it.payload.id
+            lastRoomState?.let { state -> lobbyScreen.update(state, myId) }
+        }
+
+        onMessage(MinesweeperMessageType.RoomState) {
+            lastRoomState = it.payload
+            lobbyScreen.update(it.payload, myId)
+            if (screens.current == roomListScreen) screens.show(lobbyScreen)
+        }
+
+        onMessage(MinesweeperMessageType.JoinRefused) { client.send(MinesweeperMessageType.ListRooms) }
+
+        onMessage(MinesweeperMessageType.GameStarted) { showGameScreen() }
+
+        onMessage(MinesweeperMessageType.SetTime) { map?.controlBar?.timerDisplay?.value = it.payload.time }
+        onMessage(MinesweeperMessageType.RevealTiles) { map?.revealTiles(it.payload.tiles) }
+        onMessage(MinesweeperMessageType.SetFlag) { map?.setFlag(it.payload.x, it.payload.y, it.payload.status) }
+        onMessage(MinesweeperMessageType.SetBombsLeft) { map?.controlBar?.bombsLeft?.value = it.payload.bombs }
+        onMessage(MinesweeperMessageType.Win) { map?.onWin() }
+        onMessage(MinesweeperMessageType.Loose) { map?.onLose() }
+        onMessage(MinesweeperMessageType.Restart) { map?.onRestart() }
+    }
+
+    private fun showGameScreen() {
+        val settings = lastRoomState?.settings ?: return
+
+        map = Map(this, settings.width, settings.height, settings.bombs).also {
+            screens.add(it)
+            screens.show(it)
+        }
+    }
+
+    /** The room is back in its lobby after a game; the smiley is the way back to it. */
+    fun onSmileyClicked() {
+        if (lastRoomState?.phase == RoomPhase.LOBBY && screens.current == map) {
+            screens.show(lobbyScreen)
+        }
+    }
+
+    fun showRoomList() {
+        screens.show(roomListScreen)
+        client.send(MinesweeperMessageType.ListRooms)
+    }
+
     private fun onServerConnect() {
+        client.send(MinesweeperMessageType.ListRooms)
     }
 
     private fun onServerDisconnect() {
@@ -59,14 +124,16 @@ class Minesweeper : GApplet() {
     }
 
     override fun draw() {
-        if (width < map.width) surface.setSize(map.width, height)
-        if (height < map.height) surface.setSize(width, map.height)
+        screens.current?.let { screen ->
+            if (screen.width in 1 until width || screen.height in 1 until height) {
+                val cX = width / 2 - screen.width / 2
+                val cY = height / 2 - screen.height / 2
+                if (screen.x != cX || screen.y != cY) screen.moveTo(cX, cY)
+            }
 
-        val cX = width / 2 - map.width / 2
-        if (map.x != cX) map.moveTo(cX, map.y)
-
-        val cY = height / 2 - map.height / 2
-        if (map.y != cY) map.moveTo(map.x, cY)
+            if (width < screen.width) surface.setSize(screen.width, height)
+            if (height < screen.height) surface.setSize(width, screen.height)
+        }
 
         background(0xCC)
     }

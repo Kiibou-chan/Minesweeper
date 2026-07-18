@@ -1,11 +1,14 @@
 package space.kiibou.game
 
 import space.kiibou.Minesweeper
-import space.kiibou.common.GameHandle
-import space.kiibou.common.MapInfo
-import space.kiibou.common.MinesweeperMessageType
+import space.kiibou.common.TileInfo
 import space.kiibou.gui.*
 
+/**
+ * The board view. Purely presentational: tile clicks send their own messages, and the
+ * game-state messages are routed here by [Minesweeper] (registered once, forwarded to
+ * the current map), so maps can be created per game without duplicating handlers.
+ */
 class Map(override val app: Minesweeper, private val tilesX: Int, private val tilesY: Int, val bombs: Int) :
     GraphicsElement(app) {
     private val margin = tileWidth / 4
@@ -53,50 +56,30 @@ class Map(override val app: Minesweeper, private val tilesX: Int, private val ti
         heightProp.bind(box.heightProp)
     }
 
-    override fun initImpl() {
-        with(app) {
-            onMessage(MinesweeperMessageType.SetTime) {
-                controlBar.timerDisplay.value = it.payload.time
-            }
-
-            onMessage(MinesweeperMessageType.RevealTiles) {
-                it.payload.tiles.forEach { (x, y, type) ->
-                    tiles[x, y]!!.type = type
-                    tiles[x, y]!!.revealed = true
-                }
-            }
-
-            onMessage(MinesweeperMessageType.Win) {
-                tiles.forEach(Tile::deactivate)
-                controlBar.setSmiley(SmileyStatus.GLASSES)
-            }
-
-            onMessage(MinesweeperMessageType.Loose) {
-                tiles.forEach(Tile::deactivate)
-                controlBar.setSmiley(SmileyStatus.DEAD)
-            }
-
-            onMessage(MinesweeperMessageType.Restart) {
-                tiles.forEach(Tile::reset)
-                controlBar.setSmiley(SmileyStatus.NORMAL)
-            }
-
-            onMessage(MinesweeperMessageType.SetFlag) {
-                val (x, y, status) = it.payload
-
-                tiles[x, y]!!.flagged = status
-            }
-
-            onMessage(MinesweeperMessageType.SetBombsLeft) {
-                controlBar.bombsLeft.value = it.payload.bombs
-            }
-
-            client.send(MinesweeperMessageType.JoinGame, GameHandle(0))
-            client.send(
-                MinesweeperMessageType.InitMap,
-                MapInfo(tilesX, tilesY, bombs)
-            )
+    fun revealTiles(infos: List<TileInfo>) {
+        infos.forEach { (x, y, type) ->
+            tiles[x, y]!!.type = type
+            tiles[x, y]!!.revealed = true
         }
+    }
+
+    fun setFlag(x: Int, y: Int, flagged: Boolean) {
+        tiles[x, y]!!.flagged = flagged
+    }
+
+    fun onWin() {
+        tiles.forEach(Tile::deactivate)
+        controlBar.setSmiley(SmileyStatus.GLASSES)
+    }
+
+    fun onLose() {
+        tiles.forEach(Tile::deactivate)
+        controlBar.setSmiley(SmileyStatus.DEAD)
+    }
+
+    fun onRestart() {
+        tiles.forEach(Tile::reset)
+        controlBar.setSmiley(SmileyStatus.NORMAL)
     }
 
     override fun move(dx: Int, dy: Int): GraphicsElement {

@@ -97,35 +97,6 @@ class GameService(server: Server) : Service(server) {
             withGame(it.connectionHandle) { flagToggle(x, y) }
         }
 
-        // Solo-compat shim for the pre-lobby client: JoinGame joins-or-creates the room and
-        // auto-readies; InitMap applies settings and immediately starts a single-member room.
-        // Delete both once the client speaks the room protocol (SP-3 client stage).
-        routingService.registerCallback(MinesweeperMessageType.JoinGame) { message ->
-            if (!registry.join(message.connectionHandle, message.payload)) {
-                val room = registry.createAndJoin(message.connectionHandle)
-                logger.info { "Compat: created room ${room.handle} for JoinGame(${message.payload})" }
-            }
-            withRoom(message.connectionHandle) { setReady(message.connectionHandle, true) }
-        }
-
-        routingService.registerCallback(MinesweeperMessageType.InitMap) { message ->
-            withRoom(message.connectionHandle) {
-                setSettings(message.connectionHandle, message.payload)
-                if (members.size == 1) startGame(message.connectionHandle)
-            }
-        }
-
-        routingService.registerCallback(MinesweeperMessageType.Restart) { message ->
-            // Compat: the smiley restart maps to game-over-and-restart for single-member rooms.
-            withRoom(message.connectionHandle) {
-                onGameOver()
-                if (members.size == 1) {
-                    setReady(message.connectionHandle, true)
-                    startGame(message.connectionHandle)
-                }
-            }
-        }
-
         server.onDisconnect { registry.leave(it) }
     }
 

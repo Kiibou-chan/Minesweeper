@@ -36,7 +36,7 @@ class ControlBar(app: GApplet, margin: Int, map: Map) : GraphicsElement(app) {
         addChild(it)
 
         it.clicked observe {
-            (app as Minesweeper).client.send(MinesweeperMessageType.Restart)
+            (app as Minesweeper).onSmileyClicked()
         }
     }
 
