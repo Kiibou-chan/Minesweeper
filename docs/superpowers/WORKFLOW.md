@@ -161,8 +161,22 @@ this finished SP-3b and closed the original brainstormed roadmap:
   appears in RoomState), plus a full mouse-driven xvfb journey: menu →
   Singleplayer → lobby → Start → board → reveal.
 
-Future polish noted: auto-ready solo rooms after game over; leaderboard and
-settings menu entries; win/lose overlay; chording; best-times persistence.
+**Post-SP-4 polish round (COMPLETE):**
+- **Auto-ready solo rematch** — a lone player stays ready when the room returns
+  to its lobby (one-click rematch).
+- **Chording** — clicking a revealed number whose flagged-neighbor count matches
+  reveals all unflagged hidden neighbors; a wrong flag detonates (classic rules).
+  Server logic in `GameState.chord` (stops mid-chord on game over); client keeps
+  the tile itself clickable when its cover button is hidden.
+- **Two framework fixes found via e2e/TDD:** events now skip elements with a
+  hidden *ancestor* (`effectivelyHidden`), and `hierarchyDepth` updates
+  recursively when a subtree is attached — previously a parent registered for
+  events could out-depth its own children and swallow their clicks (this broke
+  tile clicks when chording registered the tile, and was caught by the xvfb
+  journey run).
+
+Future polish: leaderboard and settings menu entries; win/lose overlay;
+best-times persistence; flag attribution (who flagged what) in multiplayer.
 
 Build note: with full network access the project builds natively on the real
 `jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org
