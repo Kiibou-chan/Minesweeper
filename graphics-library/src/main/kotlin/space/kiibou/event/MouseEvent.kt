@@ -34,6 +34,7 @@ class MouseEvent : Event {
     override fun toString() = "MouseEvent(source=$source, button=$button, actions=$actions, modifiers=$modifiers)"
 }
 
+@ConsistentCopyVisibility
 data class MouseEventOption internal constructor(
     private val button: MouseButton,
     private val action: EnumSet<MouseAction>,

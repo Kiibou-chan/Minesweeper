@@ -1,15 +1,16 @@
 package space.kiibou.event
 
-import com.sun.javafx.scene.input.KeyCodeMap
 import javafx.scene.input.KeyCode
 import java.util.*
 import kotlin.collections.HashMap
+
+private val keyCodesById: Map<Int, KeyCode> = KeyCode.entries.associateBy { it.code }
 
 class KeyEvent internal constructor(private val source: processing.event.KeyEvent) : Event {
     val key: Char
         get() = source.key
 
-    val keyCode: KeyCode = KeyCodeMap.valueOf(source.keyCode)
+    val keyCode: KeyCode = keyCodesById[source.keyCode] ?: KeyCode.UNDEFINED
 
     val isAutoRepeat: Boolean
         get() = source.isAutoRepeat
@@ -43,6 +44,7 @@ enum class KeyAction(val id: Int) {
     }
 }
 
+@ConsistentCopyVisibility
 data class KeyEventOption internal constructor(
     private val keyCode: KeyCode,
     private val action: KeyAction,
