@@ -60,11 +60,14 @@ class Minesweeper : GApplet() {
 
         registerMessageHandlers()
 
+        // Assign before connecting: onServerConnect uses the client field and connect()
+        // invokes it synchronously.
         client = Client(
             ::onServerConnect,
             eventDispatcher::messageEvent,
             ::onServerDisconnect
-        ).connect("localhost", 8454)
+        )
+        client.connect("localhost", 8454)
     }
 
     private fun registerMessageHandlers() {

@@ -20,10 +20,8 @@ class Client(
         try {
             socket = Socket(address, port)
             SocketConnection.create(socket!!).ifPresent { connection ->
-                onConnect()
-
-                logger.info { "Connected to [$address:$port]" }
-
+                // The client must be fully usable (connection assigned, callbacks wired)
+                // before onConnect fires — callers send messages from that callback.
                 this.connection = connection
 
                 connection.registerMessageCallback { _, message ->
@@ -37,6 +35,10 @@ class Client(
 
                     onDisconnect()
                 }
+
+                logger.info { "Connected to [$address:$port]" }
+
+                onConnect()
             }
         } catch (ex: Exception) {
             logger.error(ex) {
