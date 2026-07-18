@@ -44,6 +44,7 @@ class Room(
         }
 
         readyByMember[handle] = false
+        events.memberId(handle, handle.handle)
         broadcastState()
 
         return true

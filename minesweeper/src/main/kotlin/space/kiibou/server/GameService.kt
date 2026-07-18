@@ -156,6 +156,9 @@ class BroadcastRoomEvents(
     override fun roomState(state: RoomStateInfo) =
         members().forEach { messageService.send(it, MinesweeperMessageType.RoomState, state) }
 
+    override fun memberId(to: ConnectionHandle, id: Long) =
+        messageService.send(to, MinesweeperMessageType.YourId, YourIdInfo(id))
+
     override fun joinRefused(to: ConnectionHandle, room: GameHandle) =
         messageService.send(to, MinesweeperMessageType.JoinRefused, room)
 

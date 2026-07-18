@@ -39,6 +39,23 @@ class RoomTest {
     }
 
     @Test
+    fun successful_join_tells_the_joiner_its_member_id() {
+        val (room, events) = newRoom()
+        room.join(handle(7))
+        assertEquals(handle(7) to 7L, events.memberIds.single())
+    }
+
+    @Test
+    fun refused_join_does_not_emit_a_member_id() {
+        val (room, events) = newRoom()
+        room.join(handle(1))
+        room.setReady(handle(1), true)
+        room.startGame(handle(1))
+        room.join(handle(2))
+        assertEquals(listOf(handle(1) to 1L), events.memberIds)
+    }
+
+    @Test
     fun new_joiner_is_not_ready() {
         val (room, events) = newRoom()
         room.join(handle(1))

@@ -13,6 +13,9 @@ interface RoomEvents {
     /** Full room state, re-sent to all members after every change. */
     fun roomState(state: RoomStateInfo)
 
+    /** Told to a single connection right after it joins: the member id others see it as. */
+    fun memberId(to: ConnectionHandle, id: Long)
+
     /** Told to a single connection whose join attempt was rejected (room already playing). */
     fun joinRefused(to: ConnectionHandle, room: GameHandle)
 

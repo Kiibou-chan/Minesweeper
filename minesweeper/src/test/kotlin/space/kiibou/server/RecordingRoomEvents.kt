@@ -7,10 +7,12 @@ import space.kiibou.net.common.ConnectionHandle
 /** Test double that records every emitted room event for assertions. */
 class RecordingRoomEvents : RoomEvents {
     val roomStates = mutableListOf<RoomStateInfo>()
+    val memberIds = mutableListOf<Pair<ConnectionHandle, Long>>()
     val refusals = mutableListOf<Pair<ConnectionHandle, GameHandle>>()
     var gameStarts = 0
 
     override fun roomState(state: RoomStateInfo) { roomStates += state }
+    override fun memberId(to: ConnectionHandle, id: Long) { memberIds += to to id }
     override fun joinRefused(to: ConnectionHandle, room: GameHandle) { refusals += to to room }
     override fun gameStarted() { gameStarts++ }
 

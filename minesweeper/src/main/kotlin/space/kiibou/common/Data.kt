@@ -35,6 +35,9 @@ data class BombsLeftInfo(val bombs: Int)
 data class ReadyInfo(val ready: Boolean)
 
 @Serializable
+data class YourIdInfo(val id: Long)
+
+@Serializable
 enum class RoomPhase { LOBBY, PLAYING }
 
 @Serializable
@@ -126,6 +129,9 @@ object MinesweeperMessageType {
     @Serializable
     object GameStarted : MessageType<Unit>(Unit::class)
 
+    @Serializable
+    object YourId : MessageType<YourIdInfo>(YourIdInfo::class)
+
     val serializersModule = SerializersModule {
         polymorphic(MessageType::class) {
             subclass(SetTime::class)
@@ -150,6 +156,7 @@ object MinesweeperMessageType {
             subclass(RoomState::class)
             subclass(JoinRefused::class)
             subclass(GameStarted::class)
+            subclass(YourId::class)
         }
     }
 }

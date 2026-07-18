@@ -47,6 +47,7 @@ class MessageRoundTripTest {
         ),
         Message(MinesweeperMessageType.JoinRefused, GameHandle(2)),
         Message(MinesweeperMessageType.GameStarted, Unit),
+        Message(MinesweeperMessageType.YourId, YourIdInfo(7L)),
     )
 
     @Test
