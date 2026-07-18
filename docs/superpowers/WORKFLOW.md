@@ -122,7 +122,16 @@ all 5 tasks, 23 tests green, e2e-verified under xvfb): protocol types +
 round-trip test, `Room` state machine, `RoomRegistry` (replaces `GameRegistry`),
 `GameService` routing with `BroadcastRoomEvents`/`GameOverNotifying`, and a
 temporary solo-compat shim (`JoinGame`/`InitMap`/`Restart` handlers marked for
-deletion in the SP-3 client stage). Next: SP-2.
+deletion in the SP-3 client stage).
+
+**SP-2 is COMPLETE** (plan `plans/2026-07-18-sp2-event-migration-completion.md`):
+key codes mapped via public JavaFX API (no more `com.sun` internals), focus moves
+on click instead of hover (`EventDispatcher.focused` exposed), `TextInput` widget
+added (REKotlin `Var<String>` value, TYPE-based editing, Enter submit; visual
+child deferred to `initImpl` so logic tests run headless), TestMain demo, and the
+layout freeze documented in CLAUDE.md ("Reactive boundaries"). Keyboard editing is
+verified at unit level (13 graphics-library tests); typing in a live window is a
+manual check via TestMain. Next: SP-3 client (screen system + lobby UI).
 
 Build note: with full network access the project builds natively on the real
 `jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org

@@ -72,3 +72,23 @@ Modules (`settings.gradle.kts`), in dependency order:
   (see its `build.gradle.kts`); this is required for tests that touch JOGL/OpenGL internals to run
   at all under the module system.
 - Tests use `kotlin.test` + JUnit4 (`kotlin("test-junit")`), not JUnit5/Kotest.
+
+## Reactive boundaries (settled — do not re-litigate)
+
+`graphics-library` deliberately uses **two** reactive systems with a fixed boundary:
+
+- **REKotlin** (`space.kiibou.reactive`) drives **events and derived state**: the
+  mouse/key event system, `Evt`/`Var`/`Signal` state such as `TextInput.value`, and
+  anything discrete or low-frequency.
+- **JavaFX properties/bindings** drive **layout**: `xProp`/`widthProp`/`scaleProperty`
+  and all container binding math (`BorderBox`, `Grid`, `VerticalList`, `TextElement`
+  sizing). This was migrated to REKotlin once and reverted: REKotlin propagates eagerly
+  (every `Var.set` re-propagates its whole downstream cone immediately, with no
+  batch/transaction API), which is far too slow for per-frame layout graphs. JavaFX
+  bindings are lazy — invalidate now, recompute on read — which fits layout exactly.
+- The sanctioned bridge is **`Signal.toFX`** (`data/Utils.kt`): REKotlin values feed
+  JavaFX-bound consumers, never the other way around.
+
+Moving layout onto REKotlin would first require a batching/transaction API in the
+REKotlin project itself (one propagation per frame, not per set). Until that exists,
+keep new reactive layout code on JavaFX and new event/state code on REKotlin.

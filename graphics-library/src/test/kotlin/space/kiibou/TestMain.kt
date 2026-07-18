@@ -10,6 +10,7 @@ import space.kiibou.gui.VerticalList
 import space.kiibou.gui.text.FontRegistry
 import space.kiibou.gui.text.TextElement
 import space.kiibou.gui.text.TextFlow
+import space.kiibou.gui.text.TextInput
 import space.kiibou.reactive.count
 import space.kiibou.reactive.map
 import space.kiibou.reactive.reactives.Evt
@@ -69,6 +70,13 @@ class TestMain : GApplet() {
             fontSize = 25,
             fontName = "NBP Informa FiveSix"
         )
+
+        // TextInput demo: click the line to focus it, type, press Enter to append the text.
+        list += TextInput(this, "click here and type...", fontSize = 25, fontName = "NBP Informa FiveSix").also { input ->
+            input.onSubmit = { submitted ->
+                list += TextElement(this, submitted, fontSize = 15, fontColor = Color(35, 100, 194))
+            }
+        }
 
         list.x = 10
         list.y = 10
