@@ -79,7 +79,7 @@ class Room(
         if (!readyByMember.values.all { it }) return false
 
         val handles = readyByMember.keys.toMutableList()
-        gameState = createGame(settings, handles)
+        gameState = createGame(settings, handles).also { it.reset() } // reset() emits Restart: the fresh-board signal
         phase = RoomPhase.PLAYING
 
         events.gameStarted()

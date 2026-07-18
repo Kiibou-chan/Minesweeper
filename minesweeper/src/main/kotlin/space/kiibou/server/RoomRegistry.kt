@@ -37,6 +37,8 @@ class RoomRegistry(private val createRoom: (GameHandle) -> Room) {
 
     fun roomFor(handle: ConnectionHandle): Room? = users[handle]?.let { rooms[it] }
 
+    fun room(handle: GameHandle): Room? = rooms[handle]
+
     fun leave(handle: ConnectionHandle) {
         val roomHandle = users.remove(handle) ?: return
         val room = rooms[roomHandle] ?: return

@@ -33,23 +33,58 @@ class GameService(server: Server) : Service(server) {
     @Inject
     lateinit var messageService: MessageService
 
-    private val registry = GameRegistry { gameHandle ->
-        val handles = mutableListOf<ConnectionHandle>()
-        GameState(
-            handles, 9, 9, 10,
-            BroadcastGameEvents(handles, messageService),
-            FixedRateTicker("Timer $gameHandle"),
-        )
+    private val registry = RoomRegistry(::newRoom)
+
+    private fun newRoom(roomHandle: GameHandle): Room {
+        lateinit var room: Room
+
+        room = Room(roomHandle, BroadcastRoomEvents({ room.members }, messageService)) { settings, handles ->
+            GameState(
+                handles, settings.width, settings.height, settings.bombs,
+                GameOverNotifying(BroadcastGameEvents(handles, messageService)) { room.onGameOver() },
+                FixedRateTicker("Timer $roomHandle"),
+            )
+        }
+
+        return room
     }
 
     override fun initialize() {
-        routingService.registerCallback(MinesweeperMessageType.JoinGame) {
-            registry.join(it.connectionHandle, it.payload)
+        routingService.registerCallback(MinesweeperMessageType.CreateRoom) {
+            registry.createAndJoin(it.connectionHandle)
         }
 
-        routingService.registerCallback(MinesweeperMessageType.InitMap) {
-            val (width, height, bombs) = it.payload
-            withGame(it.connectionHandle) { reset(width, height, bombs) }
+        routingService.registerCallback(MinesweeperMessageType.ListRooms) {
+            messageService.send(
+                it.connectionHandle,
+                MinesweeperMessageType.RoomList,
+                RoomListInfo(registry.listLobbyRooms()),
+            )
+        }
+
+        routingService.registerCallback(MinesweeperMessageType.JoinRoom) { message ->
+            val joined = registry.join(message.connectionHandle, message.payload)
+            // A playing room refuses via its own RoomEvents; only an unknown room needs a
+            // refusal from here.
+            if (!joined && registry.room(message.payload) == null) {
+                messageService.send(message.connectionHandle, MinesweeperMessageType.JoinRefused, message.payload)
+            }
+        }
+
+        routingService.registerCallback(MinesweeperMessageType.LeaveRoom) {
+            registry.leave(it.connectionHandle)
+        }
+
+        routingService.registerCallback(MinesweeperMessageType.SetReady) {
+            withRoom(it.connectionHandle) { setReady(it.connectionHandle, it.payload.ready) }
+        }
+
+        routingService.registerCallback(MinesweeperMessageType.SetSettings) {
+            withRoom(it.connectionHandle) { setSettings(it.connectionHandle, it.payload) }
+        }
+
+        routingService.registerCallback(MinesweeperMessageType.StartGame) {
+            withRoom(it.connectionHandle) { startGame(it.connectionHandle) }
         }
 
         routingService.registerCallback(MinesweeperMessageType.RevealTile) {
@@ -62,21 +97,85 @@ class GameService(server: Server) : Service(server) {
             withGame(it.connectionHandle) { flagToggle(x, y) }
         }
 
-        routingService.registerCallback(MinesweeperMessageType.Restart) {
-            withGame(it.connectionHandle) { reset() }
+        // Solo-compat shim for the pre-lobby client: JoinGame joins-or-creates the room and
+        // auto-readies; InitMap applies settings and immediately starts a single-member room.
+        // Delete both once the client speaks the room protocol (SP-3 client stage).
+        routingService.registerCallback(MinesweeperMessageType.JoinGame) { message ->
+            if (!registry.join(message.connectionHandle, message.payload)) {
+                val room = registry.createAndJoin(message.connectionHandle)
+                logger.info { "Compat: created room ${room.handle} for JoinGame(${message.payload})" }
+            }
+            withRoom(message.connectionHandle) { setReady(message.connectionHandle, true) }
+        }
+
+        routingService.registerCallback(MinesweeperMessageType.InitMap) { message ->
+            withRoom(message.connectionHandle) {
+                setSettings(message.connectionHandle, message.payload)
+                if (members.size == 1) startGame(message.connectionHandle)
+            }
+        }
+
+        routingService.registerCallback(MinesweeperMessageType.Restart) { message ->
+            // Compat: the smiley restart maps to game-over-and-restart for single-member rooms.
+            withRoom(message.connectionHandle) {
+                onGameOver()
+                if (members.size == 1) {
+                    setReady(message.connectionHandle, true)
+                    startGame(message.connectionHandle)
+                }
+            }
         }
 
         server.onDisconnect { registry.leave(it) }
     }
 
-    /** Runs [action] on the caller's game, or logs and ignores when the connection has not joined one. */
+    private fun withRoom(handle: ConnectionHandle, action: Room.() -> Unit) {
+        val room = registry.roomFor(handle)
+        if (room == null) {
+            logger.warn { "Room message from connection $handle outside any room; ignoring" }
+            return
+        }
+        room.action()
+    }
+
     private fun withGame(handle: ConnectionHandle, action: GameState.() -> Unit) {
-        val game = registry.gameFor(handle)
+        val game = registry.roomFor(handle)?.gameState
         if (game == null) {
-            logger.warn { "Game message from connection $handle with no joined game; ignoring" }
+            logger.warn { "Game message from connection $handle with no running game; ignoring" }
             return
         }
         game.action()
+    }
+}
+
+/** Production [RoomEvents]: broadcasts room updates to the room's current members. */
+class BroadcastRoomEvents(
+    private val members: () -> List<ConnectionHandle>,
+    private val messageService: MessageService,
+) : RoomEvents {
+    override fun roomState(state: RoomStateInfo) =
+        members().forEach { messageService.send(it, MinesweeperMessageType.RoomState, state) }
+
+    override fun joinRefused(to: ConnectionHandle, room: GameHandle) =
+        messageService.send(to, MinesweeperMessageType.JoinRefused, room)
+
+    override fun gameStarted() =
+        members().forEach { messageService.send(it, MinesweeperMessageType.GameStarted) }
+}
+
+/** Decorates [GameEvents] to flip the room back to its lobby when the game ends. */
+class GameOverNotifying(
+    private val inner: GameEvents,
+    private val onGameOver: () -> Unit,
+) : GameEvents by inner {
+    override fun win() {
+        inner.win()
+        onGameOver()
+    }
+
+    override fun lose() {
+        inner.lose()
+        onGameOver()
     }
 }
 
