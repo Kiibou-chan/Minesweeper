@@ -175,6 +175,27 @@ this finished SP-3b and closed the original brainstormed roadmap:
   tile clicks when chording registered the tile, and was caught by the xvfb
   journey run).
 
+**SP-5 · GUI testing framework, Tier 1 (COMPLETE)** — spec
+`specs/2026-07-18-sp5-gui-testing-tier1-design.md`, plan
+`plans/2026-07-18-sp5-gui-testing-tier1.md`:
+- `graphics-library`: `testTag` addressing, `GApplet.elementRoots` scene query,
+  `TextMetrics` seam (`EstimatingTextMetrics` for headless layout; production
+  path untouched), and `GuiRobot` in `java-test-fixtures` (clicks synthesized at
+  real widget centers through production dispatch; typing via real
+  click-to-focus). Two headless-enablement fixes: JavaFX validates bindings when
+  listeners attach, so the headless branch must not depend on `fontProperty`;
+  `BorderBox` resolves `app.graphics` at draw time instead of construction.
+  Includes the approved `TextInput` minimum-width fix (empty inputs were
+  effectively unclickable in the shipped app).
+- `minesweeper`: `GameConnection` seam (`ClientGameConnection` wraps the socket
+  client), `Minesweeper.initHeadless`, tags on all menu/rooms/lobby widgets, and
+  `LobbyFlowTest` — five headless GUI flows (singleplayer boot, owner-control
+  visibility, click-join from the room list, typed room join, name-before-
+  multiplayer ordering) driving real screens with a `FakeGameConnection`.
+- Tier 2 (future spec): in-process sketch under xvfb reusing `GuiRobot` on the
+  live window (replaces the xdotool sweep scripts), pixel probes, `Map`-screen
+  coverage.
+
 Future polish: leaderboard and settings menu entries; win/lose overlay;
 best-times persistence; flag attribution (who flagged what) in multiplayer.
 
