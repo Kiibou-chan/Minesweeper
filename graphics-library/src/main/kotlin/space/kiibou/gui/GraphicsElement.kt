@@ -189,8 +189,13 @@ abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventL
         element.let {
             it.parent = this
             it.scaleProperty.bind(scaleProperty)
-            it.hierarchyDepth = hierarchyDepth + 1
+            it.updateHierarchyDepth(hierarchyDepth + 1)
         }
+    }
+
+    private fun updateHierarchyDepth(depth: Int) {
+        hierarchyDepth = depth
+        children.forEach { it.updateHierarchyDepth(depth + 1) }
     }
 
     fun removeChild(child: GraphicsElement): GraphicsElement {

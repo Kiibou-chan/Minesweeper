@@ -46,14 +46,16 @@ class Tile(override val app: Minesweeper, private val map: Map, private val tile
         set(value) {
             field = value
 
+            // Only the cover button toggles: the tile itself stays active so a click on
+            // a revealed number can request a chord.
             if (revealed) {
                 button.hide()
                 flagged = false
-                deactivate()
+                button.deactivate()
             } else {
                 button.show()
                 flagged = false
-                activate()
+                button.activate()
             }
         }
 
@@ -116,20 +118,23 @@ class Tile(override val app: Minesweeper, private val map: Map, private val tile
         button.registerCallback(options(LEFT, EnumSet.of(DRAG, ELEMENT_EXIT))) {
             map.controlBar.setSmiley(SmileyStatus.NORMAL)
         }
+
+        /* Chord: clicking a revealed number tile asks the server to reveal its neighbors */
+        registerCallback(options(LEFT, RELEASE)) {
+            if (revealed) {
+                app.client.send(
+                    MinesweeperMessageType.RevealTile,
+                    TilePosition(tileX, tileY)
+                )
+            }
+        }
     }
 
     fun reset() {
         type = TileType.EMPTY
         revealed = false
         button.border.style = BorderStyle.OUT
-    }
-
-    override fun activate() {
-        button.activate()
-    }
-
-    override fun deactivate() {
-        button.deactivate()
+        activate()
     }
 }
 

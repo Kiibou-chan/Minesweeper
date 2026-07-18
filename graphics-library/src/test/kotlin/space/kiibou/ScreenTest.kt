@@ -26,6 +26,20 @@ class ScreenTest {
     }
 
     @Test
+    fun hierarchy_depth_updates_recursively_when_a_subtree_is_attached() {
+        val app = TestApp()
+        val parent = Element(app)
+        val child = Element(app)
+        parent.addChild(child) // parent not attached yet: parent=0, child=1
+
+        val root = Element(app)
+        root.addChild(parent) // attaching the subtree must push depths down
+
+        assertEquals(1, parent.hierarchyDepth)
+        assertEquals(2, child.hierarchyDepth, "descendants must follow when their subtree is attached")
+    }
+
+    @Test
     fun show_switches_hidden_and_active_flags() {
         val app = TestApp()
         val screens = ScreenManager(app)

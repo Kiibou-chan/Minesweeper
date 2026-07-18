@@ -145,7 +145,12 @@ class GameState(
                     setGameRunning(false)
                 }
 
-                else -> revealTile(x, y, revealed)
+                else ->
+                    if (isNotRevealed(x, y)) {
+                        revealTile(x, y, revealed)
+                    } else {
+                        chord(x, y, revealed)
+                    }
             }
         }
 
@@ -159,6 +164,28 @@ class GameState(
         }
 
         return revealed
+    }
+
+    /**
+     * Chording: clicking an already-revealed number tile whose flagged-neighbor count
+     * matches its number reveals every unflagged hidden neighbor. A wrong flag means an
+     * unflagged neighbor is a bomb — revealing it detonates, as in classic Minesweeper.
+     */
+    private fun chord(x: Int, y: Int, revealed: MutableList<TileInfo>) {
+        val number = getTile(x, y).lookup
+        if (number !in 1..8) return
+
+        val neighbors = possibleTilePositions(x - 1, y - 1, 3, 3)
+            .filter { (nx, ny) -> isValidTile(nx, ny) && !(nx == x && ny == y) }
+
+        if (neighbors.count { (nx, ny) -> isFlagged(nx, ny) } != number) return
+
+        for ((nx, ny) in neighbors) {
+            if (isFlagged(nx, ny) || !isNotRevealed(nx, ny)) continue
+            revealed += reveal(nx, ny)
+            // A detonation (or win) stops the game mid-chord; do not keep revealing.
+            if (!gameRunning) break
+        }
     }
 
     private fun revealTile(x: Int, y: Int, revealed: MutableList<TileInfo>): Boolean {
