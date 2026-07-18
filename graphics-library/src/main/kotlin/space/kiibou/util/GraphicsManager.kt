@@ -41,6 +41,11 @@ class GraphicsManager {
         if (initialized) element.init()
     }
 
+    fun unregisterGraphicsElement(element: GraphicsElement) {
+        elements.remove(element)
+        element.scaleProperty.unbind()
+    }
+
     fun registerApp(app: GApplet) {
         this.app = app
         app.registerMethod("pre", this)

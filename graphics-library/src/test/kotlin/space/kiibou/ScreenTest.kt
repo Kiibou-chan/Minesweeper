@@ -64,6 +64,22 @@ class ScreenTest {
     }
 
     @Test
+    fun removed_screens_leave_the_scene_entirely() {
+        val app = TestApp()
+        val screens = ScreenManager(app)
+        val screen = Element(app).also { it.testTag = "gone" }
+        screens.add(screen)
+        screens.show(screen)
+
+        screens.remove(screen)
+
+        assertTrue(app.elementRoots.none { it.testTag == "gone" }, "removed screens must leave the roots")
+        assertTrue(screen.hidden)
+        assertFalse(screen.active)
+        assertEquals(null, screens.current)
+    }
+
+    @Test
     fun elements_registered_after_startup_are_initialized() {
         val app = TestApp()
         val early = Element(app)

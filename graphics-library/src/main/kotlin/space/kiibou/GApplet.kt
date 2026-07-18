@@ -34,6 +34,8 @@ open class GApplet : PApplet() {
 
     fun registerGraphicsElement(element: GraphicsElement) = graphicsManager.registerGraphicsElement(element)
 
+    fun unregisterGraphicsElement(element: GraphicsElement) = graphicsManager.unregisterGraphicsElement(element)
+
     fun setScale(scale: Int) {
         graphicsManager.scale = scale
     }

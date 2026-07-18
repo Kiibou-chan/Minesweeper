@@ -21,6 +21,16 @@ class ScreenManager(private val app: GApplet) {
         screen.deactivate()
     }
 
+    /** Discards a screen for good: hidden, inactive, and gone from the scene roots. */
+    fun remove(screen: GraphicsElement) {
+        screens -= screen
+        if (current == screen) current = null
+
+        screen.hide()
+        screen.deactivate()
+        app.unregisterGraphicsElement(screen)
+    }
+
     fun show(screen: GraphicsElement) {
         require(screen in screens) { "Screen $screen was never added to this ScreenManager" }
 

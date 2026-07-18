@@ -123,6 +123,8 @@ class Minesweeper : GApplet() {
     private fun showGameScreen() {
         val settings = lastRoomState?.settings ?: return
 
+        map?.let(screens::remove) // discard the previous game's board entirely
+
         map = Map(this, settings.width, settings.height, settings.bombs).also {
             screens.add(it)
             screens.show(it)
