@@ -7,10 +7,13 @@ import processing.core.PApplet
 import processing.opengl.PGraphicsOpenGL
 import processing.opengl.PJOGL
 import space.kiibou.common.MinesweeperMessageType
+import space.kiibou.common.NameInfo
+import space.kiibou.common.ReadyInfo
 import space.kiibou.common.RoomPhase
 import space.kiibou.common.RoomStateInfo
 import space.kiibou.game.Map
 import space.kiibou.gui.ScreenManager
+import space.kiibou.lobby.MainMenuScreen
 import space.kiibou.lobby.RoomListScreen
 import space.kiibou.lobby.RoomLobbyScreen
 import space.kiibou.net.NetUtils
@@ -33,6 +36,7 @@ class Minesweeper : GApplet() {
     lateinit var client: Client
 
     private lateinit var screens: ScreenManager
+    private lateinit var mainMenuScreen: MainMenuScreen
     private lateinit var roomListScreen: RoomListScreen
     private lateinit var lobbyScreen: RoomLobbyScreen
 
@@ -54,9 +58,10 @@ class Minesweeper : GApplet() {
         frameRate(60f)
 
         screens = ScreenManager(this)
+        mainMenuScreen = MainMenuScreen(this).also(screens::add)
         roomListScreen = RoomListScreen(this).also(screens::add)
         lobbyScreen = RoomLobbyScreen(this).also(screens::add)
-        screens.show(roomListScreen)
+        screens.show(mainMenuScreen)
 
         registerMessageHandlers()
 
@@ -81,7 +86,9 @@ class Minesweeper : GApplet() {
         onMessage(MinesweeperMessageType.RoomState) {
             lastRoomState = it.payload
             lobbyScreen.update(it.payload, myId)
-            if (screens.current == roomListScreen) screens.show(lobbyScreen)
+            if (screens.current == roomListScreen || screens.current == mainMenuScreen) {
+                screens.show(lobbyScreen)
+            }
         }
 
         onMessage(MinesweeperMessageType.JoinRefused) { client.send(MinesweeperMessageType.ListRooms) }
@@ -113,13 +120,25 @@ class Minesweeper : GApplet() {
         }
     }
 
+    fun setPlayerName(name: String) {
+        if (name.isNotBlank()) client.send(MinesweeperMessageType.SetName, NameInfo(name.trim()))
+    }
+
+    fun startSingleplayer() {
+        client.send(MinesweeperMessageType.CreateRoom)
+        client.send(MinesweeperMessageType.SetReady, ReadyInfo(true))
+    }
+
+    fun showMainMenu() {
+        screens.show(mainMenuScreen)
+    }
+
     fun showRoomList() {
         screens.show(roomListScreen)
         client.send(MinesweeperMessageType.ListRooms)
     }
 
     private fun onServerConnect() {
-        client.send(MinesweeperMessageType.ListRooms)
     }
 
     private fun onServerDisconnect() {

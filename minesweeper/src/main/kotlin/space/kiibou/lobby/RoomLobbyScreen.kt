@@ -86,7 +86,7 @@ class RoomLobbyScreen(override val app: Minesweeper) : GraphicsElement(app) {
                 if (member.id == state.owner) append(" (owner)")
                 if (member.id == myId) append(" (you)")
             }
-            members += TextElement(app, "Player ${member.id} $markers")
+            members += TextElement(app, "${member.name} $markers")
         }
 
         val isOwner = myId != null && myId == state.owner

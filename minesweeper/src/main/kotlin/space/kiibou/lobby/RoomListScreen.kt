@@ -7,6 +7,7 @@ import space.kiibou.gui.Button
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.gui.VerticalList
 import space.kiibou.gui.text.TextElement
+import space.kiibou.gui.text.TextInput
 import space.kiibou.reactive.observe
 
 /**
@@ -19,7 +20,11 @@ class RoomListScreen(override val app: Minesweeper) : GraphicsElement(app) {
     private val rooms = VerticalList(app, 2)
 
     private val list = VerticalList(app, 6).also { list ->
-        list += TextElement(app, "Minesweeper", fontSize = 25)
+        list += TextElement(app, "Rooms", fontSize = 25)
+
+        list += Button(app, TextElement(app, "Back to Menu")).also { button ->
+            button.clicked observe { app.showMainMenu() }
+        }
 
         list += Button(app, TextElement(app, "Create Room")).also { button ->
             button.clicked observe { app.client.send(MinesweeperMessageType.CreateRoom) }
@@ -27,6 +32,15 @@ class RoomListScreen(override val app: Minesweeper) : GraphicsElement(app) {
 
         list += Button(app, TextElement(app, "Refresh")).also { button ->
             button.clicked observe { app.client.send(MinesweeperMessageType.ListRooms) }
+        }
+
+        list += TextElement(app, "Join room by number (click, type, Enter):")
+        list += TextInput(app).also { input ->
+            input.onSubmit = { text ->
+                text.trim().toLongOrNull()?.let { id ->
+                    app.client.send(MinesweeperMessageType.JoinRoom, space.kiibou.common.GameHandle(id))
+                }
+            }
         }
 
         list += rooms
