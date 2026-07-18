@@ -33,6 +33,12 @@ class GameService(server: Server) : Service(server) {
     @Inject
     lateinit var messageService: MessageService
 
+    /**
+     * Message callbacks run on per-connection socket listener threads; every room/game
+     * mutation is serialized on this lock to keep the state maps consistent.
+     */
+    private val stateLock = Any()
+
     private val names = mutableMapOf<ConnectionHandle, String>()
 
     private val registry = RoomRegistry(::newRoom)
@@ -56,60 +62,64 @@ class GameService(server: Server) : Service(server) {
 
     override fun initialize() {
         routingService.registerCallback(MinesweeperMessageType.CreateRoom) {
-            registry.createAndJoin(it.connectionHandle)
+            synchronized(stateLock) { registry.createAndJoin(it.connectionHandle) }
         }
 
         routingService.registerCallback(MinesweeperMessageType.ListRooms) {
-            messageService.send(
-                it.connectionHandle,
-                MinesweeperMessageType.RoomList,
-                RoomListInfo(registry.listLobbyRooms()),
-            )
+            val rooms = synchronized(stateLock) { registry.listLobbyRooms() }
+            messageService.send(it.connectionHandle, MinesweeperMessageType.RoomList, RoomListInfo(rooms))
         }
 
         routingService.registerCallback(MinesweeperMessageType.JoinRoom) { message ->
-            val joined = registry.join(message.connectionHandle, message.payload)
-            // A playing room refuses via its own RoomEvents; only an unknown room needs a
-            // refusal from here.
-            if (!joined && registry.room(message.payload) == null) {
+            val refuse = synchronized(stateLock) {
+                val joined = registry.join(message.connectionHandle, message.payload)
+                // A playing room refuses via its own RoomEvents; only an unknown room
+                // needs a refusal from here.
+                !joined && registry.room(message.payload) == null
+            }
+            if (refuse) {
                 messageService.send(message.connectionHandle, MinesweeperMessageType.JoinRefused, message.payload)
             }
         }
 
         routingService.registerCallback(MinesweeperMessageType.LeaveRoom) {
-            registry.leave(it.connectionHandle)
+            synchronized(stateLock) { registry.leave(it.connectionHandle) }
         }
 
         routingService.registerCallback(MinesweeperMessageType.SetReady) {
-            withRoom(it.connectionHandle) { setReady(it.connectionHandle, it.payload.ready) }
+            synchronized(stateLock) { withRoom(it.connectionHandle) { setReady(it.connectionHandle, it.payload.ready) } }
         }
 
         routingService.registerCallback(MinesweeperMessageType.SetSettings) {
-            withRoom(it.connectionHandle) { setSettings(it.connectionHandle, it.payload) }
+            synchronized(stateLock) { withRoom(it.connectionHandle) { setSettings(it.connectionHandle, it.payload) } }
         }
 
         routingService.registerCallback(MinesweeperMessageType.SetName) {
-            names[it.connectionHandle] = it.payload.name.take(24)
-            registry.roomFor(it.connectionHandle)?.refreshState()
+            synchronized(stateLock) {
+                names[it.connectionHandle] = it.payload.name.take(24)
+                registry.roomFor(it.connectionHandle)?.refreshState()
+            }
         }
 
         routingService.registerCallback(MinesweeperMessageType.StartGame) {
-            withRoom(it.connectionHandle) { startGame(it.connectionHandle) }
+            synchronized(stateLock) { withRoom(it.connectionHandle) { startGame(it.connectionHandle) } }
         }
 
         routingService.registerCallback(MinesweeperMessageType.RevealTile) {
             val (x, y) = it.payload
-            withGame(it.connectionHandle) { revealAt(x, y) }
+            synchronized(stateLock) { withGame(it.connectionHandle) { revealAt(x, y) } }
         }
 
         routingService.registerCallback(MinesweeperMessageType.ToggleFlag) {
             val (x, y) = it.payload
-            withGame(it.connectionHandle) { flagToggle(x, y) }
+            synchronized(stateLock) { withGame(it.connectionHandle) { flagToggle(x, y) } }
         }
 
         server.onDisconnect {
-            registry.leave(it)
-            names.remove(it)
+            synchronized(stateLock) {
+                registry.leave(it)
+                names.remove(it)
+            }
         }
     }
 
