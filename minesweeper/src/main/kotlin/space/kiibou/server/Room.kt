@@ -95,7 +95,9 @@ class Room(
 
         phase = RoomPhase.LOBBY
         gameState = null
-        readyByMember.replaceAll { _, _ -> false }
+        // A lone player should not have to re-ready for a rematch.
+        val autoReady = readyByMember.size == 1
+        readyByMember.replaceAll { _, _ -> autoReady }
 
         broadcastState()
     }

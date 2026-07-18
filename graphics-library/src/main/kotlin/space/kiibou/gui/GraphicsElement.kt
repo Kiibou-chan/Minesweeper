@@ -30,6 +30,10 @@ abstract class GraphicsElement(open val app: GApplet) : Rectangle(), MouseEventL
     var hidden = false
         protected set
 
+    /** True when this element or any ancestor is hidden — i.e. it is not on screen. */
+    val effectivelyHidden: Boolean
+        get() = hidden || parent?.effectivelyHidden == true
+
     private var parent: GraphicsElement? = null
 
     override var active: Boolean = true

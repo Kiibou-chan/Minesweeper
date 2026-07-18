@@ -65,6 +65,36 @@ class ScreenTest {
     }
 
     @Test
+    fun elements_inside_a_hidden_ancestor_do_not_receive_events() {
+        val app = TestApp()
+
+        var clicks = 0
+        val visible = Element(app).also {
+            it.width = 10
+            it.height = 10
+            it.registerCallback(options(MouseButton.LEFT, MouseAction.PRESS)) { clicks++ }
+        }
+
+        val hiddenScreen = object : GraphicsElement(app) {}
+        var hiddenClicks = 0
+        Element(app).also {
+            it.width = 10
+            it.height = 10
+            hiddenScreen.addChild(it) // deeper than `visible`, would win without the fix
+            it.registerCallback(options(MouseButton.LEFT, MouseAction.PRESS)) { hiddenClicks++ }
+        }
+        hiddenScreen.hide() // hidden but its child stays active
+
+        app.eventDispatcher.mouseEvent(
+            processing.event.MouseEvent(null, 0L, processing.event.MouseEvent.PRESS, 0, 5, 5, PConstants.LEFT, 1),
+        )
+        app.eventDispatcher.pre()
+
+        assertEquals(0, hiddenClicks, "children of a hidden ancestor must not receive events")
+        assertEquals(1, clicks, "the visible element must receive the press instead")
+    }
+
+    @Test
     fun inactive_elements_do_not_swallow_mouse_events_or_focus() {
         val app = TestApp()
 

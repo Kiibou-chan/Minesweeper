@@ -176,6 +176,16 @@ class RoomTest {
     }
 
     @Test
+    fun solo_rooms_auto_ready_after_game_over() {
+        val (room, events) = newRoom()
+        room.join(handle(1))
+        room.setReady(handle(1), true)
+        room.startGame(handle(1))
+        room.onGameOver()
+        assertTrue(events.lastState().members.single().ready, "a lone player should not need to re-ready")
+    }
+
+    @Test
     fun leave_while_playing_removes_player_from_running_game() {
         val (room, _) = newRoom()
         room.join(handle(1))
