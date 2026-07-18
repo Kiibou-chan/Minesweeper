@@ -117,6 +117,13 @@ dissolve. Sequencing: **SP-3 server (room lifecycle) → SP-2 (events/TextInput/
 layout freeze) → SP-3 client (screen system + lobby UI) → SP-3b (typed codes)** —
 screens build on the finished event system.
 
+**SP-3 server is COMPLETE** (plan `plans/2026-07-18-sp3-server-room-lifecycle.md`,
+all 5 tasks, 23 tests green, e2e-verified under xvfb): protocol types +
+round-trip test, `Room` state machine, `RoomRegistry` (replaces `GameRegistry`),
+`GameService` routing with `BroadcastRoomEvents`/`GameOverNotifying`, and a
+temporary solo-compat shim (`JoinGame`/`InitMap`/`Restart` handlers marked for
+deletion in the SP-3 client stage). Next: SP-2.
+
 Build note: with full network access the project builds natively on the real
 `jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org
 resolves normally. JDK 24 can be fetched from `corretto.aws` (GitHub-release
