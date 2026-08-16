@@ -63,6 +63,14 @@ class TextElement(
         }
     }
 
+    /** Width of an arbitrary string in this element's font, measured as [widthProp] is. */
+    fun widthOf(text: String): Int {
+        val metrics = app.textMetrics
+
+        return if (metrics != null) metrics.width(fontNameProperty.value, fontSizeProperty.value, text)
+        else app.gg.textWidth(fontProperty.value, fontSizeProperty.value, text)
+    }
+
     override fun drawImpl() {
         with(app.gg) {
             textFont(fontProperty.value)

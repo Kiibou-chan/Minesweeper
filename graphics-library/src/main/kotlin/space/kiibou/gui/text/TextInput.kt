@@ -1,5 +1,6 @@
 package space.kiibou.gui.text
 
+import javafx.beans.property.SimpleIntegerProperty
 import javafx.scene.input.KeyCode
 import space.kiibou.GApplet
 import space.kiibou.data.BLACK
@@ -29,6 +30,25 @@ class TextInput(
 ) : GraphicsElement(app) {
 
     val value: Var<String> = Var(initial)
+
+    private val cursorProp = SimpleIntegerProperty(initial.length)
+
+    /** Insertion point, between 0 and the value's length. */
+    val cursor: Int get() = cursorProp.value
+
+    internal var clock: () -> Long = System::currentTimeMillis
+
+    private var lastEdit = 0L
+
+    /** Solid for [CARET_SOLID_MS] after a keystroke, then blinking. */
+    val caretVisible: Boolean
+        get() {
+            val idle = clock() - lastEdit
+
+            if (idle < CARET_SOLID_MS) return true
+
+            return ((idle - CARET_SOLID_MS) / CARET_BLINK_MS) % 2 == 0L
+        }
 
     var onSubmit: ((String) -> Unit)? = null
 
@@ -65,10 +85,15 @@ class TextInput(
         }
 
         label.addChild(Caret(app).also {
-            it.xProp.bind(label.xProp.add(label.widthProp))
-            it.yProp.bind(label.yProp)
-            it.widthProp.bind(it.scaleProperty.multiply(2))
+            it.xProp.bind(
+                javafx.beans.binding.Bindings.createIntegerBinding(
+                    { label.x - scale + label.widthOf(label.textProperty.valueSafe.take(cursorProp.value)) },
+                    label.xProp, label.textProperty, label.fontSizeProperty, cursorProp,
+                ),
+            )
+            it.widthProp.bind(it.scaleProperty)
             it.heightProp.bind(label.heightProp)
+            it.yProp.bind(label.yProp.add(label.heightProp.subtract(it.heightProp).divide(2)))
         })
     }
 
@@ -76,6 +101,7 @@ class TextInput(
     private inner class Caret(app: GApplet) : GraphicsElement(app) {
         override fun drawImpl() {
             if (app.eventDispatcher.focused !== this@TextInput) return
+            if (!caretVisible) return
 
             val left = x.toFloat()
             val top = y.toFloat()
@@ -93,24 +119,46 @@ class TextInput(
         super.keyEvent(event)
 
         if (!active) return
+        if (event.action != KeyAction.RELEASE) lastEdit = clock()
 
         val current = value.now ?: ""
+        val at = cursorProp.value.coerceIn(0, current.length)
 
         when (event.action) {
-            // Processing sends no TYPE event for backspace or enter, only a press.
+            // Processing sends no TYPE event for the editing keys, only a press.
             KeyAction.PRESS -> when (event.keyCode) {
-                KeyCode.BACK_SPACE -> if (current.isNotEmpty()) value set current.dropLast(1)
+                KeyCode.BACK_SPACE -> if (at > 0) {
+                    value set current.removeRange(at - 1, at)
+                    cursorProp.value = at - 1
+                }
+
+                KeyCode.DELETE -> if (at < current.length) value set current.removeRange(at, at + 1)
+
+                KeyCode.LEFT -> cursorProp.value = (at - 1).coerceAtLeast(0)
+                KeyCode.RIGHT -> cursorProp.value = (at + 1).coerceAtMost(current.length)
+                KeyCode.HOME -> cursorProp.value = 0
+                KeyCode.END -> cursorProp.value = current.length
+
                 KeyCode.ENTER -> onSubmit?.invoke(current)
+
                 else -> {}
             }
 
             KeyAction.TYPE -> {
                 val key = event.key
-                if (!key.isISOControl() && key != '￿') value set (current + key)
+
+                if (!key.isISOControl() && key != '￿') {
+                    value set current.substring(0, at) + key + current.substring(at)
+                    cursorProp.value = at + 1
+                }
             }
 
             else -> {}
         }
     }
 
+    companion object {
+        internal const val CARET_SOLID_MS = 500L
+        internal const val CARET_BLINK_MS = 500L
+    }
 }
