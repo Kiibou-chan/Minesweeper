@@ -1,5 +1,6 @@
 package space.kiibou.gui.text
 
+import javafx.scene.input.KeyCode
 import space.kiibou.GApplet
 import space.kiibou.data.BLACK
 import space.kiibou.data.Color
@@ -91,14 +92,24 @@ class TextInput(
     override fun keyEvent(event: KeyEvent) {
         super.keyEvent(event)
 
-        if (!active || event.action != KeyAction.TYPE) return
+        if (!active) return
 
         val current = value.now ?: ""
 
-        when (val key = event.key) {
-            '\b' -> if (current.isNotEmpty()) value set current.dropLast(1)
-            '\n', '\r' -> onSubmit?.invoke(current)
-            else -> if (!key.isISOControl() && key != '￿') value set (current + key)
+        when (event.action) {
+            // Processing sends no TYPE event for backspace or enter, only a press.
+            KeyAction.PRESS -> when (event.keyCode) {
+                KeyCode.BACK_SPACE -> if (current.isNotEmpty()) value set current.dropLast(1)
+                KeyCode.ENTER -> onSubmit?.invoke(current)
+                else -> {}
+            }
+
+            KeyAction.TYPE -> {
+                val key = event.key
+                if (!key.isISOControl() && key != '￿') value set (current + key)
+            }
+
+            else -> {}
         }
     }
 

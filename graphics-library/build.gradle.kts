@@ -42,6 +42,10 @@ dependencies {
     testFixturesImplementation(libs.processing)
 }
 
+// The fixtures synthesize the library's own event types, so they need its dependencies
+// (JavaFX key codes among them), which the openjfx plugin only puts on `implementation`.
+configurations["testFixturesImplementation"].extendsFrom(configurations["implementation"])
+
 javafx {
     modules("javafx.controls")
 }

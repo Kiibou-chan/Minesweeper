@@ -60,6 +60,14 @@ object WindowedAppHarness {
         awaitUntil("main menu visible", 5_000) { !robot.findByTag("screen.menu").effectivelyHidden }
     }
 
+    private val keyboard by lazy { java.awt.Robot().also { it.autoDelay = 40 } }
+
+    /** Real X key events, exercising the NEWT to Processing to dispatcher path itself. */
+    fun pressKeys(vararg codes: Int) = codes.forEach {
+        keyboard.keyPress(it)
+        keyboard.keyRelease(it)
+    }
+
     fun awaitUntil(what: String, timeoutMs: Long, condition: () -> Boolean) {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {

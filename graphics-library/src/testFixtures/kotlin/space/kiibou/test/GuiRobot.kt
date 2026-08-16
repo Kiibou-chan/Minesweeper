@@ -1,5 +1,6 @@
 package space.kiibou.test
 
+import javafx.scene.input.KeyCode
 import processing.core.PConstants
 import space.kiibou.GApplet
 import space.kiibou.gui.GraphicsElement
@@ -41,11 +42,16 @@ class GuiRobot(
     fun rightClickOn(tag: String) = click(findByTag(tag), PConstants.RIGHT)
 
     fun type(text: String) {
-        text.forEach { key(it) }
+        text.forEach { char -> Keys.typed(char).forEach(app.eventDispatcher::keyEvent) }
         pump()
     }
 
-    fun pressEnter() = type("\n")
+    fun press(code: KeyCode) {
+        Keys.pressed(code).forEach(app.eventDispatcher::keyEvent)
+        pump()
+    }
+
+    fun pressEnter() = press(KeyCode.ENTER)
 
     private fun click(element: GraphicsElement, button: Int) {
         val cx = element.x + element.width / 2
@@ -61,8 +67,4 @@ class GuiRobot(
             processing.event.MouseEvent(null, 0L, action, 0, x, y, button, 1),
         )
 
-    private fun key(char: Char) =
-        app.eventDispatcher.keyEvent(
-            processing.event.KeyEvent(null, 0L, processing.event.KeyEvent.TYPE, 0, char, 0),
-        )
 }

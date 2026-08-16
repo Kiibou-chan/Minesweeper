@@ -1,5 +1,6 @@
 package space.kiibou
 
+import javafx.scene.input.KeyCode
 import space.kiibou.event.KeyEvent
 import space.kiibou.gui.BorderBox
 import space.kiibou.gui.BorderStyle
@@ -7,6 +8,7 @@ import space.kiibou.gui.text.EstimatingTextMetrics
 import space.kiibou.gui.text.TextInput
 import space.kiibou.reactive.now
 import space.kiibou.reactive.observe
+import space.kiibou.test.Keys
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -17,9 +19,9 @@ class TextInputTest {
     private val app = GApplet().also { it.textMetrics = EstimatingTextMetrics }
     private val input = TextInput(app)
 
-    private fun type(key: Char) = input.keyEvent(
-        KeyEvent(processing.event.KeyEvent(null, 0L, processing.event.KeyEvent.TYPE, 0, key, 0)),
-    )
+    private fun type(key: Char) = Keys.typed(key).forEach { input.keyEvent(KeyEvent(it)) }
+
+    private fun press(code: KeyCode) = Keys.pressed(code).forEach { input.keyEvent(KeyEvent(it)) }
 
     @Test
     fun typed_characters_are_appended() {
