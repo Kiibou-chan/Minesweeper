@@ -69,15 +69,21 @@ kotlin {
 //   gradle :minesweeper:test -Dgui.e2e=true    (under xvfb-run on headless machines)
 
 // JOGL cannot find its native jars in the Gradle cache (they are not siblings of the
-// base jars as in an installDist lib dir), so extract the .so files for the test JVM.
+// base jars as in an installDist lib dir), so extract the .so files for the test and run JVMs.
 val extractJoglNatives by tasks.registering(Sync::class) {
-    from(configurations.testRuntimeClasspath.map { classpath ->
+    from(configurations.runtimeClasspath.map { classpath ->
         classpath.filter { it.name.contains("natives-linux-amd64") }.map { zipTree(it) }
     })
     include("**/*.so")
     eachFile { path = name }
     includeEmptyDirs = false
     into(layout.buildDirectory.dir("jogl-natives"))
+}
+
+tasks.named<JavaExec>("run") {
+    dependsOn(extractJoglNatives)
+    systemProperty("jogamp.gluegen.UseTempJarCache", "false")
+    systemProperty("java.library.path", layout.buildDirectory.dir("jogl-natives").get().asFile.absolutePath)
 }
 
 tasks.withType<Test>().configureEach {
