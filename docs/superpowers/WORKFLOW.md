@@ -241,9 +241,58 @@ now applies the size on a daemon single-thread executor off the draw callback; t
 five runs in a row. Note that no Processing callback is a safe place to resize: `pre`, `draw` and
 `post` all run inside `handleDraw`, and so do the message handlers `EventDispatcher` drains.
 
+**`run` task fixed (2026-08-16)** — `./gradlew :minesweeper:run` died with
+`UnsatisfiedLinkError: Couldn't load library 'nativewindow_awt'`. JOGL locates its natives jar beside
+the base jar, which holds in an `installDist` `lib/` directory but not in the Gradle cache, where
+every jar sits in its own hash directory. `extractJoglNatives` now reads `runtimeClasspath` and the
+`run` task gets the same `java.library.path` treatment the test task had. Found only because Svenja
+tried to launch the app; nothing in the build had ever exercised it.
+
+**Text input overhauled (2026-08-16)** — driven by looking at the running app, in four commits:
+- **Sunken box** (`b0cd43d`): `TextInput` wraps its text in a `BorderStyle.IN` `BorderBox` with a
+  100-scaled-pixel minimum inner width, so an empty field is visible instead of an invisible hit
+  area. The caret is a child of the text, because `drawImpl` runs *before* children and the bevel
+  would otherwise paint over it. It also drew with the canvas dimensions, since inside
+  `with(app.gg)` a bare `width`/`height` resolves to `PGraphics.width`/`height`; harmless while the
+  caret sat off-screen, an 800x800 black rectangle once it moved inside. `NameFieldJourneyTest` pins
+  that with a pixel probe (masked to RGB: the alpha byte varies with where in the frame it lands).
+- **Editing keys** (`44940c0`): backspace and Enter were dead in the shipped app. `PSurfaceJOGL`
+  withholds the TYPE event for coded keys and for backspace, tab, enter, escape and delete
+  (`isHackyKey`, keyCodes 8, 9, 13, 27, 147), and the widget listened only for TYPE. Measured with
+  `java.awt.Robot` against the live window: `a` gives PRESS/TYPE/RELEASE, backspace and Enter give
+  only PRESS/RELEASE, and Processing normalises Enter to JavaFX `ENTER` (10), not NEWT's 13. No test
+  caught it because `GuiRobot` synthesized a TYPE per character, agreeing with a key path the app
+  never produces; the `Keys` fixture now builds the real sequence and `RealKeyboardJourneyTest`
+  drives genuine X events.
+- **Cursor and caret** (`ca42e8a`): an insertion point with Left, Right, Home, End and Delete; the
+  caret binds to it through `TextElement.widthOf`, so it tracks in both the headless and GL paths,
+  and stays solid for `CARET_SOLID_MS` after a keystroke before blinking (clock injected for tests).
+- **Modifier-agnostic dispatch** (`05308be`): `KeyEventOption`/`MouseEventOption` take a null
+  modifier set meaning "any", built by `anyModifiers()`, and dispatch tries the exact option before
+  falling back. Every prior callback silently meant "with exactly these modifiers held", so
+  shift-clicking any element did nothing; that is now expressible, though nothing in the game
+  registers a shift-click yet. `TextInput` has no `keyEvent` override left, and Ctrl with Left,
+  Right, Backspace or Delete jumps and deletes by word.
+
+Counts after all of it: **46 graphics-library and 42 minesweeper tests, 0 failed**; four Tier-2
+journeys green.
+
+**Open (2026-08-16):** an intermittent journey failure, seen twice and never reproduced — once
+`ResizeJourneyTest` timing out on "window grown to fit the 30x16 board", once
+`SingleplayerJourneyTest` with the message lost. Roughly 1 in 10 early on, then ~15 consecutive green
+runs. All journeys share one window and one app instance across classes, which is the obvious
+suspect and is unverified. The agreed approach is to capture the output on the next sighting rather
+than chase it; giving each class its own app instance would remove the suspected cause but could
+mask a production bug.
+
 Future polish: leaderboard and settings menu entries; win/lose overlay;
 best-times persistence; flag attribution (who flagged what) in multiplayer;
-TextInput border/background so empty inputs are visible.
+sizing the window on screen change instead of testing it every frame in
+`Minesweeper.draw` (the deferred apply landed, the per-frame rule did not).
+
+Next session, first: pick a polish item, or capture the intermittent journey failure if it shows.
+Installing JetBrains' `kotlin-lsp` on `PATH` would give this repo type-aware navigation; the harness
+has an `LSP` tool wired to it and it is currently absent.
 
 Build note: with full network access the project builds natively on the real
 `jvmToolchain(24)` — REKotlin must be `publishToMavenLocal`'d first, and jogamp.org
