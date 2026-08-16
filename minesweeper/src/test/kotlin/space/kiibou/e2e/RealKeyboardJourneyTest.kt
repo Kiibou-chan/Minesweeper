@@ -32,4 +32,16 @@ class RealKeyboardJourneyTest {
         WindowedAppHarness.pressKeys(KeyEvent.VK_BACK_SPACE)
         WindowedAppHarness.awaitUntil("last character deleted", 5_000) { field.value.now == before + "a" }
     }
+
+    @Test
+    fun control_backspace_deletes_a_word_on_a_real_keyboard() {
+        WindowedAppHarness.robot.clickOn("menu.nameInput")
+        val before = field.value.now ?: ""
+
+        WindowedAppHarness.pressKeys(KeyEvent.VK_SPACE, KeyEvent.VK_O, KeyEvent.VK_N, KeyEvent.VK_E)
+        WindowedAppHarness.awaitUntil("word typed", 5_000) { field.value.now == "$before one" }
+
+        WindowedAppHarness.pressChord(KeyEvent.VK_CONTROL, KeyEvent.VK_BACK_SPACE)
+        WindowedAppHarness.awaitUntil("whole word deleted", 5_000) { field.value.now == "$before " }
+    }
 }

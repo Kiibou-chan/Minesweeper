@@ -68,6 +68,14 @@ object WindowedAppHarness {
         keyboard.keyRelease(it)
     }
 
+    /** [code] pressed while [modifier] is held, so the event carries the modifier. */
+    fun pressChord(modifier: Int, code: Int) {
+        keyboard.keyPress(modifier)
+        keyboard.keyPress(code)
+        keyboard.keyRelease(code)
+        keyboard.keyRelease(modifier)
+    }
+
     fun awaitUntil(what: String, timeoutMs: Long, condition: () -> Boolean) {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {

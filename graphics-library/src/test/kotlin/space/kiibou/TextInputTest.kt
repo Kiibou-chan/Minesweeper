@@ -1,6 +1,7 @@
 package space.kiibou
 
 import javafx.scene.input.KeyCode
+import space.kiibou.event.EventModifier
 import space.kiibou.event.KeyEvent
 import space.kiibou.gui.BorderBox
 import space.kiibou.gui.BorderStyle
@@ -24,7 +25,8 @@ class TextInputTest {
 
     private fun type(key: Char) = Keys.typed(key).forEach { input.keyEvent(KeyEvent(it)) }
 
-    private fun press(code: KeyCode) = Keys.pressed(code).forEach { input.keyEvent(KeyEvent(it)) }
+    private fun press(code: KeyCode, vararg modifiers: EventModifier) =
+        Keys.pressed(code, *modifiers).forEach { input.keyEvent(KeyEvent(it)) }
 
     @Test
     fun typed_characters_are_appended() {
@@ -73,6 +75,52 @@ class TextInputTest {
         type('\n')
         assertEquals("", input.value.now)
         assertNull(submitted)
+    }
+
+    @Test
+    fun control_left_jumps_to_the_start_of_the_previous_word() {
+        "one two".forEach(::type)
+
+        press(KeyCode.LEFT, EventModifier.CTRL)
+
+        assertEquals(4, input.cursor)
+    }
+
+    @Test
+    fun control_right_jumps_past_the_next_word() {
+        "one two".forEach(::type)
+        press(KeyCode.HOME)
+
+        press(KeyCode.RIGHT, EventModifier.CTRL)
+
+        assertEquals(3, input.cursor)
+    }
+
+    @Test
+    fun control_backspace_deletes_the_word_before_the_cursor() {
+        "one two".forEach(::type)
+
+        press(KeyCode.BACK_SPACE, EventModifier.CTRL)
+
+        assertEquals("one ", input.value.now)
+        assertEquals(4, input.cursor)
+    }
+
+    @Test
+    fun control_delete_deletes_the_word_after_the_cursor() {
+        "one two".forEach(::type)
+        press(KeyCode.HOME)
+
+        press(KeyCode.DELETE, EventModifier.CTRL)
+
+        assertEquals(" two", input.value.now)
+    }
+
+    @Test
+    fun capitals_are_inserted_despite_the_shift_modifier() {
+        "Ab".forEach(::type)
+
+        assertEquals("Ab", input.value.now)
     }
 
     @Test

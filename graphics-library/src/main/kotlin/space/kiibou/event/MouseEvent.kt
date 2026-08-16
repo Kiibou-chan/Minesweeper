@@ -27,6 +27,10 @@ class MouseEvent : Event {
     val option: MouseEventOption
         get() = MouseEventOption(button, actions, modifiers)
 
+    /** The option a callback registered through [anyModifiers] is filed under. */
+    val optionIgnoringModifiers: MouseEventOption
+        get() = MouseEventOption(button, actions, null)
+
     val x: Int get() = source.x
     val y: Int get() = source.y
     val count: Int get() = source.count
@@ -38,7 +42,8 @@ class MouseEvent : Event {
 data class MouseEventOption internal constructor(
     private val button: MouseButton,
     private val action: EnumSet<MouseAction>,
-    private val modifiers: EnumSet<EventModifier>
+    /** Null matches any combination of held modifiers. */
+    private val modifiers: EnumSet<EventModifier>?
 )
 
 typealias MouseEventConsumer = (MouseEvent) -> Unit
@@ -48,7 +53,11 @@ interface MouseEventListener : EventListener {
     val mouseOptionMap: MouseOptionMap
 
     fun mouseEvent(event: MouseEvent) {
-        if (active) mouseOptionMap[event.option]?.invoke(event)
+        if (!active) return
+
+        val callback = mouseOptionMap[event.option] ?: mouseOptionMap[event.optionIgnoringModifiers]
+
+        callback?.invoke(event)
     }
 
     fun registerCallback(option: MouseEventOption, callback: MouseEventConsumer) {
@@ -69,6 +78,13 @@ fun options(button: MouseButton, actions: EnumSet<MouseAction>, vararg modifiers
     mods.addAll(listOf(*modifiers))
     return MouseEventOption(button, actions, mods)
 }
+
+/** Matches [button] and [action] whatever modifiers are held; see the key-event twin. */
+fun anyModifiers(button: MouseButton, action: MouseAction): MouseEventOption =
+    anyModifiers(button, EnumSet.of(action))
+
+fun anyModifiers(button: MouseButton, actions: EnumSet<MouseAction>): MouseEventOption =
+    MouseEventOption(button, actions, null)
 
 enum class MouseButton(private val id: Int) {
     LEFT(PConstants.LEFT),

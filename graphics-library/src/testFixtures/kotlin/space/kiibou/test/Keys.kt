@@ -2,7 +2,9 @@ package space.kiibou.test
 
 import javafx.scene.input.KeyCode
 import processing.core.PConstants
+import processing.event.Event
 import processing.event.KeyEvent
+import space.kiibou.event.EventModifier
 
 /**
  * Builds the event sequence Processing really delivers, measured against a live sketch:
@@ -22,20 +24,29 @@ object Keys {
             else -> KeyCode.getKeyCode(char.uppercaseChar().toString()) ?: KeyCode.UNDEFINED
         }
 
-        return sequence(code, char)
+        // A capital arrives with shift held, which is part of the option a callback matches.
+        return sequence(code, char, if (char.isUpperCase()) Event.SHIFT else 0)
     }
 
-    fun pressed(code: KeyCode): List<KeyEvent> = sequence(code, CODED)
+    fun pressed(code: KeyCode, vararg modifiers: EventModifier): List<KeyEvent> =
+        sequence(code, CODED, modifiers.fold(0) { bits, modifier -> bits or bit(modifier) })
 
-    private fun sequence(code: KeyCode, char: Char): List<KeyEvent> {
-        val press = event(KeyEvent.PRESS, char, code.code)
-        val release = event(KeyEvent.RELEASE, char, code.code)
+    private fun bit(modifier: EventModifier) = when (modifier) {
+        EventModifier.SHIFT -> Event.SHIFT
+        EventModifier.CTRL -> Event.CTRL
+        EventModifier.META -> Event.META
+        EventModifier.ALT -> Event.ALT
+    }
+
+    private fun sequence(code: KeyCode, char: Char, modifiers: Int): List<KeyEvent> {
+        val press = event(KeyEvent.PRESS, char, code.code, modifiers)
+        val release = event(KeyEvent.RELEASE, char, code.code, modifiers)
 
         if (char == CODED || char.isISOControl()) return listOf(press, release)
 
-        return listOf(press, event(KeyEvent.TYPE, char, 0), release)
+        return listOf(press, event(KeyEvent.TYPE, char, 0, modifiers), release)
     }
 
-    private fun event(action: Int, char: Char, code: Int) =
-        KeyEvent(null, 0L, action, 0, char, code)
+    private fun event(action: Int, char: Char, code: Int, modifiers: Int) =
+        KeyEvent(null, 0L, action, modifiers, char, code)
 }

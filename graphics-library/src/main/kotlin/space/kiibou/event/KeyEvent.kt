@@ -18,6 +18,10 @@ class KeyEvent internal constructor(private val source: processing.event.KeyEven
     val option: KeyEventOption
         get() = KeyEventOption(keyCode, action, modifier)
 
+    /** The option a callback registered through [anyModifiers] is filed under. */
+    val optionIgnoringModifiers: KeyEventOption
+        get() = KeyEventOption(keyCode, action, null)
+
     val modifier: EnumSet<EventModifier> = EventModifier.fromProcessingEvent(source)
     val action: KeyAction = KeyAction.fromProcessingEvent(source)
     val millis: Long get() = source.millis
@@ -48,7 +52,8 @@ enum class KeyAction(val id: Int) {
 data class KeyEventOption internal constructor(
     private val keyCode: KeyCode,
     private val action: KeyAction,
-    private val modifier: EnumSet<EventModifier>
+    /** Null matches any combination of held modifiers. */
+    private val modifier: EnumSet<EventModifier>?
 )
 
 typealias KeyEventConsumer = (KeyEvent) -> Unit
@@ -58,7 +63,11 @@ interface KeyEventListener : EventListener {
     val keyOptionMap: KeyOptionMap
 
     fun keyEvent(event: KeyEvent) {
-        if (active) keyOptionMap[event.option]?.invoke(event)
+        if (!active) return
+
+        val callback = keyOptionMap[event.option] ?: keyOptionMap[event.optionIgnoringModifiers]
+
+        callback?.invoke(event)
     }
 
     fun registerCallback(option: KeyEventOption, callback: KeyEventConsumer) {
@@ -73,3 +82,10 @@ interface KeyEventListener : EventListener {
 fun options(key: KeyCode, action: KeyAction, vararg modifiers: EventModifier): KeyEventOption {
     return KeyEventOption(key, action, EnumSet.noneOf(EventModifier::class.java).apply { addAll(modifiers) })
 }
+
+/**
+ * Matches [key] and [action] whatever modifiers are held. An [options] registration for
+ * the same key and action takes precedence over this one for its own combination, which
+ * is how a modifier gets special-cased without losing the default.
+ */
+fun anyModifiers(key: KeyCode, action: KeyAction): KeyEventOption = KeyEventOption(key, action, null)
