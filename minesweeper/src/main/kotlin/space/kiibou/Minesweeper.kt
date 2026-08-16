@@ -171,8 +171,8 @@ class Minesweeper : GApplet() {
                 if (screen.x != cX || screen.y != cY) screen.moveTo(cX, cY)
             }
 
-            if (width < screen.width) surface.setSize(screen.width, height)
-            if (height < screen.height) surface.setSize(width, screen.height)
+            if (width < screen.width) requestWindowSize(screen.width, height)
+            if (height < screen.height) requestWindowSize(width, screen.height)
         }
 
         background(0xCC)
