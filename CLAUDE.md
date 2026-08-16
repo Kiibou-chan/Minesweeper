@@ -16,7 +16,8 @@ README; this file is the source of truth for orientation.
 
 Gradle multi-module build, Kotlin 2.2.21, JVM toolchain 24 (root `build.gradle.kts`), though
 individual modules pin `sourceCompatibility`/`targetCompatibility` to Java 17 — be aware of this
-mismatch if touching build config. Gradle wrapper is 8.10.2.
+mismatch if touching build config. Gradle wrapper is 8.14.3, never below: 8.10.2 cannot read Java 24
+bytecode, so its detector calls every test-source class a test (23 phantom `InvalidTestClassError`s).
 
 Modules (`settings.gradle.kts`), in dependency order:
 

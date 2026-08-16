@@ -220,6 +220,18 @@ this finished SP-3b and closed the original brainstormed roadmap:
 - Polish note from the boot screenshot: an empty `TextInput` is clickable but
   invisible (no border/background) — worth a visual treatment.
 
+**Build gate fixed (2026-08-16)** — `./gradlew build` is now green and is the real gate. It had
+never been green on this lineage: Gradle 8.10.2's bundled ASM cannot read Java 24 bytecode
+(`IllegalArgumentException: Unsupported class file major version 68`), and its test detector fails
+open, logging `Failed to read class file ...; assuming it's a test class` for every class in a test
+source set. Helpers, companion objects, Kotlin file facades and the old demo sketches (`GridTest`,
+`ListTest`, `TestMain`) therefore ran as tests and failed with `InvalidTestClassError: No runnable
+methods` — 6 such failures at the branch base, 23 by the end of SP-6, which is why every earlier
+stage reported green only from filtered `--tests` runs. Bumping the wrapper to **8.14.3** fixed the
+cause; no source or build-script change was needed, and the misleadingly named demo sketches are
+correctly ignored once the bytecode is readable. Counts now: 26 graphics-library and 40 minesweeper
+tests, 0 failed, with the three Tier-2 journeys reported as skipped unless `-Dgui.e2e=true`.
+
 Future polish: leaderboard and settings menu entries; win/lose overlay;
 best-times persistence; flag attribution (who flagged what) in multiplayer;
 TextInput border/background so empty inputs are visible.
