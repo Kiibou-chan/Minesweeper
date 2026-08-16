@@ -232,6 +232,15 @@ cause; no source or build-script change was needed, and the misleadingly named d
 correctly ignored once the bytecode is readable. Counts now: 26 graphics-library and 40 minesweeper
 tests, 0 failed, with the three Tier-2 journeys reported as skipped unless `-Dgui.e2e=true`.
 
+**Resize crash fixed (2026-08-16)** — `Minesweeper.draw` called `surface.setSize` inside `draw`;
+NEWT applies that reshape inline, re-entering `handleDraw`, and Processing answers re-entry with a
+raw `System.exit(1)` that `suppressSystemExit` cannot intercept. The Tier-2 resize journey died
+mid-test, reported as SKIPPED with the build red on the worker's exit code and no assertion failing,
+and the shipped app could vanish when the Expert preset grew the window. `GApplet.requestWindowSize`
+now applies the size on a daemon single-thread executor off the draw callback; the journey is green
+five runs in a row. Note that no Processing callback is a safe place to resize: `pre`, `draw` and
+`post` all run inside `handleDraw`, and so do the message handlers `EventDispatcher` drains.
+
 Future polish: leaderboard and settings menu entries; win/lose overlay;
 best-times persistence; flag attribution (who flagged what) in multiplayer;
 TextInput border/background so empty inputs are visible.
