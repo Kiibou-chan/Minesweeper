@@ -1,16 +1,20 @@
 package space.kiibou
 
 import space.kiibou.event.KeyEvent
+import space.kiibou.gui.BorderBox
+import space.kiibou.gui.BorderStyle
+import space.kiibou.gui.text.EstimatingTextMetrics
 import space.kiibou.gui.text.TextInput
 import space.kiibou.reactive.now
 import space.kiibou.reactive.observe
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class TextInputTest {
 
-    private val app = GApplet()
+    private val app = GApplet().also { it.textMetrics = EstimatingTextMetrics }
     private val input = TextInput(app)
 
     private fun type(key: Char) = input.keyEvent(
@@ -64,6 +68,21 @@ class TextInputTest {
         type('\n')
         assertEquals("", input.value.now)
         assertNull(submitted)
+    }
+
+    @Test
+    fun an_empty_input_is_drawn_as_a_sunken_box() {
+        input.init()
+
+        val border = input.children.filterIsInstance<BorderBox>().single()
+        assertEquals(BorderStyle.IN, border.style)
+    }
+
+    @Test
+    fun an_empty_input_keeps_a_name_sized_width() {
+        input.init()
+
+        assertTrue(input.width >= 100, "an empty input measured ${input.width}")
     }
 
     @Test

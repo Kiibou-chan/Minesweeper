@@ -5,6 +5,8 @@ import space.kiibou.data.BLACK
 import space.kiibou.data.Color
 import space.kiibou.event.KeyAction
 import space.kiibou.event.KeyEvent
+import space.kiibou.gui.BorderBox
+import space.kiibou.gui.BorderStyle.IN
 import space.kiibou.gui.GraphicsElement
 import space.kiibou.reactive.now
 import space.kiibou.reactive.reactives.Var
@@ -37,19 +39,52 @@ class TextInput(
     }
 
     override fun initImpl() {
-        text = TextElement(app, value).also {
+        val label = TextElement(app, value).also {
             it.fontSizeProperty.unbind()
             it.fontSizeProperty.bind(scaleProperty.multiply(fontSize))
             it.fontNameProperty.value = fontName
             it.fontColorProperty.value = fontColor
+        }
+        text = label
 
-            addChild(it)
-
+        BorderBox(app).also {
+            it.style = IN
             it.xProp.bind(xProp)
             it.yProp.bind(yProp)
-            // Minimum width keeps an empty input visible and clickable.
-            widthProp.bind(javafx.beans.binding.Bindings.max(it.widthProp, scaleProperty.multiply(60)))
+
+            addChild(it)
+            it.addChild(label)
+
+            // A name-sized box stays visible and clickable while the value is empty.
+            it.innerWidthProp.unbind()
+            it.innerWidthProp.bind(javafx.beans.binding.Bindings.max(label.widthProp, scaleProperty.multiply(100)))
+
+            widthProp.bind(it.widthProp)
             heightProp.bind(it.heightProp)
+        }
+
+        label.addChild(Caret(app).also {
+            it.xProp.bind(label.xProp.add(label.widthProp))
+            it.yProp.bind(label.yProp)
+            it.widthProp.bind(it.scaleProperty.multiply(2))
+            it.heightProp.bind(label.heightProp)
+        })
+    }
+
+    /** A child of the text, so the box's bevel is drawn before it rather than over it. */
+    private inner class Caret(app: GApplet) : GraphicsElement(app) {
+        override fun drawImpl() {
+            if (app.eventDispatcher.focused !== this@TextInput) return
+
+            val left = x.toFloat()
+            val top = y.toFloat()
+            val thickness = width.toFloat()
+            val extent = height.toFloat()
+
+            with(app.gg) {
+                fill(fontColor)
+                rect(left, top, thickness, extent)
+            }
         }
     }
 
@@ -67,17 +102,4 @@ class TextInput(
         }
     }
 
-    override fun drawImpl() {
-        val text = text ?: return
-
-        if (app.eventDispatcher.focused === this) {
-            with(app.gg) {
-                fill(text.fontColorProperty.value)
-                rect(
-                    (x + width).toFloat(), y.toFloat(),
-                    (2 * scale).toFloat(), height.toFloat(),
-                )
-            }
-        }
-    }
 }
